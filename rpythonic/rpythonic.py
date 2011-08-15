@@ -2,7 +2,7 @@
 # RPythonic - July 28th, 2011
 # By HartsAntler, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.1pre2'
+VERSION = '0.4.1pre3'
 
 # py3k compat
 
@@ -3595,8 +3595,8 @@ class AndroidPackage( object ):
 
 	'''
 
-	DROID_HEADER = open( os.path.join(RPYTHONIC_DIR,'android-glue.h'), 'rb' ).read().decode('utf-8')
-	DROID_FOOTER = open( os.path.join(RPYTHONIC_DIR,'android-glue.c'), 'rb' ).read().decode('utf-8')
+	DROID_HEADER = ''#open( os.path.join(RPYTHONIC_DIR,'android-glue.h'), 'rb' ).read().decode('utf-8')
+	DROID_FOOTER = ''#open( os.path.join(RPYTHONIC_DIR,'android-glue.c'), 'rb' ).read().decode('utf-8')
 
 	SDK_ROOT = NDK_ROOT = None
 	@classmethod
