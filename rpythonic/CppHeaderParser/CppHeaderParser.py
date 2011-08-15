@@ -1895,7 +1895,9 @@ class _CppHeader( Resolver ):
                 if '(' not in stack: return None
                 #print('AFTER------',stack)
 
-        assert stack.count('(') == stack.count(')')
+        if 'throw' in stack: stack = stack[ : stack.index('throw') ]
+        #assert stack.count('(') == stack.count(')')
+        if not stack.count('(') == stack.count(')'): print('WARN - parser error', stack); return None
 
         header = stack[ : stack.index('(') ]
         header = ' '.join( header )

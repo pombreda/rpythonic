@@ -3,9 +3,30 @@ import os, sys
 sys.path.append('..')
 import rpythonic
 #rpythonic.set_cache( '../cache' )	# the default cache is rpythonic/cache/
-rpythonic.set_pypy_root( '../../pypy' )
+#rpythonic.set_pypy_root( '../../pypy' )
 ################################
 debug=0
+
+
+if '--ogre' in sys.argv:
+	defines = []
+	ignore_ogre = 'MeshSerializerImpl MeshSerializerImpl_v1_4 MeshSerializerImpl_v1_3 MeshSerializerImpl_v1_2 MeshSerializerImpl_v1_1 InstancedGeometry::MaterialBucket MaterialBucket ScriptCompiler StringUtil'.split()
+	ignore_ogre += 'SharedPtr ExceptionFactory ControllerManager UTFString AnimableValue'.split()
+	ignore_ogre += 'RenderQueueInvocationList RenderQueueInvocationIterator ConstShadowTextureConfigIterator ConstEnabledAnimationStateIterator'.split()
+	ignore_ogre += 'Any AnyNumeric AnimableObject'.split()
+	ignore_rtss = 'UniformParameter NormalMapLighting TargetRenderState'.split()
+
+	rpythonic.wrap( 'Ogre', 
+		header='/usr/local/include/OGRE/Ogre.h', 
+		insert_headers = ['/usr/local/include/OGRE/RTShaderSystem/OgreRTShaderSystem.h'],
+		library='/usr/local/lib/libOgreMain.so',
+		dynamic_libs = ['OgreMain', 'OgreRTShaderSystem'],
+		defines=defines, ctypes=True, rffi=True, 
+		ignore_classes = ignore_ogre + ignore_rtss,
+		ignore_functions = ['Ogre::any_cast'],
+		cplusplus=True
+	)
+	assert 0
 
 
 if '--qt' in sys.argv:
@@ -90,26 +111,6 @@ if os.path.isdir( nroot ) and '--naali' in sys.argv:
 		cplusplus=True,
 	)
 
-if '--ogre' in sys.argv:
-	#mod = rpythonic.load( 'Ogre', debug=debug )
-	defines = []
-	ignore_ogre = 'MeshSerializerImpl MeshSerializerImpl_v1_4 MeshSerializerImpl_v1_3 MeshSerializerImpl_v1_2 MeshSerializerImpl_v1_1 InstancedGeometry::MaterialBucket MaterialBucket ScriptCompiler StringUtil'.split()
-	ignore_ogre += 'SharedPtr ExceptionFactory ControllerManager UTFString AnimableValue'.split()
-	ignore_ogre += 'RenderQueueInvocationList RenderQueueInvocationIterator ConstShadowTextureConfigIterator ConstEnabledAnimationStateIterator'.split()
-	ignore_ogre += 'Any AnyNumeric AnimableObject'.split()
-	ignore_rtss = 'UniformParameter NormalMapLighting TargetRenderState'.split()
-
-	rpythonic.wrap( 'Ogre', 
-		header='/usr/local/include/OGRE/Ogre.h', 
-		insert_headers = ['/usr/local/include/OGRE/RTShaderSystem/OgreRTShaderSystem.h'],
-		library='/usr/local/lib/libOgreMain.so',
-		dynamic_libs = ['OgreMain', 'OgreRTShaderSystem'],
-		defines=defines, ctypes=True, rffi=True, 
-		ignore_classes = ignore_ogre + ignore_rtss,
-		ignore_functions = ['Ogre::any_cast'],
-		cplusplus=True
-	)
-	assert 0
 
 if '--ogrepaged' in sys.argv:
 	root = '/usr/local'

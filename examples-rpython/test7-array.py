@@ -18,11 +18,15 @@ def test_float( addr, length ):
 @rpy.bind( addr=int, length=int )
 def test( addr, length ):
 	a = rffi.cast( rffi.DOUBLEP, addr )
+	x = ['<somexml']
 	for i in range( length ):
 		print a[i]
+		x.append( 'attribute="%s"' %a[i] )
+	x.append( '>' )
+	print( ' '.join(x) )
 
 		
-rpy.cache('test7', refresh=0)
+rpy.cache('test7', refresh=1)
 
 ############### testing ##############
 
