@@ -1800,6 +1800,8 @@ def make_pycparser_compatible( data ):
 			if line.strip().endswith(';'): line = ';'; skip = False
 			else: continue
 
+		if '((__noreturn__))' in line.split(): line = line.replace('((__noreturn__))','')	# pthread.h
+
 		if line in ('char *__const__ * _PySequence_BytesToCharpArray(PyObject* self);', 'void _Py_FreeCharPArray(char *__const__ array[]);'):
 			line = ''	# strange cases in python3.2/abstract.h
 
