@@ -4,7 +4,7 @@ sys.path.append('..')
 import rpythonic
 rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython()
+rpy = rpythonic.RPython('threadsafety_test')
 
 @rpy.object
 class MyRpyObject(object):
@@ -16,7 +16,7 @@ class MyRpyObject(object):
 	def append2(self, value=.0 ):
 		self._thread2.append( math.sqrt(value) )
 
-rpy.cache('test4', refresh=1)	
+rpy.cache(refresh=1)	
 
 o = MyRpyObject()
 

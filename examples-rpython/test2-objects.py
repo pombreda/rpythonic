@@ -4,7 +4,7 @@ sys.path.append('..')
 import rpythonic
 rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython()
+rpy = rpythonic.RPython('rpyobject_test')
 
 @rpy.object
 class MyRpyObject(object):
@@ -14,7 +14,7 @@ class MyRpyObject(object):
 	def sum( self ): return self.x + self.y + self.z
 	def show( self ): print '<%s %s %s>' %(self.x, self.y, self.z)
 
-rpy.cache('test2', refresh=1)	
+rpy.cache(refresh=1)	
 
 o = MyRpyObject()
 print o.x

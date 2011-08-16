@@ -4,8 +4,8 @@ sys.path.append('..')
 import rpythonic
 rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython( 'javascript' )
-rprint = rpy.get_rprint()	# normal print won't work
+rpy = rpythonic.RPython( 'jstest', platform='javascript' )
+rprint = rpy.get_rprint()           # normal print won't work
 
 def add( a=1, b=1000 ):			# keyword defaults are given
 	return a+b

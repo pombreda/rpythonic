@@ -2,22 +2,23 @@
 # RPythonic - July 28th, 2011
 # By HartsAntler, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.1pre3'
-
-# py3k compat
+VERSION = '0.4.1'
 
 import os, sys, ctypes, inspect
 import subprocess
+
+ISPYTHON2 = sys.version_info[0] == 2
 
 # this wont work, DAM!
 #os.environ['LD_LIBRARY_PATH'] = '/usr/local/lib'
 #sys.path.append( '/usr/local/lib' )
 #http://stackoverflow.com/questions/856116/changing-ld-library-path-at-runtime-for-ctypes
 
-import CppHeaderParser
-print( 'loaded CppHeaderParser' )
 
 try:
+	import CppHeaderParser
+	print( 'loaded CppHeaderParser' )
+
 	import pycparser		# including pycparser-2.03
 	print( 'loaded pycparser' )
 
@@ -2605,7 +2606,7 @@ class CPP_class( object ):
 					gen_func_names[ gname ] += 1
 					if gen_func_names[ gname ] > 1: gname += str( gen_func_names[gname] )
 
-					path = T['type']; print path
+					path = T['type']; print( path )
 					build_wrapper_function( meth, gname, cpp, get(T)['methods'], path=path, template=T )
 
 			elif 'template_typename' in self.info and not 'template_info' in self.info:
@@ -3798,8 +3799,11 @@ class _rpy_func_bind(object):		# @sub-decorator
 
 	def __call__(self,func):
 		self.function = func
-		self.name = func.func_name
 		self.arguments = args = []
+		if ISPYTHON2:
+			self.name = func.func_name
+		else:
+			self.name = func.__name__
 
 		spec = inspect.getargspec( func )
 		if spec.args: nargs = len(spec.args)
@@ -3812,11 +3816,13 @@ class _rpy_func_bind(object):		# @sub-decorator
 		if spec.args:
 			if self.argtypes:
 				for arg in spec.args: args.append( self.argtypes[arg] )
-			elif func.func_defaults:
+			elif ISPYTHON2:
 				assert len(spec.args) == len(func.func_defaults)
 				for i,arg in enumerate(spec.args): args.append( type(func.func_defaults[i]) )
-			else:	# 'you must either provide keyword defaults or declare the types in the decorator'
-				raise SyntaxError
+			else:
+				assert len(spec.args) == len(func.__defaults__)
+				for i,arg in enumerate(spec.args): args.append( type(func.__defaults__[i]) )
+
 
 		self.wrapper = _rpy_func_wrapper(func)
 		return self.wrapper
@@ -4003,6 +4009,8 @@ class LinuxPackage( object ):
 	def save(self, path ):
 		os.system( 'cp -v %s %s' %(self.path, path) )
 
+
+
 class RPython(object):
 	@staticmethod
 	def acquire_lock(): _RPY_._locks_[ SEM_NAME ].acquire()
@@ -4030,7 +4038,8 @@ class RPython(object):
 
 
 
-	def __init__(self, platform='linux', threading=False, gc='ref'):
+	def __init__(self, name, platform='linux', threading=False, gc='ref'):
+		self.name = name
 		self.platform = platform
 		if platform in 'android ios'.split():
 			from pypy.rpython.lltypesystem import lltype, rffi
@@ -4045,10 +4054,10 @@ class RPython(object):
 		self.wrapped = []
 		self.classes = []
 		#if stackless:
-		if 1: self._setup()
-		#except:
-		#	print( 'pypy not found, this is ok if your only loading from cache' )
-		#	self.AbstractThunk = object
+		try: self._setup()
+		except:
+			print( 'pypy not found, this is ok if your only loading from cache' )
+			self.AbstractThunk = object
 		if threading: self._setup_threading()
 
 
@@ -4212,7 +4221,8 @@ class RPython(object):
 		return fw
 
 
-	def cache(self, mname, refresh=False):		# loads and compiles rpython module for CPython
+	def cache(self, refresh=False):		# loads and compiles rpython module for CPython
+		mname = self.name
 		if refresh:
 			self._gen( mname )
 			mod = load( mname, debug=True )
@@ -4221,7 +4231,17 @@ class RPython(object):
 			except:
 				self._gen( mname )
 				mod = load( mname, debug=True )
+		self._prepare_rpython_module( mod )
+		return mod
 
+	def load(self):
+		try:
+			mod = load( self.name )
+			self._prepare_rpython_module( mod )
+			return mod
+		except: return None
+
+	def _prepare_rpython_module(self, mod ):
 		#if hasattr( mod, 'pypy_g_frameworkgc_setup' ):
 		#	print('setting up pypy framework gc')
 		#	mod.pypy_g_frameworkgc_setup()
@@ -4280,9 +4300,6 @@ class RPython(object):
 					else:
 						print( 'WARN: meth not found in class', n )
 
-
-
-		return mod
 
 
 	def _gen(self,mname):

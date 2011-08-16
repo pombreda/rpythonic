@@ -13,7 +13,7 @@ if '--ogre' in sys.argv:
 	ignore_ogre = 'MeshSerializerImpl MeshSerializerImpl_v1_4 MeshSerializerImpl_v1_3 MeshSerializerImpl_v1_2 MeshSerializerImpl_v1_1 InstancedGeometry::MaterialBucket MaterialBucket ScriptCompiler StringUtil'.split()
 	ignore_ogre += 'SharedPtr ExceptionFactory ControllerManager UTFString AnimableValue'.split()
 	ignore_ogre += 'RenderQueueInvocationList RenderQueueInvocationIterator ConstShadowTextureConfigIterator ConstEnabledAnimationStateIterator'.split()
-	ignore_ogre += 'Any AnyNumeric AnimableObject'.split()
+	ignore_ogre += 'Any AnyNumeric AnimableObject Animation DefaultWorkQueueBase'.split()
 	ignore_rtss = 'UniformParameter NormalMapLighting TargetRenderState'.split()
 
 	rpythonic.wrap( 'Ogre', 

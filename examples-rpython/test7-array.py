@@ -4,7 +4,7 @@ sys.path.append('..')
 import rpythonic
 rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython()
+rpy = rpythonic.RPython('rpyarraytest')
 
 import pypy.rpython.lltypesystem.rffi as rffi
 
@@ -25,8 +25,8 @@ def test( addr, length ):
 	x.append( '>' )
 	print( ' '.join(x) )
 
-		
-rpy.cache('test7', refresh=1)
+
+rpy.cache(refresh=1)
 
 ############### testing ##############
 

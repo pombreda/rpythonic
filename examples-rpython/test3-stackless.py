@@ -5,7 +5,7 @@ import rpythonic
 rpythonic.set_cache( '../cache' )
 rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython()
+rpy = rpythonic.RPython('stackles_test')
 
 
 class _RPYSINGLETON(object):
@@ -109,7 +109,7 @@ def stackless_thread():
 	print( 'rpython stackless test done' )
 
 
-mod = rpy.cache('test3', refresh=0)
+mod = rpy.cache(refresh=0)
 
 ############### testing ##############
 s = Shared()

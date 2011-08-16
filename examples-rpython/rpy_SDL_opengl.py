@@ -4,7 +4,7 @@ import os,sys, time
 if '..' not in sys.path: sys.path.append( '..' )
 import rpythonic
 rpythonic.set_pypy_root( '../../pypy' )
-rpy = rpythonic.RPython( 'linux' )
+rpy = rpythonic.RPython( 'rpySDLtest', platform='linux' )
 gl = rpy.rimport( 'openGL' )
 sdl = rpy.rimport( 'SDL' )
 
