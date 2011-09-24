@@ -26,7 +26,9 @@ def _load_ctypes_lib( name ):
 			elif __os.path.isfile( '/usr/local/lib64/%s'%name ) and not IS32BIT: return ctypes.CDLL('/usr/local/lib64/%s'%name)
 			elif __os.path.isfile( '/usr/lib/%s'%name ): return ctypes.CDLL('/usr/lib/%s'%name)
 			elif __os.path.isfile( './%s'%name ): return ctypes.CDLL('./%s'%name)
-			else: return ctypes.CDLL(name) #fallback
+			else:	# fallback
+				try: return ctypes.CDLL(name)
+				except: return ctypes.CDLL('')
 
 		elif sys.platform == 'darwin':
 			name += '.dylib'
@@ -110,18 +112,20 @@ def _rpythonic_generate_subclass_( name, struct, functions ):
 
 	possibles = {}
 	rank = []		# rank by longest name
-	for n1 in names:
-		prefix = ''
-		for i,char in enumerate(n1):
-			prefix += char
-			if prefix not in possibles:
-				possibles[ prefix ] = 0
-				for n2 in names:
-					if n2.startswith( prefix ):
-						possibles[ prefix ] += 1
+	if len(names) > 3000: print('too many functions to use this hack')
+	else:
+		for n1 in names:
+			prefix = ''
+			for i,char in enumerate(n1):
+				prefix += char
+				if prefix not in possibles:
+					possibles[ prefix ] = 0
+					for n2 in names:
+						if n2.startswith( prefix ):
+							possibles[ prefix ] += 1
 
-				if not rank or len(prefix) > len(rank[-1]) and possibles[prefix] > len(names)/4:
-					rank.append( prefix )
+					if not rank or len(prefix) > len(rank[-1]) and possibles[prefix] > len(names)/4:
+						rank.append( prefix )
 
 	top = []
 	while rank:

@@ -1999,6 +1999,9 @@ def make_pycparser_compatible( data ):
 		if line.strip().startswith('((format (printf,') and line.strip().endswith(')))'):
 			line = ''
 
+		### blender ###
+		if '__attribute__((__unused__))' in line: line = line.replace( '__attribute__((__unused__))', '')
+
 		#######################
 		d += line + '\n'
 	return d

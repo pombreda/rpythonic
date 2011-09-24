@@ -7,6 +7,37 @@ import rpythonic
 ################################
 debug=0
 
+mod = rpythonic.load( 'python3', debug=debug )
+if not mod or '--rffi' in sys.argv:
+	footer = 'PyRun_SimpleString = PyRun_SimpleStringFlags'
+	rpythonic.wrap( 'python3', 
+		header='/usr/include/python3.2/Python.h',
+		library = '/usr/lib/libpython3.2mu.so',
+		ctypes_footer = footer,
+	)
+else:
+	print( mod )
+
+
+broot = '../../blender'
+if os.path.isdir( broot ) and '--blender' in sys.argv:
+	includes = []
+	for d in 'extern/bullet2/src intern/ghost source/blender/ikplugin source/blender/blenloader source/blender/gpu source/blender/windowmanager source/blender/editors/include source/blender/render/extern/include source/blender/imbuf source/blender/makesrna source/blender/makesdna source/blender/blenkernel source/blender/blenlib intern/guardedalloc'.split():
+		includes.append( os.path.join( broot, d ) )
+
+	#rpythonic.wrap( 'bpy', 
+	#	header='./custom-sources/RNA_blender.h',
+	#	includes=includes,
+	#	library = 'bpy.so',
+	#)
+
+	rpythonic.wrap( 'blender', 
+		header='./libblender/blender.h',	# needs RNA_blender.h
+		includes=includes,
+		insert_headers = [ os.path.join( broot, 'source/creator/creator.c' ) ],
+		library = 'bpy.so',
+	)
+	assert 0
 
 if '--ogre' in sys.argv:
 	defines = []
@@ -278,40 +309,40 @@ else:
 	print( mod )
 	#print( dir(mod) )
 
-mod = rpythonic.load( 'openal', debug=debug )
-if not mod:
-	defines = []
-	rpythonic.wrap( 'openal', header='/usr/include/AL/al.h', defines=defines, ctypes=True, rffi=True )
-else:
-	print( mod )
-	#print( dir(mod) )
+if '--openaudio' in sys.argv:
+	mod = rpythonic.load( 'openal', debug=debug )
+	if not mod:
+		defines = []
+		rpythonic.wrap( 'openal', header='/usr/include/AL/al.h', defines=defines, ctypes=True, rffi=True )
+	else:
+		print( mod )
+		#print( dir(mod) )
 
-mod = rpythonic.load( 'alut', debug=debug )
-if not mod:
-	defines = []
-	rpythonic.wrap( 'alut', header='/usr/include/AL/alut.h', defines=defines, ctypes=True, rffi=True )
-else:
-	print( mod )
-	#print( dir(mod) )
+	mod = rpythonic.load( 'alut', debug=debug )
+	if not mod:
+		defines = []
+		rpythonic.wrap( 'alut', header='/usr/include/AL/alut.h', defines=defines, ctypes=True, rffi=True )
+	else:
+		print( mod )
+		#print( dir(mod) )
 
 
+if '--freenect' in sys.argv:
+	mod = rpythonic.load( 'libfreenect', debug=debug )
+	if not mod:
+		defines = []
+		rpythonic.wrap( 'libfreenect', header='/usr/local/include/libfreenect/libfreenect.h', defines=defines)
+	else:
+		print( mod )
+		#print( dir(mod) )
 
-
-mod = rpythonic.load( 'libfreenect', debug=debug )
-if not mod:
-	defines = []
-	rpythonic.wrap( 'libfreenect', header='/usr/local/include/libfreenect/libfreenect.h', defines=defines)
-else:
-	print( mod )
-	#print( dir(mod) )
-
-mod = rpythonic.load( 'libfreenect_sync', debug=debug )
-if not mod:
-	defines = []
-	rpythonic.wrap( 'libfreenect_sync', header='/usr/local/include/libfreenect/libfreenect_sync.h', defines=defines)
-else:
-	print( mod )
-	#print( dir(mod) )
+	mod = rpythonic.load( 'libfreenect_sync', debug=debug )
+	if not mod:
+		defines = []
+		rpythonic.wrap( 'libfreenect_sync', header='/usr/local/include/libfreenect/libfreenect_sync.h', defines=defines)
+	else:
+		print( mod )
+		#print( dir(mod) )
 
 mod = rpythonic.load( 'gtk', debug=debug )
 if not mod:
@@ -383,28 +414,28 @@ for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 		library= '/usr/lib/libgtk-x11-2.0.so',
 	)
 else:
-	print( mod )
-	#print( dir(mod) )
+	print( 'Already Wrapped Gtk2', mod )
 
-mod = rpythonic.load( 'gtk3', debug=debug )
-if not mod:
-	includes = [
-		'/usr/include/gtk-3.0/',
-		'/usr/include/glib-2.0/',
-		'/usr/lib/glib-2.0/include/',
-		'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
-		'/usr/include/pango-1.0/',					# pango.h
-		'/usr/include/cairo/',
-		'/usr/include/gdk-pixbuf-2.0/',
-		'/usr/include/atk-1.0/',
-	]
-	rpythonic.wrap( 'gtk3', 
-		header='/usr/include/gtk-3.0/gtk/gtk.h', 
-		library='/usr/lib/libgtk-3.so',
-		includes=includes,
-	)
-else:
-	print( mod )
+if '--gtk3' in sys.argv:
+	mod = rpythonic.load( 'gtk3', debug=debug )
+	if not mod:
+		includes = [
+			'/usr/include/gtk-3.0/',
+			'/usr/include/glib-2.0/',
+			'/usr/lib/glib-2.0/include/',
+			'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
+			'/usr/include/pango-1.0/',					# pango.h
+			'/usr/include/cairo/',
+			'/usr/include/gdk-pixbuf-2.0/',
+			'/usr/include/atk-1.0/',
+		]
+		rpythonic.wrap( 'gtk3', 
+			header='/usr/include/gtk-3.0/gtk/gtk.h', 
+			library='/usr/lib/libgtk-3.so',
+			includes=includes,
+		)
+	else:
+		print( mod )
 
 
 mod = rpythonic.load( 'openGL', debug=debug )
@@ -434,40 +465,30 @@ else:
 	print( mod )
 
 
+if '--vnc' in sys.argv:
+	mod = rpythonic.load( 'vncserver', debug=debug )
+	if not mod:
+		rpythonic.wrap( 'vncserver', header='/usr/include/rfb/rfb.h' )
+	else:
+		print( mod )
 
-mod = rpythonic.load( 'vncserver', debug=debug )
-if not mod:
-	rpythonic.wrap( 'vncserver', header='/usr/include/rfb/rfb.h' )
-else:
-	print( mod )
-
-mod = rpythonic.load( 'vncclient', debug=debug )
-if not mod:
-	rpythonic.wrap( 'vncclient', header='/usr/include/rfb/rfbclient.h' )
-else:
-	print( mod )
-
-
-mod = rpythonic.load( 'python3', debug=debug )
-if not mod or '--rffi' in sys.argv:
-	footer = 'PyRun_SimpleString = PyRun_SimpleStringFlags'
-	rpythonic.wrap( 'python3', 
-		header='/usr/include/python3.2/Python.h',
-		library = '/usr/lib/libpython3.2mu.so',
-		ctypes_footer = footer,
-		rffi=True,
-	)
-else:
-	print( mod )
+	mod = rpythonic.load( 'vncclient', debug=debug )
+	if not mod:
+		rpythonic.wrap( 'vncclient', header='/usr/include/rfb/rfbclient.h' )
+	else:
+		print( mod )
 
 
-mod = rpythonic.load( 'wiiuse', debug=debug )
-if not mod:
-	footer = '''
+
+
+if '--wiiuse' in sys.argv:
+	mod = rpythonic.load( 'wiiuse', debug=debug )
+	if not mod:
+		footer = '''
 def IS_PRESSED(dev, button): return ((dev.contents.buttons & button) == button)
 
 def IS_HELD(dev, button): return ((dev.contents.buttons_held & button) == button)
-      
+	
 def IS_RELEASED(dev, button): return  ((dev.contents.buttons_released & button) == button)
 
 def IS_JUST_PRESSED(dev, button): return  (IS_PRESSED(dev, button) and not IS_HELD(dev, button))
@@ -499,14 +520,14 @@ WIIMOTE_STATE_IR_SENS_LVL4 = 0x1000
 WIIMOTE_STATE_IR_SENS_LVL5 = 0x2000
 WIIMOTE_INIT_STATES = WIIMOTE_STATE_IR_SENS_LVL3
 
-	'''
-	rpythonic.wrap( 'wiiuse', 
-		header='./custom-sources/rpavlik-wiiuse-0.14.0/src/wiiuse.h',
-		library = 'libwiiuse.so',
-		ctypes_footer = footer
-	)
-else:
-	print( mod )
+		'''
+		rpythonic.wrap( 'wiiuse', 
+			header='./custom-sources/rpavlik-wiiuse-0.14.0/src/wiiuse.h',
+			library = 'libwiiuse.so',
+			ctypes_footer = footer
+		)
+	else:
+		print( mod )
 
 
 # missing#webkit/webkitversion.h
@@ -530,23 +551,7 @@ if 0:
 	else:
 		print( mod )
 
-broot = '../../blender'
-if os.path.isdir( broot ) and '--blender' in sys.argv:
-	includes = []
-	for d in 'extern/bullet2/src intern/ghost source/blender/ikplugin source/blender/blenloader source/blender/gpu source/blender/windowmanager source/blender/editors/include source/blender/render/extern/include source/blender/imbuf source/blender/makesrna source/blender/makesdna source/blender/blenkernel source/blender/blenlib intern/guardedalloc'.split():
-		includes.append( os.path.join( broot, d ) )
 
-	#rpythonic.wrap( 'bpy', 
-	#	header='./custom-sources/RNA_blender.h',
-	#	includes=includes,
-	#	library = 'bpy.so',
-	#)
-
-	rpythonic.wrap( 'blender', 
-		header='./custom-sources/blender.h',
-		includes=includes,
-		library = 'bpy.so',
-	)
 
 
 
