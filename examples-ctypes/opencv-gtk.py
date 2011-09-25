@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # may5th 2011, test ported to ctypes opencv
-import os,sys, time
+import os,sys, time, ctypes
 
 if '..' not in sys.path: sys.path.append( '..' )
 import rpythonic
@@ -12,7 +12,11 @@ assert gui
 
 gtk = rpythonic.module( 'gtk' )
 assert gtk
+gtk.init()
 
+#pix = gtk.gdk_pixbuf_new( gtk.GDK_COLORSPACE_RGB, True, 8, 640, 480)
+#img = gtk.Image()
+#assert 0
 
 _colorspaces = '''
 CV_BGR2GRAY
@@ -106,9 +110,11 @@ def make_transparent(widget, color=BG_COLOR ):
 	widget.set_colormap(colormap)
 	return False
 
+BUFFER_TYPE = (ctypes.c_ubyte * (640*480*3))
 
 class UI(object):
 	def __init__(self, cam ):
+		cam._ui = self
 		self.active = True
 		layers = self.layers = cam.layers		# shared
 
@@ -121,6 +127,24 @@ class UI(object):
 		root = gtk.HBox(); root.set_border_width( 3 )
 		win.add( root )
 
+		raw = BUFFER_TYPE()
+		for x in range( 640*480*3 ): raw[x] = 64
+		self.pixbuffer = ctypes.pointer( raw )
+		cam._pixbuffer = self.pixbuffer
+		#pix = gtk.gdk_pixbuf_new( gtk.GDK_COLORSPACE_RGB, True, 8, 640, 480)
+		pix = gtk.gdk_pixbuf_new_from_data(
+			self.pixbuffer, 
+			gtk.GDK_COLORSPACE_RGB,
+			False,	# ALPHA
+			8,		# bits per sample
+			640,
+			480,
+			640*3,	# row-stride
+		)
+		self._gdk_pixbuf = pix
+		img = gtk.gtk_image_new_from_pixbuf( pix )	# returns GtkWidget, should return GtkImage
+		self.image = img
+		root.pack_start( img )
 		#####################################
 		#eb = gtk.EventBox()
 		#root.pack_start( eb, expand=False )
@@ -137,6 +161,8 @@ class UI(object):
 		split = gtk.VBox(); #eb.add( split )
 		root.pack_start( split )
 		#########################make_transparent(split)
+
+		
 
 		header = gtk.HBox(); split.pack_start( header, expand=False )
 		b = gtk.Button('open blender')
@@ -244,7 +270,7 @@ class Camera(object):
 		self.active = False
 		self.index = 0
 		self.cam = gui.CreateCameraCapture(self.index)
-		self.win = gui.NamedWindow('webcam', 1)
+		#self.win = gui.NamedWindow('webcam', 1)
 		self.resize( 640, 480 )
 
 		self.layers = []
@@ -277,7 +303,12 @@ class Camera(object):
 		_gray32 = self._gray32
 
 		while self.active:
+			if gtk.gtk_events_pending():
+				while gtk.gtk_events_pending():
+					gtk.gtk_main_iteration()
+			print('sync cam')
 			_frame = self.cam.QueryFrame()	# IplImage from highgui lacks fancy methods
+
 			for layer in self.layers:
 				if not layer.active: continue
 				a = cv.CreateImage( (self.width,self.height), cv.IPL_DEPTH_8U, 3 )		# has fancy methods
@@ -325,11 +356,35 @@ class Camera(object):
 						cv.CvtColor(a, _rgb8, cv.CV_GRAY2RGB)
 						a = _rgb8
 
-				gui.ShowImage( 'webcam', a )
-				gui.WaitKey(1)
+				#gui.ShowImage( 'webcam', a )
+				#gui.WaitKey(1)
+				s = ctypes.string_at( a.imageData, 640*480*3 )
+				#print( s )
+				#ptr = ctypes.cast( a.imageData, ctypes.POINTER( BUFFER_TYPE ) )
+				#ctypes.memmove( self._pixbuffer, ptr, 640*480*3 )
+				#for i in range(640*480*3): self._pixbuffer.contents[i]= ord(s[i])
+
+				raw = BUFFER_TYPE()
+				for i in range( 640*480*3 ): raw[i] = ord(s[i])
+				pixbuffer = ctypes.pointer( raw )
+				#pix = gtk.gdk_pixbuf_new( gtk.GDK_COLORSPACE_RGB, True, 8, 640, 480)
+				pix = gtk.gdk_pixbuf_new_from_data(
+					pixbuffer, 
+					gtk.GDK_COLORSPACE_RGB,
+					False,	# ALPHA
+					8,		# bits per sample
+					640,
+					480,
+					640*3,	# row-stride
+				)
+				#self._ui.image.set_from_pixbuf( pix )	# TODO fix me
+				gtk.image_set_from_pixbuf( self._ui.image, pix )
+				#pix.copy_area( 0, 0, 640, 480, self._ui._gdk_pixbuf, 0, 0 )
+
+		print('exit camera loop')
 
 c = Camera()
 ui = UI( c )
-#c.loop()
-gtk.main()
+c.loop()
+#gtk.main()
 

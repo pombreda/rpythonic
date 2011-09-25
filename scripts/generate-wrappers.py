@@ -2,21 +2,19 @@
 import os, sys
 sys.path.append('..')
 import rpythonic
-#rpythonic.set_cache( '../cache' )	# the default cache is rpythonic/cache/
-#rpythonic.set_pypy_root( '../../pypy' )
-################################
+
 debug=0
 
-mod = rpythonic.load( 'python3', debug=debug )
-if not mod or '--rffi' in sys.argv:
+
+
+
+if '--python3' in sys.argv:
 	footer = 'PyRun_SimpleString = PyRun_SimpleStringFlags'
 	rpythonic.wrap( 'python3', 
 		header='/usr/include/python3.2/Python.h',
 		library = '/usr/lib/libpython3.2mu.so',
 		ctypes_footer = footer,
 	)
-else:
-	print( mod )
 
 
 broot = '../../blender'
@@ -79,7 +77,6 @@ if '--qt' in sys.argv:
 		cplusplus=True,
 	)
 
-	assert 0
 
 if '--g3d' in sys.argv:
 	ignore_funcs = ['G3D::'+n for n in 'toString glGetCurrentContext gcchtonl zipfileExists stringPtrCompare failureHook assertionHook debugPrint consolePrint consolePrintHook'.split()]
@@ -114,7 +111,6 @@ if '--irr' in sys.argv:
 		cplusplus=True,
 	)
 #'SMaterialLayer', 'IDynamicMeshBuffer', 'CVertexBuffer', 'CIndexBuffer', 'CDynamicMeshBuffer', 'IImage', 'IGUIElement', 'IMaterialRenderer',  ],
-	assert 0
 
 nroot = '../../naali'
 if os.path.isdir( nroot ) and '--naali' in sys.argv:
@@ -165,9 +161,6 @@ if '--ogrepaged' in sys.argv:
 	)
 
 
-	assert 0
-
-
 
 
 broot = '/usr/local/include/bullet'	# tested with bullet 2.77, something broken in 2.78?
@@ -191,11 +184,9 @@ if os.path.isdir( broot ) and '--bullet' in sys.argv:
 	#	library = '/usr/local/lib/BulletCollision/libBulletCollision.so',
 	#	cplusplus=True,
 	#)
-	assert 0
 
 
-mod = rpythonic.load( 'SDL', debug=debug )
-if not mod or '--rffi' in sys.argv:
+if '--sdl' in sys.argv:
 	defines = []
 	rpythonic.wrap( 
 		'SDL', 
@@ -203,12 +194,9 @@ if not mod or '--rffi' in sys.argv:
 		#insert_headers = ['/usr/include/SDL/SDL_opengl.h'],
 		defines=defines, rffi=True 
 	)
-else:
-	print( mod )
 
 
-mod = rpythonic.load( 'ode', debug=debug )
-if not mod or '--rffi' in sys.argv:
+if '--ode' in sys.argv:
 	defines = ['dDOUBLE']
 	footer = '''
 ### ode headers sometimes define a return type as a pointer, when it should be an array ###
@@ -234,15 +222,11 @@ for func in ( dBodyGetQuaternion,  ):
 	rpythonic.wrap( 'ode', header='/usr/include/ode/ode.h', 
 		defines=defines, rffi=True, ctypes_footer=footer 
 	)
-else:
-	print( mod )
 
 
 
 
-
-mod = rpythonic.load( 'cv', debug=debug )
-if not mod:
+if '--opencv' in sys.argv:
 	## need to inject some aliases and globals ##
 	footer = '''
 IPL_DEPTH_1U = 1
@@ -288,71 +272,57 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 		insert_headers = ['/usr/include/opencv/cvtypes.h'],
 		ctypes_footer = footer
 	)
-else:
-	print( mod )
 
-mod = rpythonic.load( 'cvaux', debug=debug )
-if not mod:
 	rpythonic.wrap( 
 		'cvaux', 
 		header='/usr/include/opencv/cvaux.h', 
 	)
-else:
-	print( mod )
 
-
-mod = rpythonic.load( 'highgui', debug=debug )
-if not mod:
 	defines = []
-	rpythonic.wrap( 'highgui', header='/usr/include/opencv/highgui.h', defines=defines, ctypes=True, rffi=True )
-else:
-	print( mod )
-	#print( dir(mod) )
+	rpythonic.wrap( 'highgui', header='/usr/include/opencv/highgui.h', defines=defines )
 
 if '--openaudio' in sys.argv:
-	mod = rpythonic.load( 'openal', debug=debug )
-	if not mod:
-		defines = []
-		rpythonic.wrap( 'openal', header='/usr/include/AL/al.h', defines=defines, ctypes=True, rffi=True )
-	else:
-		print( mod )
-		#print( dir(mod) )
+	defines = []
+	rpythonic.wrap( 'openal', header='/usr/include/AL/al.h', defines=defines )
 
-	mod = rpythonic.load( 'alut', debug=debug )
-	if not mod:
-		defines = []
-		rpythonic.wrap( 'alut', header='/usr/include/AL/alut.h', defines=defines, ctypes=True, rffi=True )
-	else:
-		print( mod )
-		#print( dir(mod) )
+	defines = []
+	rpythonic.wrap( 'alut', header='/usr/include/AL/alut.h', defines=defines )
 
 
 if '--freenect' in sys.argv:
-	mod = rpythonic.load( 'libfreenect', debug=debug )
-	if not mod:
-		defines = []
-		rpythonic.wrap( 'libfreenect', header='/usr/local/include/libfreenect/libfreenect.h', defines=defines)
-	else:
-		print( mod )
-		#print( dir(mod) )
+	defines = []
+	rpythonic.wrap( 'libfreenect', header='/usr/local/include/libfreenect/libfreenect.h', defines=defines)
 
-	mod = rpythonic.load( 'libfreenect_sync', debug=debug )
-	if not mod:
-		defines = []
-		rpythonic.wrap( 'libfreenect_sync', header='/usr/local/include/libfreenect/libfreenect_sync.h', defines=defines)
-	else:
-		print( mod )
-		#print( dir(mod) )
+	defines = []
+	rpythonic.wrap( 'libfreenect_sync', header='/usr/local/include/libfreenect/libfreenect_sync.h', defines=defines)
 
-mod = rpythonic.load( 'gtk', debug=debug )
-if not mod:
+GINCLUDE = [
+	'/usr/include/gtk-2.0/',
+	'/usr/include/glib-2.0/',
+	'/usr/lib/glib-2.0/include/',
+	'/usr/include/cairo/',
+	'/usr/include/pango-1.0/',
+	'/usr/include/atk-1.0/',
+	'/usr/include/gdk-pixbuf-2.0/',
+	'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
+	'/usr/lib/gtk-2.0/include/',				# gdkconfig.h
+]
+
+if '--wnck' in sys.argv:
+	#sudo apt-get install libwnck-dev
+	rpythonic.wrap( 'wnck', 
+		defines = ['WNCK_I_KNOW_THIS_IS_UNSTABLE'],
+		includes=[ '/usr/include/libwnck-1.0'] + GINCLUDE,
+		header='/usr/include/libwnck-1.0/libwnck/libwnck.h',
+		library = '/usr/lib/libwnck-1.so',
+	)
+
+if '--gtk' in sys.argv:
 	includes = [
 		'/usr/include/gtk-2.0/',
 		'/usr/include/glib-2.0/',
 		'/usr/lib/glib-2.0/include/',
-		'/usr/include/cairo/',
 		'/usr/include/pango-1.0/',
-		'/usr/include/gdk-pixbuf-2.0/',
 		'/usr/include/atk-1.0/',
 		'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
 		'/usr/lib/gtk-2.0/include/',				# gdkconfig.h
@@ -413,8 +383,7 @@ for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 		includes=includes, ctypes_footer=footer,
 		library= '/usr/lib/libgtk-x11-2.0.so',
 	)
-else:
-	print( 'Already Wrapped Gtk2', mod )
+
 
 if '--gtk3' in sys.argv:
 	mod = rpythonic.load( 'gtk3', debug=debug )
@@ -438,31 +407,17 @@ if '--gtk3' in sys.argv:
 		print( mod )
 
 
-mod = rpythonic.load( 'openGL', debug=debug )
-if not mod or '--rffi' in sys.argv:
-	rpythonic.wrap( 'openGL', header='/usr/include/GL/gl.h', library='/usr/lib/libGL.so', rffi=True )
-else:
-	print( mod )
+if '--opengl' in sys.argv:
+	rpythonic.wrap( 'openGL', header='/usr/include/GL/gl.h', library='/usr/lib/libGL.so' )
 
-mod = rpythonic.load( 'openGLU', debug=debug )
-if not mod or '--rffi' in sys.argv:
-	rpythonic.wrap( 'openGLU', header='/usr/include/GL/glu.h', library='/usr/lib/libGLU.so', rffi=True )
-else:
-	print( mod )
-	#print( dir(mod) )
+if '--openglu' in sys.argv:
+	rpythonic.wrap( 'openGLU', header='/usr/include/GL/glu.h', library='/usr/lib/libGLU.so' )
 
-mod = rpythonic.load( 'openGLUT', debug=debug )
-if not mod or '--rffi' in sys.argv:
-	rpythonic.wrap( 'openGLUT', header='/usr/include/GL/glut.h', library='/usr/lib/libglut.so', rffi=True )
-else:
-	print( mod )
-	#print( dir(mod) )
+if '--openglut' in sys.argv:
+	rpythonic.wrap( 'openGLUT', header='/usr/include/GL/glut.h', library='/usr/lib/libglut.so' )
 
-mod = rpythonic.load( 'openjpeg', debug=debug )
-if not mod:
+if '--openjpeg' in sys.argv:
 	rpythonic.wrap( 'openjpeg', header='/usr/include/openjpeg.h' )
-else:
-	print( mod )
 
 
 if '--vnc' in sys.argv:

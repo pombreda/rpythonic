@@ -1,7 +1,5 @@
 #!/usr/bin/python
-
 import os,sys, time, subprocess
-#http://www.kryogenix.org/days/2006/06/13/doing-a-show-desktop-using-pythons-libwnck-bindings
 import wnck	# apt-get install gnome-python-extras
 
 if '..' not in sys.path: sys.path.append( '..' )
@@ -29,9 +27,7 @@ class MultiBlender(object):
 		frame.set_border_width( 4 )
 
 		self._notebook = note = gtk.Notebook()
-		print( note, dir(note) )
 		frame.add( note )
-		#note.set_tab_pos( gtk.POS_LEFT )
 		self._pages = []
 		self._sockets = []
 		self._procs = []
@@ -41,13 +37,11 @@ class MultiBlender(object):
 			self._procs.append(
 				subprocess.Popen( [exe]+ '--window-geometry 0 0 640 480'.split() )
 			)
-
 			frame = gtk.Frame(); self._pages.append( frame )
 			frame.set_size_request( 640, 480 )
 			note.append_page( frame, gtk.Label( 'blender %s' %i ) )
 
 		win.show_all()
-		#win.maximize()
 		self._blender_windows = []
 
 
@@ -55,14 +49,12 @@ class MultiBlender(object):
 	def add_blender_page(self):
 		self._waiting = True
 		self._not_ready -= 1
-
-
 		wins = None
-		for i in range( 10 ): # only try this ten times
+		for i in range( 10 ): 	# only try this ten times
 			time.sleep( 0.25 )
 			wins = self.get_blender_windows()
 			if wins: break
-			if gtk.gtk_events_pending(): gtk.gtk_main_iteration()	# seems to fix no windows
+			if gtk.gtk_events_pending(): gtk.gtk_main_iteration()	# required
 		if not wins: assert 0	# this should never happen
 		else:
 			w = wins[0]
@@ -73,11 +65,9 @@ class MultiBlender(object):
 			soc.connect('plug-added', self.on_plug)
 			frame.add( soc )
 			frame.show_all()
-			soc.show()
 
 			wid = w.get_xid()
-			print( dir(w) )
-			w.shade()	#w.minimize() minimize won't work
+			w.shade()	# shade is the trick
 			w.make_below()
 			w.set_skip_pager(True)
 			self._blender_windows.append( w )
@@ -107,31 +97,20 @@ class MultiBlender(object):
 		print( 'on plug:', self._plugs )
 		for i,soc in enumerate(self._sockets):
 			sub = soc.gtk_socket_get_plug_window()
-			print(dir(sub))
-			#sub.set_size_request( 640, 800 )	# not possible
-			#sub.set_default_size( 640, 800 )	# not possible
-			#if not sub.get_title().startswith('hack'):
 			sub.set_title('hack%s' %i)
 			bwin = self._blender_windows[ i ]
 			bwin.unshade()
-			#bwin.set_geometry( x=0, y=0, width=800, height=800, gravity=0, geometry_mask=1 )
 
 		if self._plugs == self._num_blenders:
-			#self._window.maximize()
 			print( '---embed complete---' )
 		else:
 			print( '...waiting for other blenders to embed...' )
 
 mb = MultiBlender()
-
-#gtk.main()
 while True:
 	if gtk.gtk_events_pending(): gtk.gtk_main_iteration()
-	elif mb._not_ready and not mb._waiting:		# and mb._blender_windows:
-		#print('doing embed')
-		#mb.embed()
+	elif mb._not_ready and not mb._waiting:
 		mb.add_blender_page()
-
 
 print('exit')
 

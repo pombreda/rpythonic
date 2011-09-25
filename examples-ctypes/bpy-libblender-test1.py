@@ -1,4 +1,34 @@
 #!/usr/bin/python3
+#!../../pypy-1.6/bin/pypy
+'''
+PyPy1.6 fails:
+
+/home/brett/.rpythonic/clibs/linux32/libbpy.so
+Traceback (most recent call last):
+  File "app_main.py", line 53, in run_toplevel
+  File "./bpy-libblender-test1.py", line 12, in <module>
+    blender = rpythonic.module( 'blender' )
+  File "../rpythonic/rpythonic.py", line 375, in module
+    mod = load( name, mode, platform )
+  File "../rpythonic/rpythonic.py", line 324, in load
+    if debug: mod = _load( name, mode, platform )
+  File "../rpythonic/rpythonic.py", line 319, in _load
+    fromlist=[name]
+  File "/home/brett/.rpythonic/genctypes/blender/__init__.py", line 7672, in <module>
+    ( "toolsettings", ctypes.POINTER(ToolSettings) ),
+  File "/home/brett/pypy-1.6/lib_pypy/_ctypes/pointer.py", line 179, in POINTER
+    {'_type_': cls})
+  File "/home/brett/pypy-1.6/lib_pypy/_ctypes/pointer.py", line 31, in __new__
+    self.set_type(obj, typedict['_type_'])
+  File "/home/brett/pypy-1.6/lib_pypy/_ctypes/pointer.py", line 70, in set_type
+    self._ffiargtype = _ffi.types.Pointer(TP.get_ffi_argtype())
+  File "/home/brett/pypy-1.6/lib_pypy/_ctypes/basics.py", line 57, in get_ffi_argtype
+    return _shape_to_ffi_type(self._ffiargshape)
+  File "/home/brett/pypy-1.6/lib_pypy/_ctypes/basics.py", line 200, in _shape_to_ffi_type
+    return shape[0].get_ffi_type()
+MemoryError
+
+'''
 
 import os,sys, time, ctypes
 from random import *
