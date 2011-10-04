@@ -4,8 +4,13 @@ sys.path.append('..')
 import rpythonic
 
 debug=0
-
-
+if '--emokit' in sys.argv:
+	#apt-get install libmcrypt-dev liboscpack-dev
+	#git clone http://github.com/qdot/emokit.git
+	rpythonic.wrap( 'emokit', 
+		header='/usr/local/include/libepoc.h',
+		library = '/usr/local/lib/libepoc.so',
+	)
 
 
 if '--python3' in sys.argv:
@@ -318,22 +323,32 @@ if '--wnck' in sys.argv:
 	)
 
 if '--gtk' in sys.argv:
-	includes = [
-		'/usr/include/gtk-2.0/',
-		'/usr/include/glib-2.0/',
-		'/usr/lib/glib-2.0/include/',
-		'/usr/include/pango-1.0/',
-		'/usr/include/atk-1.0/',
-		'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
-		'/usr/lib/gtk-2.0/include/',				# gdkconfig.h
-	]
 	footer = '''
 
 gtk_window_new.defaults[0] = GTK_WINDOW_TOPLEVEL
 
-def connect( ptr, name, func, data=None ):
-	gtk_signal_connect_while_alive( ptr, name, func, data, ptr )
+def connect( ptr, name, func, *args ):
+	if not args: userdata = None
+	else:
+		if hasattr( func, 'im_self' ): self = func.im_self
+		elif hasattr( func, '__self__' ): self = func.__self__
+		else: self = None
 
+		if len(args)==1:
+			userdata = ctypes.pointer( ctypes.py_object(args[0]) )
+		else:
+			userdata = ctypes.pointer( ctypes.py_object(args) )
+
+		## must keep userdata pointer ##
+		if self:
+			if not hasattr( self, '_gtk_connect_hack' ):
+				self._gtk_connect_hack = {}
+			self._gtk_connect_hack[ func ] = (args,userdata)
+		else:
+			func._gtk_connect_hack = (args,userdata)
+
+	#return gtk_signal_connect_while_alive( ptr, name, func, userdata, ptr )
+	return g_signal_connect_object( ptr, name, func, userdata )
 
 RPYTHONIC_AUTOPREFIX_IGNORE.append( 'gdk_' )
 RPYTHONIC_AUTOPREFIX_IGNORE.append( 'atk_' )
@@ -380,7 +395,7 @@ for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 	rpythonic.wrap( 
 		'gtk', 
 		header='/usr/include/gtk-2.0/gtk/gtk.h', 
-		includes=includes, ctypes_footer=footer,
+		includes=GINCLUDE, ctypes_footer=footer,
 		library= '/usr/lib/libgtk-x11-2.0.so',
 	)
 
@@ -437,23 +452,22 @@ if '--vnc' in sys.argv:
 
 
 if '--wiiuse' in sys.argv:
-	mod = rpythonic.load( 'wiiuse', debug=debug )
-	if not mod:
-		footer = '''
+	#git clone http://github.com/rpavlik/wiiuse.git
+	footer = '''
 def IS_PRESSED(dev, button): return ((dev.contents.buttons & button) == button)
 
 def IS_HELD(dev, button): return ((dev.contents.buttons_held & button) == button)
-	
+
 def IS_RELEASED(dev, button): return  ((dev.contents.buttons_released & button) == button)
 
 def IS_JUST_PRESSED(dev, button): return  (IS_PRESSED(dev, button) and not IS_HELD(dev, button))
 
 def WIIUSE_USING_ACC(dev):  return ((dev.contents.state & 0x020) == 0x020)
-  
+
 def WIIUSE_USING_EXP(dev): return ((dev.contents.state & 0x040) == 0x040)
-  
+
 def WIIUSE_USING_IR(dev): return ((dev.contents.state & 0x080) == 0x080)
-  
+
 def WIIUSE_USING_SPEAKER(dev): return ((dev.contents.state & 0x100) == 0x100)
 
 WIIUSE_SMOOTHING = 0x01
@@ -475,14 +489,12 @@ WIIMOTE_STATE_IR_SENS_LVL4 = 0x1000
 WIIMOTE_STATE_IR_SENS_LVL5 = 0x2000
 WIIMOTE_INIT_STATES = WIIMOTE_STATE_IR_SENS_LVL3
 
-		'''
-		rpythonic.wrap( 'wiiuse', 
-			header='./custom-sources/rpavlik-wiiuse-0.14.0/src/wiiuse.h',
-			library = 'libwiiuse.so',
-			ctypes_footer = footer
-		)
-	else:
-		print( mod )
+	'''
+	rpythonic.wrap( 'wiiuse', 
+		header='/usr/local/include/wiiuse.h',
+		library = '/usr/local/lib/libwiiuse.so',
+		ctypes_footer = footer
+	)
 
 
 # missing#webkit/webkitversion.h

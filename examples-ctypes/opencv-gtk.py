@@ -54,18 +54,23 @@ class LayerConfig(object):
 		self.split_red = self.split_green = self.split_blue = False
 		for fx in FXtypes: setattr(self, fx, False )
 
+	def _cb_toggle( self, *args ):
+		print( args )
+
+
 	def widget( self, notebook ):
 		cspace = ColorSpacesByValue[ self.colorspace ]
 		tag = cspace.split('2')[-1]
 		page = gtk.HBox()
 		h = gtk.HBox()
 		b = gtk.CheckButton()
-		#TODO b.connect('toggled', lambda b,lay: setattr(lay,'active',bool(b.get_active())), layer)
+
+		b.connect('toggled', self._cb_toggle)#, 'active')
+		#lambda b,lay: setattr(lay,'active',bool(b.get_active())), layer)
 		b.set_active( bool(self.active) )
 		h.pack_start( b, expand=False )
 		h.pack_start( gtk.Label(tag) )
 		notebook.append_page( page, h )
-
 		h.show_all()		# required - Gtk bug
 
 		col1, col2 = gtk.VBox(), gtk.VBox()
@@ -94,6 +99,7 @@ class LayerConfig(object):
 						bx = fxgroups[fx]
 						break
 				if not bx:
+					print(name,val)
 					adjust = gtk.Adjustment(
 						value=val, 
 						lower=0, upper=255, 

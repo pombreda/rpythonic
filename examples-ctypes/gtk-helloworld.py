@@ -24,11 +24,16 @@ win.add( frame )
 button = gtk.button_new_with_label("test")
 frame.add( button )
 
-def callback(*args): print('python callback')
-button.connect( 'clicked', callback )
+def callback(*args):
+	print('python callback')
+	print(args)
+button.connect( 'clicked', callback, 'arg-to-cb' )
 
 win.show_all()
-gtk.main()
+#gtk.main()
+while True:
+	if gtk.gtk_events_pending():
+		gtk.gtk_main_iteration()
 
 print('exit')
 
