@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - July 28th, 2011
+# RPythonic - Dec, 2011
 # By HartsAntler, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.1'
+VERSION = '0.4.4c'
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -327,7 +327,7 @@ def load( name, mode='ctypes', platform='', debug=True ):	# load module
 		except: print( 'failed to load module', name )
 	return mod
 
-class ModuleWrapper(object):
+class ModuleWrapper(object):		# TODO DEPRECATE ME
 	## backdoor to define manual wrappers
 	# module( somefunc, returns, arg )
 	def __call__(self, name, result=ctypes.c_void_p, *args ):
@@ -383,6 +383,7 @@ def module( name, space=None, mode='ctypes', platform='', secondary=None, fold_c
 ########### Wrapper API ############
 
 CTYPES_FOOTER = ''
+
 def wrap(
 	name, 
 	header=None, 
@@ -394,15 +395,15 @@ def wrap(
 	undefines=[], 
 	includes=[], 
 	ctypes=True, 
-	rffi=False, 
 	cplusplus=False, 
 	platform='linux', 
 	system_include=None, 
 	ignore_classes = [],
 	ignore_functions = [],
+	strip_prefixes = [],
 	ctypes_footer='' ):
 
-	global LIBS, CTYPES_OUTPUT, RFFI_OUTPUT, INCLUDE_DIRS, SYS_INCLUDE_DIRS, MACRO_DEFS, MACRO_UNDEFS, INSERT_HEADERS, CTYPES_FOOTER
+	global LIBS, CTYPES_OUTPUT, RFFI_OUTPUT, INCLUDE_DIRS, SYS_INCLUDE_DIRS, MACRO_DEFS, MACRO_UNDEFS, INSERT_HEADERS, CTYPES_FOOTER, STRIP_PREFIXES
 
 	_reset_wrapper_state()
 	LIBS = []
@@ -410,6 +411,7 @@ def wrap(
 	INSERT_HEADERS = list( insert_headers )
 	SYS_INCLUDE_DIRS = []
 	CTYPES_FOOTER = ctypes_footer
+	STRIP_PREFIXES = list( strip_prefixes )
 
 	if system_include:
 		SYS_INCLUDE_DIRS.append( system_include )
@@ -429,25 +431,13 @@ def wrap(
 
 
 	if library: LIBS.append( library )
-	#for d in defines: MACRO_DEFS.append( d )
 	MACRO_DEFS = list( defines )
 	MACRO_UNDEFS = list( undefines )
 
 	if ctypes:
-		pre = os.path.join( 'genctypes', name )	# ctypes should not have a platform?
-		mdir = os.path.join( CACHEDIR, pre )
-		if not os.path.isdir( mdir ):
-			os.makedirs( mdir )
-			open( os.path.join(os.path.join(CACHEDIR,'genctypes'),'__init__.py'), 'wb' )
-		CTYPES_OUTPUT = os.path.join(pre,'__init__.py')
-
-	if rffi:
-		pre = os.path.join( 'rffi'+platform, name )
-		mdir = os.path.join( CACHEDIR, pre )
-		if not os.path.isdir( mdir ):
-			os.makedirs( mdir )
-			open( os.path.join(os.path.join(CACHEDIR,'rffi'+platform),'__init__.py'), 'wb' )
-		RFFI_OUTPUT = os.path.join(pre,'__init__.py')
+		mdir = os.path.join( CACHEDIR, name )
+		if not os.path.isdir( mdir ): os.makedirs( mdir )
+		CTYPES_OUTPUT = os.path.join(name,'__init__.py')
 
 	if cplusplus:
 		a = CPlusPlus( header )
@@ -456,13 +446,10 @@ def wrap(
 		for n in ignore_classes: a.add_ignore_class( n )
 		for n in ignore_functions: a.add_ignore_function( n )
 
+	else:	# pycparser C
+		a = C( header )
 
-	else: a = C( header )
-
-	a.save( name )
-
-	if not platform:
-		return _load( name, 'ctypes' )
+	return a.save( name )
 
 
 
@@ -520,103 +507,6 @@ def translate_rpython( func, inline=True, compile=False, stackless=False, gc='re
 	if compile: return t.compile_c()
 	else: return headers, sources
 
-# just for testing #####################
-def test_rpy(x):
-	a = 'helloworld'
-	print( a )
-	b = ['a','b']
-	for i in b: print( i )	# <PtrRepr * Array of Char >
-	for j in ['hello', 'world']: print( j )
-	c = 1 + 99
-	print( c  )
-	return 1	#Exception: stand-alone program entry point must return an int (and not, e.g., None or always raise an exception)
-
-
-
-
-def scan_cmake( url ):
-	cwd = os.getcwd()
-	path,cmake = os.path.split(url)
-	data = open(url,'rb').read()
-	os.chdir( path )
-	do = False
-	paths = []
-	ifdefs = {}
-	prevline = None
-	debug = ''
-	for line in data.splitlines():
-		line = line.strip()
-		if not line: continue	# skip whitespace
-		debug += line + '\n'
-		if line.startswith( 'INCLUDE_DIRECTORIES(' ):
-			if do: raise SyntaxError
-			do = True
-			line = line.replace('INCLUDE_DIRECTORIES(', '')	# expects single per line
-		if do:
-			if ')' in line: do = False; line = line.replace(')','')
-			for chk in line.split():
-				if '$' in chk: print( 'warning: can not parse $ syntax ->', chk )
-				elif os.path.isdir( chk ):
-					p = os.path.abspath( chk )
-					if prevline:
-						if prevline.startswith('IF('):
-							ifdef = prevline.split('IF(')[-1].split(')')[0].strip()
-							print( 'looks like a IF def macro ->', ifdef )
-							#if ifdef not in ifdefs: ifdefs[ ifdef ] = []
-							#if p not in ifdefs[ ifdef ]: ifdefs[ ifdef ].append( p )
-							ifdefs[ ifdef ] = p
-						elif p not in paths: paths.append( p )
-					elif p not in paths: paths.append( p )
-				else: print( debug); raise SyntaxError
-		prevline = line
-
-	os.chdir(cwd)
-	#print paths
-	#print ifdefs
-	return {'includes': paths, 'ifdefs':ifdefs }
-
-
-def find_header_directory( name, path='.' ):
-	if name in os.listdir( path ): return path
-	for p in INCLUDE_DIRS:
-		if name in os.listdir( p ): return p
-
-	if '--scan-cmake' in sys.argv and 'CMakeLists.txt' in os.listdir( path ):
-		cmake = scan_cmake( os.path.join( path, 'CMakeLists.txt' ) )
-		for p in cmake['includes']:
-			if name in os.listdir( p ): return p
-		for macro in MACRO_DEFS:
-			if macro in cmake['ifdefs']:
-				p = cmake['ifdefs'][macro]
-				if name in os.listdir( p ): return p
-		if cmake['ifdefs']:
-			for macro in cmake['ifdefs']:
-				print( 'warning: using undefined macro name:', macro )
-				p = cmake['ifdefs'][macro]
-				if name in os.listdir( p ): return p
-
-	if '/' in name:		# bug fix dec5th, sometimes headers have path/name/header.h
-		a,b = os.path.split( name )
-		if b in os.listdir( path ): return path
-		for p in INCLUDE_DIRS:
-			if b in os.listdir( p ): return p
-
-
-	print( 'warning: resorting to final hacks to find headers' )
-	for n in os.listdir( path ):	# check subdirs
-		a = os.path.join( path, n )
-		if os.path.isdir( a ) and not n.startswith('.'):
-			if name in os.listdir( a ): return a
-
-	## check one directory up, then subs
-	a,b = os.path.split( path )
-	if name in os.listdir(a): return a
-	for n in os.listdir( a ):
-		c = os.path.join( a, n )
-		if c != path and os.path.isdir(c) and not n.startswith('.'):
-			if name in os.listdir( c ): return c
-
-	print( 'error: failed to find header ->', name )
 
 
 
@@ -802,7 +692,7 @@ class SomeThing(object):
 			elif isclass( child, 'FuncDef', 'FuncDecl' ): self.child = Function( child, parent=self )
 			elif isclass( child, 'Enum' ): self.child = Enum( child, parent=self )
 			elif isclass( child, 'ArrayDecl'):	#, 'ArrayRef' ):
-				child.show()
+				#child.show()
 				self.child = Array( child, parent=self )
 				if self.tag == 'Typedef': self.array = self.child	#TODO revisit
 				elif self.tag == 'Decl': self.array = self.child	# structs that contain arrays - may5th
@@ -1039,7 +929,9 @@ class SomeThing(object):
 				_type.remove( 'signed' )
 
 			if _type.count( 'long' ) == 2: ctype = 'ctypes.c_%slonglong' %unsigned
-			elif 'double' in _type and 'long' in _type: ctype = 'ctypes.c_longdouble'
+			elif 'double' in _type and 'long' in _type:
+				#ctype = 'ctypes.c_longdouble' # pointer to longdouble is NOT pypy compatible
+				ctype = 'ctypes.c_double'
 			elif 'int' in _type and 'short' in _type: ctype = 'ctypes.c_%sint16' %unsigned	# correct?
 			elif 'int' in _type and 'long' in _type: ctype = 'ctypes.c_%sint64' %unsigned	# correct?
 			else:
@@ -1215,9 +1107,8 @@ class Enum( SomeThing ):		# an enum can be nameless
 		self.values = []
 		self.values_by_key = {}
 		if isclass( self.parent, 'FuncDef', 'FuncDecl' ) or not self.ast.values:
-			self.ast.show()
+			#self.ast.show()
 			return
-		self.ast.show()
 
 		i = 0
 		for val in self.ast.values.children():
@@ -1334,22 +1225,8 @@ class Function( SomeThing ):
 				if isclass( arg, 'EllipsisParam' ): pass #print 'EllipsisParam'	#TODO 
 				else: self.args.append( SomeThing(arg, parent=self) )
 
-		self.returns = SomeThing( decl.type, parent=self )		# re-enabled may16th
-		#print( '-----------function---------', self.name() )
-		#decl.show()
-		#if isclass( decl.type, 'TypeDecl', 'PtrDecl' ):
-		#	self.returns = SomeThing( decl.type.type, parent=self )
-		#else:
-		#	self.returns = SomeThing( decl.type, parent=self )
-		#	#print('returns', decl.type)
-		#print('----')
-		#decl.type.show()
-		#print('---------------------------')
+		self.returns = SomeThing( decl.type, parent=self )
 
-		#if self.name() == 'SDL_JoystickGetAxis':		# ohno!
-		#	self.ast.show()
-		#	print( self.returns.type() )
-		#	assert 0
 
 	def gen_rffi( self, declare=False ):
 		args = ''; name = self.name()
@@ -1453,7 +1330,6 @@ class Union( SomeThing ):
 
 	def setup(self):
 		ast = self.ast
-		ast.show()
 		self.fields = []
 		self.forwardref = False
 		self.contains_arrays = 0
@@ -1618,53 +1494,69 @@ class SourceCode(object):
 			n += 1; v = v[:-1] + _clean( srclines[ n ] )
 		line = v
 		v = v.split()
+
 		if name != v[1]:
-			print( 'warn: function macro: %s' %name )
+			print( 'TODO: function macro: %s' %name )
 			print( line )
 			return False
 		if len(v) >=4:
+			#print('macro >=4')
 			a = line.split('(')[-1]		# take last
 			a = a.replace(')','')		# assume just closing pairs
-			a = a.strip(); val = a
-			try:
-				val = eval( val )
+			a = a.strip()
+			if len(a) >= 2 and a[0] in '0123456789' and a[1] =='U':
+				a = a.replace('U', '')
+
+			val = None
+			if a == 'int': val = 0
+			elif a == 'float': val = .0
+			else:
+				try: val = eval( a )
+				except: print('HARD macro to parse:', line)
+
+			if val is not None:
 				self.macro_globals.append( name )	# retain order
 				self.macro_globals_values[ name ] = val
 				return True
-			except:
-				print('HARD macro to parse:', line)
 
 		elif len(v) >= 3:
-			#print( 'saving', u )
+			#print( 'macro >=3' )
 			val = v[-1]
 			val = val.split('(')[-1]
 			if val.endswith(')'): val = val[:-1]
 			if '.' in val and val.lower().endswith('f'): val = val[:-1]	# float litteral
-			try:
-				val = eval( val )
-				self.macro_globals.append( name )	# retain order
-				self.macro_globals_values[ name ] = val
-				return True
-			except:
-				try:
-					a = v[-1]; b = v[-2]
-					if a in self.macro_globals_values:
-						val = self.macro_globals_values[ a ]
-						self.macro_globals.append( name )	# retain order
-						self.macro_globals_values[ name ] = val
-						return True
-					elif a.count('(') == 1 and a.count(')') == 1:
-						val = eval( a, self.macro_globals_values, self.macro_globals_values )
-						self.macro_globals.append( name )	# retain order
-						self.macro_globals_values[ name ] = val
-						return True
-					else: print( 'WARN: non trival macro', line ); return False
+			if len(val) >= 2 and val[0] in '0123456789' and val[1] =='U':
+				val = val.replace('U', '')
 
+			if val == 'int':	# invalid?
+				self.macro_globals.append( name )	# retain order
+				self.macro_globals_values[ name ] = 0
+				return True
+			else:
+				try:
+					val = eval( val )
+					self.macro_globals.append( name )	# retain order
+					self.macro_globals_values[ name ] = val
+					return True
 				except:
-					pprint('WARNING: can not parse: %s'%name, 6)
-					pprint( line, 1 )
-					pprint('-'*80)
-					return False
+					try:
+						a = v[-1]; b = v[-2]
+						if a in self.macro_globals_values:
+							val = self.macro_globals_values[ a ]
+							self.macro_globals.append( name )	# retain order
+							self.macro_globals_values[ name ] = val
+							return True
+						elif a.count('(') == 1 and a.count(')') == 1:
+							val = eval( a, self.macro_globals_values, self.macro_globals_values )
+							self.macro_globals.append( name )	# retain order
+							self.macro_globals_values[ name ] = val
+							return True
+						else: print( 'WARN: non trival macro', line ); return False
+					except:
+						pprint('WARNING: can not parse: %s'%name, 6)
+						pprint( line, 1 )
+						pprint('-'*80)
+						return False
 		else: pprint( 'not touching unused macro: %s' %name, 4 )
 
 
@@ -1679,28 +1571,24 @@ class SourceCode(object):
 				assert os.path.isfile( header )
 				source += '\n' + open(header,'rb').read()
 
-		all_includes = {}
 		## first pass inspection, check includes, try to parse macros ##	
 		for idx, line in enumerate(source.splitlines()):
 			if line.startswith('#'):
 				line = line[1:]
 				line = line.split('//')[0]
 				line = line.split('/*')[0]
-				if line.startswith( 'define' ): self.parse_macro( line.split()[1], idx, source.splitlines() )	# march21,2011
-				elif line.startswith('ifndef'): self.if_defs.append( line.split()[-1] )
+				if line.startswith( 'define' ):
+					self.parse_macro( line.split()[1], idx, source.splitlines() )	# march21,2011
+				elif line.startswith('ifndef'):
+					self.if_defs.append( line.split()[-1] )
 				elif 'include' in line.split():
 					name = line.split()[-1]
 					if name.startswith('<') and name.endswith('>'):
 						name = name.replace('<', '').replace('>','')
-						all_includes[ name.split('/')[-1] ] = name
+						print('c++ include: %s' %name)
 					else:
-						name = name.replace('"', ''); all_includes[ name.split('/')[-1] ] = name
-						path = find_header_directory( name, path=self.source_path )
-						if path:
-							if path not in self.includes: self.includes.append( path )
-							if name not in self.headers: self.headers.append( name )
-						else:
-							print( 'WARNING: failed to find header directory', name )
+						name = name.replace('"', '')
+						print( 'c include: %s' %name )
 
 
 		## post headers, just a hack to combine many headers ##
@@ -1758,15 +1646,15 @@ class SourceCode(object):
 			for line in err.splitlines():
 				_line = line.split()
 				if 'warning:' in _line:
-					#print( line )
-					if 'warning: macro' in line:
-						u = line.split('"')[1]
-						if u in '({' or u in self.macro_globals: continue	# fixed march22, 2011
-						if u not in unused_macros:
-							unused_macros.append( u )
-							linenum = _line[0].split(':')[1]	# hopefully this won't change with other versions of cpp
-							linenum = int( linenum )-1
-							self.parse_macro( u, linenum, srclines )
+					print( line )
+					#if 'warning: macro' in line:
+					#	u = line.split('"')[1]
+					#	if u in '({' or u in self.macro_globals: continue	# fixed march22, 2011
+					#	if u not in unused_macros:
+					#		unused_macros.append( u )
+					#		linenum = _line[0].split(':')[1]	# hopefully this won't change with other versions of cpp
+					#		linenum = int( linenum )-1
+					#		self.parse_macro( u, linenum, srclines )
 
 				elif 'error:' in line.lower().split():
 					print( '-'*80 ); print(err); print( '-'*80 )
@@ -2001,6 +1889,8 @@ def make_pycparser_compatible( data ):
 
 		### blender ###
 		if '__attribute__((__unused__))' in line: line = line.replace( '__attribute__((__unused__))', '')
+
+		if line.endswith('((__sentinel__(0)));'): line = line.replace( '((__sentinel__(0)));', ';' )
 
 		#######################
 		d += line + '\n'
@@ -3333,9 +3223,9 @@ class C( SourceCode ):		# using pycparser
 _clib_name_ = '%s'
 print('loading lib', _clib_name_)
 print( os.path.abspath( os.path.curdir ) )
-_ctypes_lib_ = _load_ctypes_lib( _clib_name_ )
-assert _ctypes_lib_
-print( _ctypes_lib_._name )
+CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
+assert CTYPES_DLL
+print( CTYPES_DLL._name )
 ''' %self.shared_library_name
 
 
@@ -3453,6 +3343,8 @@ print( _ctypes_lib_._name )
 				RAYMOND_HETTINGER,
 				#'hettinger_transform()',	# can be slow for big ones like gtk
 		]
+		if STRIP_PREFIXES:
+			_tail.append( '_rpythonic_strip_prefixes_(%s)' %STRIP_PREFIXES )
 		return self.CTYPES_HEADER + '\n' + a + '\n' + '\n'.join(_tail)
 
 
@@ -4304,10 +4196,7 @@ class RPython(object):
 						print( 'WARN: meth not found in class', n )
 
 
-
-	def _gen(self,mname):
-		global CTYPES_OUTPUT
-
+	def _gen_deprecated(self,mname):
 		#g = ['_float=.0; _int=0']	# this wont work because pypy is too smart
 		g = [									# workaround, declare non-concrete variables
 			'from pypy.rlib import streamio',
@@ -4318,6 +4207,7 @@ class RPython(object):
 			'_char = str( s.read(1) )',
 			'_bool = bool( _int )',
 			'_float_list = [ _float for i in range(_int) ]',
+			'_str_list = [ _str for i in range(_int) ]',
 		]
 
 		for klass in self.classes:
@@ -4361,8 +4251,11 @@ class RPython(object):
 				elif arg is ctypes.c_char: s += '_char,'
 				elif arg is bool: s += '_bool,'
 				elif type(arg) is list:
-					#s += '[_float],'
-					s += '_float_list,'
+					if arg[0] is float:
+						s += '_float_list,'
+					elif arg[0] is str:
+						s += '_str_list,'
+					else: assert 0
 				else: s += '%s(),' %arg.__name__		# TODO, tricky - save instances above?
 			s += ')'
 			g.append( s )
@@ -4373,15 +4266,22 @@ class RPython(object):
 		g = 'def declare_ugly():\n\t' + '\n\t'.join( g )
 		print( g )
 		exec( g )
-		print( '--------compiling rpython-----------' )
+
+	def _gen(self,mname):
+		global CTYPES_OUTPUT
+
 		# TODO how to tell inliner not to inline in main?  pypy.translator.backendopt.inline.inlining_heuristic
 		# inliner just moves OP_INT_ADD into main...
 		secondary_entrypoints = []
-		secondary_entrypoints.append( (declare_ugly, []) )
+
+		for i,w in enumerate(self.wrapped):
+			if w.name == '__init__': continue
+			secondary_entrypoints.append( (w.function, w.arguments) )
 
 		if self._stackless: entry = _rpy_stackless_entrypoint
 		else: entry = lambda x: 1
 
+		print( '--------compiling rpython-----------' )
 		headers,sources = translate_rpython( 
 			entry, 
 			inline=False, 
@@ -4411,12 +4311,13 @@ class RPython(object):
 		if not os.path.isdir( mdir ):
 			os.makedirs( mdir )
 			open( os.path.join(os.path.join(CACHEDIR,'genctypes'),'__init__.py'), 'wb' )
+
 		CTYPES_OUTPUT = os.path.join(pre,'__init__.py')
 		LIBS.append( 'lib%s.so' %mname)
 		a = C( pypygen['implement.c'].strpath, debug=0 )
 		a.save()
 
-		print( g )
-
+		for i,w in enumerate(self.wrapped):
+			print('translated function: %s' %w.name)
 
 

@@ -1,16 +1,30 @@
-import os, sys, ctypes
+import os, sys, ctypes, inspect
 __os = os
 __sys = sys
+__inspect = inspect
 
-IS32BIT = (ctypes.sizeof(ctypes.c_void_p)==4)
 PYTHON_RESERVED_KEYWORDS = 'for while in as global with try except lambda return raise if else elif eval exec and not or break continue finally print yield del def class assert from is pass'.split()
 
 
-## this ctypes file expects to be in the cache directory, 
-## with precompiled c-libraries two directories up, if the library is not there try to load from the system.
-_clibs_dir = os.path.join( os.path.dirname(os.path.abspath(__file__)), '../../clibs' )
-_clibs_dir = os.path.abspath( _clibs_dir )
-if not os.path.isdir( _clibs_dir ): _clibs_dir = os.path.abspath( '.' )
+IS32BIT = (ctypes.sizeof(ctypes.c_void_p)==4)
+
+_ISPYTHON2 = sys.version_info[0] == 2
+if _ISPYTHON2: _NULLBYTE = '\0'
+else: _NULLBYTE = bytes( chr(0), 'ascii' )
+
+def _CHARP2STRING( charp, encoding='utf-8' ):
+	b = bytes()
+	i = 0
+	while True:
+		char = charp[ i ]
+		if char == _NULLBYTE: break
+		else:
+			b += char
+			i += 1
+	return b.decode( encoding )
+
+## try to load precompiled c-libraries from this directory, if the library is not there try to load from the system.
+_clibs_dir = os.path.dirname(os.path.abspath(__file__))
 
 def _load_ctypes_lib( name ):
 	if __os.name == 'posix':
@@ -58,21 +72,30 @@ PyCStructType = type( ctypes.Structure )
 CArgObject = type( ctypes.byref(ctypes.c_int()) )
 
 class _rpythonic_meta_(object):
+	'''
+	Reserved Attributes:
+		POINTER
+		CSTRUCT
+		CAST
+	'''
 	_rpythonic_ = True		# workaround for now, must have a way to know if object is a meta from another module, isinstance(o,_rpythonic_meta_) will fail in those cases. another workaround could be check sys.modules for other rpythonic modules and fetch _rpythonic_meta_ from there.
-	def __init__(self, *args, **kw ):	# cheap trick, abuse **kw, and look for "pointer"
-		if 'pointer' in kw: self._pointer = kw['pointer']
-		elif kw: raise SyntaxError	# sorry, you can not init with keywords
-		else: self._pointer = ctypes.pointer( self._ctypes_struct_(*args) )
+	def __init__(self, *args, **kw ):							# cheap trick, abuse **kw, and look for "pointer", "cast"
+		if kw and 'pointer' not in kw: raise SyntaxError	# sorry, you can not init with keywords
+		elif kw and 'pointer' in kw:
+			if 'cast' in kw and kw['cast']:
+				self.POINTER = ctypes.cast( kw['pointer'], ctypes.POINTER(self.CSTRUCT) )
+			else: self.POINTER = kw['pointer']
+		else: self.POINTER = ctypes.pointer( self.CSTRUCT(*args) )
+		self.POINTER.pyobject = self	# .pyobject is local to this pointer "object"
+
 	def __getattr__(self,name):
-		if hasattr( self._pointer.contents, name ):
-			return getattr( self._pointer.contents, name )
+		if hasattr( self.POINTER.contents, name ):
+			return getattr( self.POINTER.contents, name )
 
 		else:	# when rpythonic failed to generate good bindings - these lookups should be cached
 			for parent in self._rpythonic_parent_classes_:
 				if hasattr( parent, name ):
 					method = getattr( parent, name )	# should check if it really is an unbound method
-					#func = method._rpythonic_function_
-					#return lambda *args: func( self, *args )	# what!, not self._pointer ??
 					func = parent._rpythonic_unbound_lookup_[ method ]
 					n = func.name
 					if len(func.argnames) > 1:
@@ -80,25 +103,25 @@ class _rpythonic_meta_(object):
 						a = ',' + '=None,'.join( argnames ) + '=None'
 						b = ','.join( argnames )
 					else: a = b = ''
-					lamb = eval( 'lambda self %s: %s( self._pointer, %s )' %(a,n,b) )
+					lamb = eval( 'lambda self %s: %s( self.POINTER, %s )' %(a,n,b) )
 					setattr( self.__class__, name, lamb )
 					#return lamb	# this would return the unbound lambda, must call getattr again
 					return getattr( self, name )
 
 			## last resort, load from global name space ##
 			G = globals()
-			if name in G: return lambda *args: G[name](self._pointer, *args)
+			if name in G: return lambda *args: G[name](self.POINTER, *args)
 			else:
 				for prefix in self._autoprefix_:
 					n = prefix + name
-					if n in G: return lambda *args: G[n](self._pointer, *args)
+					if n in G: return lambda *args: G[n](self.POINTER, *args)
 				print( 'possible auto-prefixes available', self._autoprefix_ )
 				raise AttributeError
 
 	def __call__(self, type=False):
-		if type: return self._ctypes_struct_
-		else: return self._pointer
-
+		print('calling object is DEPRECATED - use ob.POINTER or ob.CSTRUCT')
+		if type: return self.CSTRUCT
+		else: return self.POINTER
 
 
 def _rpythonic_generate_subclass_( name, struct, functions ):
@@ -167,7 +190,7 @@ def _rpythonic_generate_subclass_( name, struct, functions ):
 		else: a = b = ''
 
 		fhead = 'def %s( self %s ):' %(n,a)
-		fbody = ['return %s(self._pointer, %s)' %(func.name,b)]
+		fbody = ['return %s(self.POINTER, %s)' %(func.name,b)]
 		g = fhead + '\n\t\t' + '\n\t\t'.join( fbody )
 		body.append( g )
 		#body.append( '%s._rpythonic_function_ = %s' %(func.name, func.name) )
@@ -188,7 +211,8 @@ def _rpythonic_generate_subclass_( name, struct, functions ):
 		raise SyntaxError
 
 	klass = locals()[name]
-	klass._ctypes_struct_ = struct
+	klass.CSTRUCT = struct	# ctypes struct class
+
 	klass._autoprefix_ = top
 	for func in functions:
 		unbound = getattr( klass, func.name )
@@ -229,7 +253,7 @@ def _rpythonic_setup_return_wrappers():
 		if klass in _OOAPI_RETURNS_OBJECT_:
 			for f in _OOAPI_RETURNS_OBJECT_[klass]:
 				f.object_oriented = True
-				if not f.return_wrapper:	# just in case the ctypes footer defines it
+				if not f.return_wrapper:	# just in case the ctypes footer had already defined it, do not overwrite
 					f.return_wrapper = klass._rpythonic_wrapper_class_
 
 def _rpythonic_function_( name, result=ctypes.c_void_p, args=[]):
@@ -245,7 +269,7 @@ class _rpythonic_metafunc_(object):
 	def __init__(self, name, result=ctypes.c_void_p, args=[]):
 		self.name = name
 		self.result = result
-		self.argtypes = []
+		self.argtypes = []		# can dynamically change CFUNCTYPE trick
 		self.argnames = []
 		self.argtypestypes = []
 		for i,arg in enumerate(args):
@@ -255,21 +279,25 @@ class _rpythonic_metafunc_(object):
 			self.argnames.append( n )
 			self.argtypes.append( t )
 			self.argtypestypes.append( type(t) )		# precomputed for speed
-		self.argtypes = tuple( self.argtypes )
-		self.argnames = tuple( self.argnames )
-		self.argtypestypes = tuple( self.argtypestypes )
+
+		self.argnames = tuple( self.argnames )				# should never change
 		self.numargs = len( self.argtypes )
 		self.callbacks = [None] * self.numargs
 		self.return_wrapper = None
 		self.object_oriented = False
 		self.function = None
 		try:
-			func = self.function = getattr(_ctypes_lib_, self.name )
+			func = self.function = getattr(CTYPES_DLL, self.name )
 			RPYTHONIC_WRAPPER_FUNCTIONS[ name ] = self
 		except:
 			RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES.append( name )
 		if self.function: self.reset()
 
+	def change_argument_type( self, name, t ):
+		idx = self.argnames.index( name )
+		self.argtypes[ idx ] = t
+		self.argtypestypes[ idx ] = type(t)
+		self.function.argtypes = self.argtypes
 
 	def reset(self):
 		if self.argnames:
@@ -310,8 +338,8 @@ class _rpythonic_metafunc_(object):
 	def _call_( self, *args ):			# allow flexible calling types
 		cargs = list( self.defaults )
 		for i,arg in enumerate(args):
-			if isinstance( arg, _rpythonic_meta_ ): arg = arg._pointer
-			elif hasattr( arg, '_rpythonic_' ): arg = arg._pointer	# workaround
+			if isinstance( arg, _rpythonic_meta_ ): arg = arg.POINTER
+			elif hasattr( arg, '_rpythonic_' ): arg = arg.POINTER		# workaround - instance from another module
 
 			t = type(arg)
 			k = self.argtypes[ i ]
@@ -342,21 +370,24 @@ class _rpythonic_metafunc_(object):
 			elif kt is PyCPointerType and not isinstance( arg, (ctypes._Pointer,CArgObject) ):
 				if t in (int,float,bool): ptr = k( k._type_(arg) )
 				elif t is str:
-					ptr = k( k._type_() )		# not k() otherwise null pointer error
-					for j, char in enumerate(arg): ptr[ j ] = char.encode('ascii')
+					arg = arg.encode('utf-8')
+					#ptr = k( k._type_() )								# not k() otherwise null pointer error
+					#for j, char in enumerate(arg): ptr[ j ] = char		# not correct - missing null byte?
+					ptr = ctypes.create_string_buffer(arg)				# correct and pypy compatible
 				elif t in (PyCStructType, PyCArrayType):
 					ptr = ctypes.cast( ctypes.pointer( arg ), k )
-				else: ptr = arg	# buggy TODO
-				#else:		# wrap py object - not safe!!
-				#	ptr = ctypes.cast( ctypes.pointer(ctypes.py_object(arg)), k )
+				else:
+					ptr = arg	# TODO print warning?
 				cargs[ i ] = ptr
+
 			elif kt is PyCFuncPtrType:
-				cargs[ i ] = self.callbacks[ i ] = k( arg )		# assume arg is a callable
+				if t.__name__ == 'CFunctionType': cargs[ i ] = arg		# assume outside holds pointer
+				else:													# this is not safe #
+					cargs[ i ] = self.callbacks[ i ] = k( arg )				# assume arg is a callable
 			else:
 				cargs[ i ] = arg		# directly pass
 
-		## if you define your own return_wrapper, it must take argument pointer=...
-		#print( cargs )
+		## if you define your own return_wrapper, it must take keyword "pointer"
 		if self.return_wrapper: return self.return_wrapper( pointer=self.function( *cargs ) )
 		else: return self.function( *cargs )
 
@@ -396,14 +427,15 @@ class _rpythonic_struct_( ctypes.Structure ):
 	_array_wrapper_ = False
 	_fields_ = []
 	_methods_ = {}
-	def __call__(self): return self
+	#def __call__(self): return self
 	def __init__(self, *args, **kw ):
 		cargs = []
 		argtypes = []
 		for a in self._fields_: argtypes.append( a[1] )
 		if len(args) > len(argtypes): args = [args]	# allow both calling conventions
 		for i,arg in enumerate( args ):
-			if isinstance( arg, _rpythonic_meta_ ): arg = arg._pointer
+			if isinstance( arg, _rpythonic_meta_ ): arg = arg.POINTER
+
 			t = type(arg)
 			k = argtypes[ i ]
 			if t in (list,tuple):
@@ -440,7 +472,7 @@ def _rpythonic_clean_up_missing_functions_():
 
 
 ###### NEW API #########
-_ctypes_lib_ = None
+CTYPES_DLL = None
 
 class _VOID_POINTER_CONTAINER_(object):
 	def __init__(self, ptr, name=None):
@@ -465,9 +497,9 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 	'''
 	METAS = []
 	def __init__(self, constructors=[], methods={}, properties={}):
-		global _ctypes_lib_
-		if not _ctypes_lib_:
-			_ctypes_lib_ = _load_ctypes_lib( _clib_name_ )
+		global CTYPES_DLL
+		if not CTYPES_DLL:
+			CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
 
 		self.constructors = constructors
 		self.methods = methods
@@ -522,7 +554,7 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 
 	@staticmethod
 	def _build_cfunc( info, method=False, static=False ):
-		cfunc = getattr(_ctypes_lib_, info['name'])
+		cfunc = getattr(CTYPES_DLL, info['name'])
 		if method and not static: argtypes = [ ctypes.c_void_p ]
 		else: argtypes = []
 		for p in info['parameters']: argtypes.append( eval(p['ctypes_type']) )
@@ -627,9 +659,9 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 	@classmethod
 	def function( self, info ):
 		print('@meta.function', info['name'] )
-		global _ctypes_lib_
-		if not _ctypes_lib_:
-			_ctypes_lib_ = _load_ctypes_lib( _clib_name_ )
+		global CTYPES_DLL
+		if not CTYPES_DLL:
+			CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
 
 		cfunc = self._build_cfunc( info, method=False, static=True )
 		setattr( meta, '_%s'%info['name'], cfunc )
@@ -650,6 +682,17 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 		lamb._introspect = info
 		return lamb
 
+
+
+def _rpythonic_strip_prefixes_( prefixes ):
+	G = globals()
+	names = list(G.keys())	# ensure list in py3
+	for name in names:
+		for prefix in prefixes:
+			if name.startswith( prefix ):
+				newname = name[ len(prefix) : ]
+				if newname and newname not in G:
+					G[ newname ] = G[ name ]
 
 
 

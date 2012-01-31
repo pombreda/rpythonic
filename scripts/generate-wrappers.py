@@ -3,8 +3,16 @@ import os, sys
 sys.path.append('..')
 import rpythonic
 
+if sys.argv[-1].startswith('--output='):
+	rpythonic.set_cache( sys.argv[-1].split('=')[-1] )
+else:
+	rpythonic.set_cache('../examples' )
+
+
+ALL = '--all' in sys.argv
+
 debug=0
-if '--emokit' in sys.argv:
+if '--emokit' in sys.argv or ALL:
 	#apt-get install libmcrypt-dev liboscpack-dev
 	#git clone http://github.com/qdot/emokit.git
 	rpythonic.wrap( 'emokit', 
@@ -13,7 +21,7 @@ if '--emokit' in sys.argv:
 	)
 
 
-if '--python3' in sys.argv:
+if '--python3' in sys.argv or ALL:
 	footer = 'PyRun_SimpleString = PyRun_SimpleStringFlags'
 	rpythonic.wrap( 'python3', 
 		header='/usr/include/python3.2/Python.h',
@@ -23,10 +31,29 @@ if '--python3' in sys.argv:
 
 
 broot = '../../blender'
-if os.path.isdir( broot ) and '--blender' in sys.argv:
+if os.path.isdir( broot ) and ('--blender' in sys.argv or ALL):
 	includes = []
-	for d in 'extern/bullet2/src intern/ghost source/blender/ikplugin source/blender/blenloader source/blender/gpu source/blender/windowmanager source/blender/editors/include source/blender/render/extern/include source/blender/imbuf source/blender/makesrna source/blender/makesdna source/blender/blenkernel source/blender/blenlib intern/guardedalloc'.split():
-		includes.append( os.path.join( broot, d ) )
+	dirs = '''
+extern/bullet2/src 
+intern/ghost 
+source/blender/ikplugin 
+source/blender/blenloader 
+source/blender/gpu 
+source/blender/windowmanager 
+source/blender/editors/include 
+source/blender/render/extern/include 
+source/blender/imbuf 
+source/blender/makesrna 
+source/blender/makesdna 
+source/blender/blenkernel 
+source/blender/blenlib 
+source/blender/blenfont 
+source/blender/python 
+intern/guardedalloc 
+source/blender/collada
+'''.split()
+
+	for d in dirs: includes.append( os.path.join( broot, d ) )
 
 	#rpythonic.wrap( 'bpy', 
 	#	header='./custom-sources/RNA_blender.h',
@@ -34,13 +61,13 @@ if os.path.isdir( broot ) and '--blender' in sys.argv:
 	#	library = 'bpy.so',
 	#)
 
-	rpythonic.wrap( 'blender', 
-		header='./libblender/blender.h',	# needs RNA_blender.h
+	rpythonic.wrap( 'libblender', 
+		header='./libblender/libblender.h',	# needs RNA_blender.h
+		defines=['__LITTLE_ENDIAN__', 'DNA_DEPRECATED_ALLOW'],
 		includes=includes,
-		insert_headers = [ os.path.join( broot, 'source/creator/creator.c' ) ],
-		library = 'bpy.so',
+		#insert_headers = [ os.path.join( broot, 'source/creator/creator.c' ) ],
+		library = 'libblender.so',
 	)
-	assert 0
 
 if '--ogre' in sys.argv:
 	defines = []
@@ -144,26 +171,6 @@ if os.path.isdir( nroot ) and '--naali' in sys.argv:
 	)
 
 
-if '--ogrepaged' in sys.argv:
-	root = '/usr/local'
-	#sudo apt-get install libois-dev
-	includes = [ 
-		#root+'/include', 
-		'/usr/local/include/OGRE',	# assume Ogre was built from source #
-		'%s/include/PagedGeometry' %root,
-	]
-	insert_headers = []
-	for h in 'BatchPage.h ImpostorPage.h TreeLoader3D.h'.split():
-		insert_headers.append( '%s/include/PagedGeometry/%s' %(root,h) )
-
-	rpythonic.wrap( 'OgrePaged', 
-		header='%s/include/PagedGeometry/PagedGeometry.h' %root,
-		includes=includes, insert_headers=insert_headers,
-		library = '%s/lib/libPagedGeometry.a' %root,
-		dynamic_libs = ['OgreMain', 'OgrePaging', 'OgreTerrain', 'OgreProperty'],
-		static_libs = ['PagedGeometry'],
-		cplusplus=True,
-	)
 
 
 
@@ -191,17 +198,15 @@ if os.path.isdir( broot ) and '--bullet' in sys.argv:
 	#)
 
 
-if '--sdl' in sys.argv:
-	defines = []
+if '--sdl' in sys.argv or ALL:
 	rpythonic.wrap( 
 		'SDL', 
 		header='/usr/include/SDL/SDL.h', 
-		#insert_headers = ['/usr/include/SDL/SDL_opengl.h'],
-		defines=defines, rffi=True 
+		strip_prefixes = ['SDL_'],
 	)
 
 
-if '--ode' in sys.argv:
+if '--ode' in sys.argv or ALL:
 	defines = ['dDOUBLE']
 	footer = '''
 ### ode headers sometimes define a return type as a pointer, when it should be an array ###
@@ -224,14 +229,18 @@ for func in ( dBodyGetQuaternion,  ):
 ########### end of manual patch #########
 	'''
 	#ODE_API dJointID dJointCreateContact (dWorldID, dJointGroupID, const dContact *);
-	rpythonic.wrap( 'ode', header='/usr/include/ode/ode.h', 
-		defines=defines, rffi=True, ctypes_footer=footer 
+	rpythonic.wrap(
+		'ode', 
+		header='/usr/include/ode/ode.h', 
+		ctypes_footer=footer,
+		strip_prefixes = ['d'],
+		defines = ['dDOUBLE'],
 	)
 
 
 
 
-if '--opencv' in sys.argv:
+if '--opencv' in sys.argv or ALL:
 	## need to inject some aliases and globals ##
 	footer = '''
 IPL_DEPTH_1U = 1
@@ -275,163 +284,68 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 		'cv', 
 		header='/usr/include/opencv/cv.h', 
 		insert_headers = ['/usr/include/opencv/cvtypes.h'],
-		ctypes_footer = footer
+		ctypes_footer = footer,
+		strip_prefixes = ['cv'],
 	)
 
+
+	defines = []
+	rpythonic.wrap(
+		'highgui',
+		header='/usr/include/opencv/highgui.h',
+		strip_prefixes = ['cv'],
+	)
+
+if '--opencvaux' in sys.argv or ALL:
 	rpythonic.wrap( 
 		'cvaux', 
 		header='/usr/include/opencv/cvaux.h', 
+		strip_prefixes = ['cv'],
 	)
 
-	defines = []
-	rpythonic.wrap( 'highgui', header='/usr/include/opencv/highgui.h', defines=defines )
 
-if '--openaudio' in sys.argv:
-	defines = []
-	rpythonic.wrap( 'openal', header='/usr/include/AL/al.h', defines=defines )
-
-	defines = []
-	rpythonic.wrap( 'alut', header='/usr/include/AL/alut.h', defines=defines )
-
-
-if '--freenect' in sys.argv:
-	defines = []
-	rpythonic.wrap( 'libfreenect', header='/usr/local/include/libfreenect/libfreenect.h', defines=defines)
-
-	defines = []
-	rpythonic.wrap( 'libfreenect_sync', header='/usr/local/include/libfreenect/libfreenect_sync.h', defines=defines)
-
-GINCLUDE = [
-	'/usr/include/gtk-2.0/',
-	'/usr/include/glib-2.0/',
-	'/usr/lib/glib-2.0/include/',
-	'/usr/include/cairo/',
-	'/usr/include/pango-1.0/',
-	'/usr/include/atk-1.0/',
-	'/usr/include/gdk-pixbuf-2.0/',
-	'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
-	'/usr/lib/gtk-2.0/include/',				# gdkconfig.h
-]
-
-if '--wnck' in sys.argv:
-	#sudo apt-get install libwnck-dev
-	rpythonic.wrap( 'wnck', 
-		defines = ['WNCK_I_KNOW_THIS_IS_UNSTABLE'],
-		includes=[ '/usr/include/libwnck-1.0'] + GINCLUDE,
-		header='/usr/include/libwnck-1.0/libwnck/libwnck.h',
-		library = '/usr/lib/libwnck-1.so',
+if '--openal' in sys.argv or ALL:
+	rpythonic.wrap(
+		'openal', 
+		header='/usr/include/AL/al.h', 
+		insert_headers = ['/usr/include/AL/alc.h'],
+		strip_prefixes='al alc AL_'.split(),
 	)
 
-if '--gtk' in sys.argv:
-	footer = '''
+if '--alut' in sys.argv or ALL:
 
-gtk_window_new.defaults[0] = GTK_WINDOW_TOPLEVEL
-
-def connect( ptr, name, func, *args ):
-	if not args: userdata = None
-	else:
-		if hasattr( func, 'im_self' ): self = func.im_self
-		elif hasattr( func, '__self__' ): self = func.__self__
-		else: self = None
-
-		if len(args)==1:
-			userdata = ctypes.pointer( ctypes.py_object(args[0]) )
-		else:
-			userdata = ctypes.pointer( ctypes.py_object(args) )
-
-		## must keep userdata pointer ##
-		if self:
-			if not hasattr( self, '_gtk_connect_hack' ):
-				self._gtk_connect_hack = {}
-			self._gtk_connect_hack[ func ] = (args,userdata)
-		else:
-			func._gtk_connect_hack = (args,userdata)
-
-	#return gtk_signal_connect_while_alive( ptr, name, func, userdata, ptr )
-	return g_signal_connect_object( ptr, name, func, userdata )
-
-RPYTHONIC_AUTOPREFIX_IGNORE.append( 'gdk_' )
-RPYTHONIC_AUTOPREFIX_IGNORE.append( 'atk_' )
-RPYTHONIC_AUTOPREFIX_IGNORE.append( 'Gdk' )
-RPYTHONIC_AUTOPREFIX_IGNORE.append( 'Atk' )
-
-for o in (GtkVBox, GtkHBox): o._rpythonic_parent_classes_.append( GtkBox )
-for o in (GtkCheckButton,): o._rpythonic_parent_classes_.append( GtkToggleButton )
-for o in (GtkHScale, GtkVScale): o._rpythonic_parent_classes_.append( GtkScale )
+	rpythonic.wrap( 'alut', header='/usr/include/AL/alut.h',  )
 
 
-GTK_WIDGET_CLASSES = {
-	GtkButton : gtk_button_new_with_label,
-	GtkAdjustment : gtk_adjustment_new,
-	GtkHScale : gtk_hscale_new,
-	GtkVScale : gtk_vscale_new,
-	GtkEntry : gtk_entry_new,
-	GtkLabel : gtk_label_new,
-
-	GtkToggleButton : gtk_toggle_button_new_with_label,
-	GtkCheckButton : gtk_check_button_new_with_label,
-
-}
-GTK_CONTAINER_CLASSES = {
-	GtkEventBox : gtk_event_box_new,
-	GtkExpander : gtk_expander_new,
-	GtkFixed : gtk_fixed_new,
-	GtkFrame : gtk_frame_new,
-	GtkWindow : gtk_window_new,
-	GtkVBox : gtk_vbox_new,
-	GtkHBox : gtk_hbox_new,
-	GtkNotebook : gtk_notebook_new,
-}
-for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
-	for o in d:
-		o._rpythonic_parent_classes_.append( GtkWidget )
-		o._rpythonic_parent_classes_.append( GtkContainer )
-		d[ o ].return_wrapper = o
-		s = "lambda *args, **kw: %s(*args, **kw)"%d[o].name
-		globals()[ o.__name__[3:] ] = eval(s)
-		print( o.__name__, s )
-	'''
+if '--freenect' in sys.argv or ALL:
+	#git clone https://github.com/OpenKinect/libfreenect.git
 
 	rpythonic.wrap( 
-		'gtk', 
-		header='/usr/include/gtk-2.0/gtk/gtk.h', 
-		includes=GINCLUDE, ctypes_footer=footer,
-		library= '/usr/lib/libgtk-x11-2.0.so',
+		'libfreenect', 
+		header='/usr/local/include/libfreenect/libfreenect.h',
+		strip_prefixes = ['freenect_', '_freenect_', 'FREENECT_'],
+	)
+
+if '--freenect-sync' in sys.argv or ALL:
+
+	rpythonic.wrap(
+		'libfreenect_sync', 
+		header='/usr/local/include/libfreenect/libfreenect_sync.h',
+		strip_prefixes = ['freenect_'],
 	)
 
 
-if '--gtk3' in sys.argv:
-	mod = rpythonic.load( 'gtk3', debug=debug )
-	if not mod:
-		includes = [
-			'/usr/include/gtk-3.0/',
-			'/usr/include/glib-2.0/',
-			'/usr/lib/glib-2.0/include/',
-			'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
-			'/usr/include/pango-1.0/',					# pango.h
-			'/usr/include/cairo/',
-			'/usr/include/gdk-pixbuf-2.0/',
-			'/usr/include/atk-1.0/',
-		]
-		rpythonic.wrap( 'gtk3', 
-			header='/usr/include/gtk-3.0/gtk/gtk.h', 
-			library='/usr/lib/libgtk-3.so',
-			includes=includes,
-		)
-	else:
-		print( mod )
 
-
-if '--opengl' in sys.argv:
+if '--opengl' in sys.argv or ALL:
 	rpythonic.wrap( 'openGL', header='/usr/include/GL/gl.h', library='/usr/lib/libGL.so' )
 
-if '--openglu' in sys.argv:
+if '--openglu' in sys.argv or ALL:
 	rpythonic.wrap( 'openGLU', header='/usr/include/GL/glu.h', library='/usr/lib/libGLU.so' )
 
-if '--openglut' in sys.argv:
+if '--openglut' in sys.argv or ALL:
 	rpythonic.wrap( 'openGLUT', header='/usr/include/GL/glut.h', library='/usr/lib/libglut.so' )
 
-if '--openjpeg' in sys.argv:
+if '--openjpeg' in sys.argv or ALL:
 	rpythonic.wrap( 'openjpeg', header='/usr/include/openjpeg.h' )
 
 
@@ -451,7 +365,7 @@ if '--vnc' in sys.argv:
 
 
 
-if '--wiiuse' in sys.argv:
+if '--wiiuse' in sys.argv or ALL:
 	#git clone http://github.com/rpavlik/wiiuse.git
 	footer = '''
 def IS_PRESSED(dev, button): return ((dev.contents.buttons & button) == button)
@@ -493,36 +407,31 @@ WIIMOTE_INIT_STATES = WIIMOTE_STATE_IR_SENS_LVL3
 	rpythonic.wrap( 'wiiuse', 
 		header='/usr/local/include/wiiuse.h',
 		library = '/usr/local/lib/libwiiuse.so',
-		ctypes_footer = footer
+		ctypes_footer = footer,
+		strip_prefixes = ['wiiuse_'],
 	)
 
 
-# missing#webkit/webkitversion.h
-#mod = rpythonic.load( 'webkit', debug=debug )
-#if not mod:
-#	rpythonic.wrap( 'webkit', 
-#		header='/usr/include/webkit-1.0/webkit/webkit.h',
-#		library = '/usr/lib/libwebkitgtk-1.0.so',
-#	)
-#else:
-#	print( mod )
-
-#apt-get install libxslt-dev libxml2-dev
-if 0:
-	mod = rpythonic.load( 'xml2', debug=debug )
-	if not mod:
-		rpythonic.wrap( 'xml2', 
-			header='/usr/include/libxml2/libxml/tree.h',
-			library = '/usr/lib/libxml2.so',
-		)
-	else:
-		print( mod )
 
 
+if '--fluid' in sys.argv or ALL:
+	rpythonic.wrap( 'fluidsynth', 
+		header='/usr/local/include/fluidsynth.h',
+		library = '/usr/local/lib/libfluidsynth.so',
+		strip_prefixes = ['fluid_'],
+	)
 
 
+if '--xlib' in sys.argv:		# this was just for testing
+	rpythonic.wrap( 'xlib', 
+		header='/usr/include/X11/Xlib.h',
+	)
 
-
-
+if '--fftw' in sys.argv or ALL:
+	rpythonic.wrap( 'fftw', 
+		header='/usr/include/fftw3.h',
+		library = '/usr/lib/libfftw3.so',
+		strip_prefixes = ['fftw_', 'FFTW_'],
+	)
 
 

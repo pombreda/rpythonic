@@ -1,4 +1,4 @@
-RPythonic: Beta5 - August, 2011
+RPythonic: Beta6 - Dec, 2011
 Copyright: HartsAntler (bhartsho@yahoo.com)
 License: BSD
 
