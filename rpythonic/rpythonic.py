@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - Dec, 2011
+# RPythonic - Feb, 2012
 # By HartsAntler, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.4c'
+VERSION = '0.4.4d'
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -3340,7 +3340,7 @@ print( CTYPES_DLL._name )
 				'_rpythonic_setup_return_wrappers()',
 				'_rpythonic_make_nice_global_enums_()',
 				'_rpythonic_clean_up_missing_functions_()',
-				RAYMOND_HETTINGER,
+				#RAYMOND_HETTINGER,	# not a big speed up #
 				#'hettinger_transform()',	# can be slow for big ones like gtk
 		]
 		if STRIP_PREFIXES:
