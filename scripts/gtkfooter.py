@@ -1,0 +1,307 @@
+cairo_rectangle_int = _cairo_rectangle_int
+
+gtk_window_new.defaults[0] = GTK_WINDOW_TOPLEVEL
+
+gtk_box_pack_start.defaults[2] = True		# expand
+gtk_box_pack_start.defaults[3] = True		# fill
+gtk_box_pack_end.defaults[2] = True		# expand
+gtk_box_pack_end.defaults[3] = True		# fill
+
+_RETURNS_CHARP_ = (
+	gtk_accelerator_get_label,
+	gtk_widget_path_iter_get_name,
+
+	gtk_rc_get_theme_dir,
+	gtk_rc_get_module_dir,
+	gtk_rc_get_im_module_path,
+	gtk_rc_get_im_module_file,
+
+	gtk_icon_size_get_name,
+
+	gtk_icon_source_get_filename,
+
+	gtk_icon_source_get_icon_name,
+
+	gtk_widget_get_name,
+
+	gtk_widget_get_composite_name,
+
+	gtk_widget_get_tooltip_text,
+	gtk_widget_get_tooltip_markup,
+
+	gtk_menu_get_accel_path,
+	gtk_menu_get_title,
+
+
+	gtk_action_get_name,
+	gtk_action_get_accel_path,
+	gtk_action_get_label,
+	gtk_action_get_tooltip,
+	gtk_action_group_get_name,
+	gtk_action_group_translate_string,
+
+	gtk_window_get_title,
+
+	gtk_label_get_text,
+	gtk_label_get_label,
+
+	gtk_app_chooser_get_content_type,
+	gtk_app_chooser_dialog_get_heading,
+
+	gtk_tree_path_to_string,
+
+	gtk_tree_model_get_string_from_iter,
+	gtk_cell_area_get_current_path_string,
+
+	gtk_tree_view_column_get_title,
+
+	gtk_text_iter_get_slice,
+	gtk_text_iter_get_text,
+	gtk_text_iter_get_visible_slice,
+	gtk_text_iter_get_visible_text,
+
+	gtk_editable_get_chars,
+
+	gtk_entry_buffer_get_text,
+
+	gtk_combo_box_get_title,
+	gtk_combo_box_text_get_active_text,
+	gtk_entry_get_text,
+	gtk_entry_get_icon_name,
+	gtk_entry_get_icon_tooltip_text,
+	gtk_entry_get_icon_tooltip_markup,
+
+	gtk_app_chooser_button_get_heading,
+
+	gtk_frame_get_label,
+
+	gtk_assistant_get_page_title,
+
+	gtk_builder_get_translation_domain,
+
+	gtk_buildable_get_name,
+
+	gtk_button_get_label,
+
+	gtk_menu_item_get_accel_path,
+
+	gtk_clipboard_wait_for_text,
+
+	gtk_color_button_get_title,
+
+	gtk_color_selection_palette_to_string,
+
+	gtk_expander_get_label,
+
+	gtk_file_filter_get_name,
+	gtk_file_chooser_get_filename,
+	gtk_file_chooser_get_uri,
+	gtk_file_chooser_get_current_folder_uri,
+
+	gtk_file_chooser_get_preview_filename,
+	gtk_file_chooser_get_preview_uri,
+	gtk_file_chooser_button_get_title,
+
+	gtk_font_button_get_title,
+
+	gtk_font_button_get_font_name,
+	gtk_font_selection_get_font_name,
+	gtk_font_selection_get_preview_text,
+
+	gtk_font_selection_dialog_get_font_name,
+	gtk_font_selection_dialog_get_preview_text,
+
+	gtk_icon_theme_get_example_icon_name,
+
+	gtk_icon_info_get_filename,
+	gtk_icon_info_get_display_name,
+
+	gtk_link_button_get_uri,
+
+	gtk_tool_button_get_label,
+	gtk_tool_button_get_icon_name,
+
+	gtk_notebook_get_group_name,
+	gtk_notebook_get_tab_label_text,
+	gtk_notebook_get_menu_label_text,
+
+	gtk_numerable_icon_get_label,
+	gtk_numerable_icon_get_background_icon_name,
+
+	gtk_paper_size_get_name,
+	gtk_paper_size_get_ppd_name,
+
+	gtk_print_settings_get_printer,
+	gtk_print_settings_get_media_type,
+	gtk_print_operation_get_status_string,
+
+	gtk_progress_bar_get_text,
+
+	gtk_recent_info_get_uri,
+	gtk_recent_info_get_description,
+	gtk_recent_info_get_mime_type,
+	gtk_recent_info_last_application,
+	gtk_recent_info_get_short_name,
+	gtk_recent_info_get_uri_display,
+
+	gtk_recent_filter_get_name,
+	gtk_recent_chooser_get_current_uri,
+	gtk_status_icon_get_icon_name,
+
+	gtk_status_icon_get_title,
+	gtk_status_icon_get_tooltip_text,
+
+	gtk_text_mark_get_name,
+
+	gtk_text_buffer_get_text,
+	gtk_text_buffer_get_slice,
+
+	gtk_tool_item_group_get_label,
+
+	gdk_display_get_name,
+	gdk_rgba_to_string,
+	gdk_pixbuf_format_get_name,
+	gdk_keyval_name,
+)
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
+
+class _nice_callback_args_container_(object):
+	'''	(required for pypy)
+	wraps args in an object because pypy ctypes creates a weakref to wrap pyobject
+	'''
+	def __init__(self,args): self.args = args
+
+class _nice_callback_(object):
+	def __del__(self): pass		# for some reason this holds a reference to self
+	def __init__(self, widget, func, args):
+		import inspect
+		self.widget = widget
+		self.function = func
+		self.args = args
+		argspec = inspect.getargspec( func )
+		self.num_c_args = len(argspec.args)
+		self.num_user_args = len(args)
+
+		n = len(argspec.args) - len(args)
+		if not inspect.ismethod( func ): n += 1		# if not a bound-method
+		self.cfunc_prototype = ctypes.CFUNCTYPE( ctypes.c_void_p, *([ctypes.c_void_p]*n) )
+		g_signal_connect_data.change_argument_type( 'c_handler', self.cfunc_prototype )	# ugly workaround
+
+		self.cfunc = self.cfunc_prototype( self.call )
+
+		self.wrapped_args = _nice_callback_args_container_( args )
+		userdata = ctypes.pointer( ctypes.py_object(self.wrapped_args) )
+		self.userdata = userdata
+
+
+	def call(self, *args):
+		a = [ self.widget ]	# the first argument is always the widget the signal is attached to
+		for i,arg in enumerate(args):
+			if i == len(args)-1:
+				ptr = ctypes.cast( arg, ctypes.POINTER(ctypes.py_object) )
+				w = ptr.contents.value
+				a += list(w.args)
+			elif i:
+				a.append( arg )
+		self.function( *a )
+		return 0	# pypy complains if None is returned
+
+
+def connect( ptr, name, func, *args ):
+	wrapper = _nice_callback_( ptr.pyobject, func, args )
+	return g_signal_connect_data( ptr, name, wrapper.cfunc, wrapper.userdata )
+
+
+for o in (GtkVBox, GtkHBox): o._rpythonic_parent_classes_.append( GtkBox )
+for o in (GtkCheckButton,): o._rpythonic_parent_classes_.append( GtkToggleButton )
+for o in (GtkHScale, GtkVScale): o._rpythonic_parent_classes_.append( GtkScale )
+for o in (GtkCheckButton,GtkToggleButton): o._rpythonic_parent_classes_.append( GtkButton )
+
+GTK_WIDGET_CLASSES = {
+	GtkButton : gtk_button_new_with_label,
+	GtkAdjustment : gtk_adjustment_new,
+	GtkHScale : gtk_hscale_new,
+	GtkVScale : gtk_vscale_new,
+	GtkEntry : gtk_entry_new,
+	GtkLabel : gtk_label_new,
+
+	GtkToggleButton : gtk_toggle_button_new_with_label,
+	GtkCheckButton : gtk_check_button_new_with_label,
+	GtkSwitch : gtk_switch_new,
+
+	GtkComboBox : gtk_combo_box_new,
+	GtkComboBoxText : gtk_combo_box_text_new,
+	GtkSocket : gtk_socket_new,
+
+	GtkSpinButton : gtk_spin_button_new,
+
+	GtkSeparator : gtk_separator_new,
+	GtkHSeparator : gtk_hseparator_new,
+	GtkVSeparator : gtk_vseparator_new,
+
+	GtkVolumeButton : gtk_volume_button_new,
+	GtkToolPalette : gtk_tool_palette_new,
+	GtkToolItemGroup : gtk_tool_item_group_new,
+	GtkTextView : gtk_text_view_new,
+	GtkTable : gtk_table_new,
+	GtkStatusbar : gtk_statusbar_new,
+	GtkSpinner : gtk_spinner_new,
+
+	GtkViewport : gtk_viewport_new,
+	GtkScaleButton : gtk_scale_button_new,
+	GtkRadioToolButton : gtk_radio_tool_button_new,
+	GtkToggleToolButton : gtk_toggle_tool_button_new,
+	GtkRadioButton : gtk_radio_button_new,
+
+	GtkProgressBar : gtk_progress_bar_new,
+
+	GtkMenuToolButton : gtk_menu_tool_button_new,
+	GtkToolButton : gtk_tool_button_new,
+	GtkLinkButton : gtk_link_button_new,
+
+	GtkScrollbar : gtk_scrollbar_new,
+	GtkScale : gtk_scale_new,
+	GtkFontButton : gtk_font_button_new,
+
+	GtkFileChooserButton : gtk_file_chooser_button_new,
+	GtkColorSelection : gtk_color_selection_new,
+	GtkColorButton : gtk_color_button_new_with_color,
+
+	GtkCalendar : gtk_calendar_new,
+	GtkArrow : gtk_arrow_new,
+}
+
+GTK_CONTAINER_CLASSES = {
+	GtkEventBox : gtk_event_box_new,
+	GtkExpander : gtk_expander_new,
+	GtkFixed : gtk_fixed_new,
+	GtkFrame : gtk_frame_new,
+	GtkWindow : gtk_window_new,
+	GtkVBox : gtk_vbox_new,
+	GtkHBox : gtk_hbox_new,
+	GtkNotebook : gtk_notebook_new,
+	GtkScrolledWindow : gtk_scrolled_window_new,
+
+	GtkTreeView : gtk_tree_view_new,
+	GtkDrawingArea : gtk_drawing_area_new,
+
+	GtkPaned : gtk_paned_new,
+	GtkGrid : gtk_grid_new,
+	GtkOffscreenWindow : gtk_offscreen_window_new,
+
+	GtkToolbar : gtk_toolbar_new,
+	GtkMenuBar : gtk_menu_bar_new,
+
+}
+for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
+	for o in d:
+		o._rpythonic_parent_classes_.append( GtkWidget )
+		o._rpythonic_parent_classes_.append( GtkContainer )
+		d[ o ].return_wrapper = o
+		s = "lambda *args, **kw: %s(*args, **kw)"%d[o].name
+		globals()[ o.__name__[3:] ] = eval(s)
+
+
