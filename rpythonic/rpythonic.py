@@ -2,7 +2,7 @@
 # RPythonic - Feb, 2012
 # By HartsAntler, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.4d'
+VERSION = '0.4.4e'
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -1672,6 +1672,15 @@ class SourceCode(object):
 
 ## data = output of C pre processor ##
 def make_pycparser_compatible( data ):
+	'''
+	this function is a super hack - looking for a better solution.
+	how to hack this:
+		run rpythonic to generate your wrapper,
+		when pycparser fails check /tmp/_debug_[name of your header].h
+		then search for "((" or "__attribute" since most of the GNU extensions
+		look like that.
+	'''
+
 	## deprecated ##
 	d = ''
 	TYPEDEF_HACKS = [ 
@@ -1708,8 +1717,19 @@ def make_pycparser_compatible( data ):
 		if '__attribute__((deprecated))' in line.split():	# alut.h
 			line = line.replace( '__attribute__((deprecated))', '' )
 
-		#if line.strip().endswith('__attribute__((__malloc__)) __attribute__((__alloc_size__(1)));'):	#glib/gslice.h:28
-		#	line = line.replace( '__attribute__((__malloc__)) __attribute__((__alloc_size__(1)));', ';' )
+		## libavcodec
+		if line.strip().endswith('__attribute__((deprecated));'):
+			line = line.replace( '__attribute__((deprecated));', ';' )
+		if '__attribute__((__const__))' in line.split():
+			line = line.replace( '__attribute__((__const__))', '' )
+		if line.strip().endswith('__attribute__((alloc_size(2)));'):
+			line = line.replace( '__attribute__((alloc_size(2)));', ';')
+		if line.strip().endswith('((__format__ (__printf__, 3, 4)));'):
+			line = line.replace('((__format__ (__printf__, 3, 4)));', ';')
+		## libavformat
+		if line.strip().endswith('((__format__ (__printf__, 2, 3)));'):
+			line = line.replace( '((__format__ (__printf__, 2, 3)));', ';' )
+
 		if '__attribute__((__malloc__))' in line.split() and line.strip().endswith(';'):
 			line = line.split('__attribute__((__malloc__))')[0] + ';'
 

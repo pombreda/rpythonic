@@ -412,8 +412,6 @@ WIIMOTE_INIT_STATES = WIIMOTE_STATE_IR_SENS_LVL3
 	)
 
 
-
-
 if '--fluid' in sys.argv or ALL:
 	rpythonic.wrap( 'fluidsynth', 
 		header='/usr/local/include/fluidsynth.h',
@@ -434,4 +432,17 @@ if '--fftw' in sys.argv or ALL:
 		strip_prefixes = ['fftw_', 'FFTW_'],
 	)
 
+if '--avcodec' in sys.argv or ALL:
+	rpythonic.wrap( 'avcodec', 
+		header='/usr/include/libavcodec/avcodec.h',
+		library = '/usr/lib/libavcodec.so',
+		strip_prefixes = ['AV', 'FF_'],
+	)
+
+if '--avformat' in sys.argv or ALL:
+	rpythonic.wrap( 'avformat', 
+		header='/usr/include/libavformat/avformat.h',
+		library = '/usr/lib/libavformat.so',
+		strip_prefixes = ['AV', 'FF_'],
+	)
 
