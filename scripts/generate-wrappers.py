@@ -446,3 +446,10 @@ if '--avformat' in sys.argv or ALL:
 		strip_prefixes = ['AV', 'FF_'],
 	)
 
+if '--libmlt' in sys.argv or ALL:
+	rpythonic.wrap( 'libmlt', 
+		header='/usr/include/mlt/framework/mlt.h',
+		library = '/usr/lib/libmlt.so',
+		strip_prefixes = ['mlt_'],
+	)
+
