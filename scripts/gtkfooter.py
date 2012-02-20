@@ -219,6 +219,7 @@ for o in (GtkVBox, GtkHBox): o._rpythonic_parent_classes_.append( GtkBox )
 for o in (GtkCheckButton,): o._rpythonic_parent_classes_.append( GtkToggleButton )
 for o in (GtkHScale, GtkVScale): o._rpythonic_parent_classes_.append( GtkScale )
 for o in (GtkCheckButton,GtkToggleButton, GtkColorButton): o._rpythonic_parent_classes_.append( GtkButton )
+for o in (GtkVPaned, GtkHPaned): o._rpythonic_parent_classes_.append( GtkPaned )
 
 GTK_WIDGET_CLASSES = {
 	GtkButton : gtk_button_new_with_label,
@@ -289,7 +290,9 @@ GTK_CONTAINER_CLASSES = {
 	GtkTreeView : gtk_tree_view_new,
 	GtkDrawingArea : gtk_drawing_area_new,
 
-	GtkPaned : gtk_paned_new,
+	GtkVPaned : gtk_vpaned_new,
+	GtkHPaned : gtk_hpaned_new,
+
 	GtkGrid : gtk_grid_new,
 	GtkOffscreenWindow : gtk_offscreen_window_new,
 

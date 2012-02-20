@@ -63,3 +63,12 @@ if '--wnck' in sys.argv:
 		strip_prefixes = ['wnck_'],
 	)
 
+
+if '--gimp' in sys.argv or ALL:
+	rpythonic.wrap( 'libgimp', 
+		header='/usr/include/gimp-2.0/libgimp/gimp.h',
+		library = '/usr/lib/libgimp-2.0.so',
+		includes = ['/usr/include/gimp-2.0/'] + GINCLUDE,
+		strip_prefixes = ['gimp_', 'Gimp', 'GIMP'],
+	)
+
