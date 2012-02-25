@@ -2,7 +2,7 @@
 # RPythonic - Feb, 2012
 # By HartsAntler, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.4e'
+VERSION = '0.4.4f'
 
 import os, sys, ctypes, inspect
 import subprocess
