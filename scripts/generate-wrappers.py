@@ -282,6 +282,7 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 '''
 	rpythonic.wrap( 
 		'cv', 
+		defines = ['_MMINTRIN_H_INCLUDED', '_XMMINTRIN_H_INCLUDED', '_EMMINTRIN_H_INCLUDED'],
 		header='/usr/include/opencv/cv.h', 
 		insert_headers = ['/usr/include/opencv/cvtypes.h'],
 		ctypes_footer = footer,
@@ -292,6 +293,7 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 	defines = []
 	rpythonic.wrap(
 		'highgui',
+		defines = ['_MMINTRIN_H_INCLUDED', '_XMMINTRIN_H_INCLUDED', '_EMMINTRIN_H_INCLUDED'],
 		header='/usr/include/opencv/highgui.h',
 		strip_prefixes = ['cv'],
 	)
@@ -322,7 +324,7 @@ if '--freenect' in sys.argv or ALL:
 
 	rpythonic.wrap( 
 		'libfreenect', 
-		header='/usr/local/include/libfreenect/libfreenect.h',
+		header='/usr/include/libfreenect.h',
 		strip_prefixes = ['freenect_', '_freenect_', 'FREENECT_'],
 	)
 
@@ -330,7 +332,7 @@ if '--freenect-sync' in sys.argv or ALL:
 
 	rpythonic.wrap(
 		'libfreenect_sync', 
-		header='/usr/local/include/libfreenect/libfreenect_sync.h',
+		header='/usr/include/libfreenect_sync.h',
 		strip_prefixes = ['freenect_'],
 	)
 
@@ -414,8 +416,8 @@ WIIMOTE_INIT_STATES = WIIMOTE_STATE_IR_SENS_LVL3
 
 if '--fluid' in sys.argv or ALL:
 	rpythonic.wrap( 'fluidsynth', 
-		header='/usr/local/include/fluidsynth.h',
-		library = '/usr/local/lib/libfluidsynth.so',
+		header='/usr/include/fluidsynth.h',
+		library = '/usr/lib/libfluidsynth.so',
 		strip_prefixes = ['fluid_'],
 	)
 

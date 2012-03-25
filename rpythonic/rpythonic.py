@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - Feb, 2012
-# By HartsAntler, bhartsho@yahoo.com
+# RPythonic - March, 2012 (fixes 64bits)
+# By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.4f'
+VERSION = '0.4.5a'
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -1693,9 +1693,16 @@ def make_pycparser_compatible( data ):
 	################ above is deprecated
 
 	skip = False
+	skipTO = None
 	for num, line in enumerate(data.splitlines()):
 		if skip:
-			if line.strip().endswith(';'): line = ';'; skip = False
+			if skipTO is not None:
+				if line.strip() == skipTO:
+					skip = False
+					skipTO = None
+				else:
+					continue
+			elif line.strip().endswith(';'): line = ';'; skip = False; skipTO = None
 			else: continue
 
 		if '((__noreturn__))' in line.split(): line = line.replace('((__noreturn__))','')	# pthread.h
@@ -1739,6 +1746,8 @@ def make_pycparser_compatible( data ):
 			_line = line.split('__attribute__((warn_unused_result))')[0]
 			if line.strip().endswith(';'): _line += ';'
 			line = _line
+
+		if '__attribute__((always_inline))' in line.split(): line = line.replace('__attribute__((always_inline))', '')
 
 		if '((__malloc__));' in line.split(): line = line.replace('((__malloc__));', ';')	# stdio.h:225
 		if '((__malloc__))' in line.split(): line = line.replace('((__malloc__))', '')
@@ -1877,10 +1886,44 @@ def make_pycparser_compatible( data ):
 
 		if line.strip().startswith('asm volatile') and line.strip().endswith(';'): line = ';'		# for boehm gc
 
-
+		################ SKIP SKIPTO #############
+		#####################################
 		if line.strip().startswith('__asm__'):
 			if line.strip().endswith(';'): line = ';'
 			else: line = ''; skip = True
+		if '__extension__' in line:
+			line = ''
+			skip = True
+			skipTO = '}'
+
+		if '__attribute__((' in line:
+			x = line.split('__attribute__((')[0]
+			y = line.strip()[-1]
+			if y == ')':
+				line = x
+				#skip = True
+				#skipTO = '}'
+			else: line = x + y
+
+		###################64bit hacks ###############
+
+		if '((__vector_size__' in line:
+			line = ';'
+
+		if line.strip() == 'extern  __m64': line = ''
+		if line.strip().startswith('return (__m64)'):
+			line = 'return;'
+		if line.strip() == 'return _mm_cvtsi32_si64 (__i);':
+			line = ';'
+		if line.strip().startswith('return _mm_cvtsd_si32('):
+			line = ''
+			skip = True
+			skipTO = '}'
+		if line.strip() == '__m128d t = _mm_set_sd( value );':	# opencv 64bit
+			line = ''
+
+		#####################################
+
 
 		if '__asm(' in line and line.strip().endswith(');'):	# darwin - stdio.h
 			line = line.split('__asm(')[0] + ';'

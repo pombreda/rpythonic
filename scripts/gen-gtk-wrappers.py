@@ -17,6 +17,7 @@ GINCLUDE = [
 	'/usr/include/atk-1.0/',
 	'/usr/include/gdk-pixbuf-2.0/',
 	'/usr/lib/i386-linux-gnu/glib-2.0/include/',		# glibconfig.h
+	'/usr/lib/x86_64-linux-gnu/glib-2.0/include/',	# 64bits
 ]
 
 
@@ -28,6 +29,7 @@ if '--gtk3' in sys.argv:
 		header='/usr/include/gtk-3.0/gtk/gtk.h', 
 		library='/usr/lib/libgtk-3.so',
 		includes=['/usr/include/gtk-3.0/'] + GINCLUDE,
+		#defines=['__G_THREAD_H__', '__G_ASYNCQUEUE_H__'],
 		ctypes_footer=footer,
 		strip_prefixes = ['GTK_', 'gtk_'],
 		insert_headers = ['/usr/include/gtk-3.0/gtk/gtkx.h'],	# required with gtk3 
@@ -64,7 +66,7 @@ if '--wnck' in sys.argv:
 	)
 
 
-if '--gimp' in sys.argv or ALL:
+if '--gimp' in sys.argv:
 	rpythonic.wrap( 'libgimp', 
 		header='/usr/include/gimp-2.0/libgimp/gimp.h',
 		library = '/usr/lib/libgimp-2.0.so',
