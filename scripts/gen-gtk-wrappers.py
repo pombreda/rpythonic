@@ -74,3 +74,12 @@ if '--gimp' in sys.argv:
 		strip_prefixes = ['gimp_', 'Gimp', 'GIMP'],
 	)
 
+if '--gstreamer' in sys.argv:
+	# apt-get install libgstreamer0.10-dev
+	rpythonic.wrap( 'libgstreamer', 
+		header='/usr/include/gstreamer-0.10/gst/gst.h',
+		library = 'libgstreamer-0.10.so',
+		includes = ['/usr/include/gstreamer-0.10/', '/usr/include/libxml2'] + GINCLUDE,
+		strip_prefixes = ['gst_'],
+	)
+

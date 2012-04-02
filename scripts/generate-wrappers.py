@@ -455,3 +455,14 @@ if '--libmlt' in sys.argv or ALL:
 		strip_prefixes = ['mlt_'],
 	)
 
+if '--verse' in sys.argv or ALL:
+	# mkdir verse2
+	# cd verse2
+	# svn checkout  https://dev.nti.tul.cz/repos/verse2/verse2/trunk
+	rpythonic.wrap( 'libverse', 
+		header='../../verse2/trunk/include/verse.h',
+		library = '/usr/lib/libverse.so',
+		strip_prefixes = ['ve_'],
+	)
+
+

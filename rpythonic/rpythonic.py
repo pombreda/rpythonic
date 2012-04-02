@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - March, 2012 (fixes 64bits)
+# RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.5a'
+VERSION = '0.4.5b'
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -1664,7 +1664,9 @@ class SourceCode(object):
 
 		# remove bad stuff pycparser can not handle #
 		if self.__class__ is CPlusPlus: d = data
-		else: d = make_pycparser_compatible( data )
+		else:
+			open('/tmp/_raw_%s' %self.source_file, 'wb').write( data )
+			d = make_pycparser_compatible( data )
 		f = open('/tmp/_debug_%s' %self.source_file,'wb')
 		f.write(d); f.close()
 		return d
@@ -1896,7 +1898,11 @@ def make_pycparser_compatible( data ):
 			skip = True
 			skipTO = '}'
 
+		if '__attribute__((alloc_size(1)))' in line:	#/usr/include/libxml2/libxml/xmlmemory.h
+			line = line.replace( '__attribute__((alloc_size(1)))', '' )
+
 		if '__attribute__((' in line:
+			print('WARN: ugly __attribute__ hack')
 			x = line.split('__attribute__((')[0]
 			y = line.strip()[-1]
 			if y == ')':
