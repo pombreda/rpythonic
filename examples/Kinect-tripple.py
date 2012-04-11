@@ -295,7 +295,8 @@ class Kinect( object ):
 		#assert numdevs
 
 		print( 'setting leds' )
-		status = freenect.sync_set_led( freenect.LED_YELLOW, 0 )
+		#status = freenect.sync_set_led( freenect.LED_YELLOW, 0 )
+		status = 0
 		print('KINECT STATUS',status)
 		if status < 0: self.ready = False
 		else: self.ready = True

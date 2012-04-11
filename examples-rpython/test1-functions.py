@@ -4,7 +4,7 @@ sys.path.append('..')
 import rpythonic
 rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython()
+rpy = rpythonic.RPython( 'test1' )
 
 @rpy.bind()							# declare arg types is optional if,
 def add( a=1, b=1000 ):			# keyword defaults are given
@@ -31,8 +31,8 @@ class R(object):
 	def append( self, value ):
 		self.values.append( value )
 
-
-rpy.cache('test1', refresh=1)					# only compiles if cache is dirty
+#rpythonic.set_cache( '/tmp' )					# defaults to /home/user/.rpythonic
+rpy.cache( refresh=1)					# only compiles if cache is dirty
 
 ############### testing ##############
 

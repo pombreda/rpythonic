@@ -6,24 +6,30 @@ import libfreenect as freenect
 
 print( 'creating kinect context' )
 context = freenect.context()
-#usbcon = freenect.libusb_context()
-#freenect.libusb_init( usbcon )
-#status = freenect.init(context, usbcon)
-status = freenect.init(context, None)
+conptr = ctypes.pointer( context.POINTER )
+usbcon = freenect.libusb_context()
+usbconptr = ctypes.pointer( usbcon.POINTER )
+freenect.libusb_init( usbconptr )
+
+#freenect.shutdown( context )
+
+status = freenect.init(conptr, usbcon)
+#status = freenect.init(conptr, None)
 print('init status', status )
 
-freenect.set_log_level( context, 1 )
+#freenect.set_log_level( context, 1 )
 
 numdevs = freenect.num_devices( context )
 print( 'num devices', numdevs )
 
 #f_dev = freenect.freenect_device()
 dev = freenect.device()
-#devptr = ctypes.pointer( f_dev() )
-
-status = freenect.open_device( context, ctypes.pointer(dev()), 0 )
+devptr = ctypes.pointer( dev.POINTER )
+#freenect.close_device( dev )
+status = freenect.open_device( context, devptr, 0 )
 #status = freenect.open_device( contextptr, ctypes.byref(devptr), 0 )
 print('open status', status )
+assert not status
 
 freenect.set_led( dev, freenect.LED_RED)
 time.sleep(1)

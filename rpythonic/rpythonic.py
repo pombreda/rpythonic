@@ -315,7 +315,8 @@ def set_android_ndk_root(path): AndroidPackage.set_ndk_root( path )
 
 def _load( name, type, platform='' ):
 	return __import__( 
-		'gen%s%s.%s'%(type,platform,name), 
+		#'gen%s%s.%s'%(type,platform,name), 
+		name,
 		fromlist=[name] 
 	)
 
@@ -381,7 +382,7 @@ def module( name, space=None, mode='ctypes', platform='', secondary=None, fold_c
 		return ModuleWrapper( name, mod, secondary )
 
 ########### Wrapper API ############
-
+STRIP_PREFIXES = []
 CTYPES_FOOTER = ''
 
 def wrap(
@@ -480,7 +481,8 @@ def translate_rpython( func, inline=True, compile=False, stackless=False, gc='re
 	if stackless: assert gc != 'ref'	# this can go away later when pypy supports stackless+ref
 	# other gc types: 'ref', 'framework', 'framework+asmgcroot', 'hybrid'
 
-	t = Translation( func, standalone=True, inline=inline, gc=gc, stackless=stackless)
+	#t = Translation( func, standalone=True, inline=inline, gc=gc, stackless=stackless)
+	t = Translation( func, standalone=True, inline=inline, gc=gc)
 
 	t.driver.secondary_entrypoints = functions
 	print( 'secondary entry points', t.driver.secondary_entrypoints )
@@ -2163,9 +2165,8 @@ class GCC(object):
 
 		a = ''
 		for x in includes: a += '-I%s ' %x
-		b = ''
+		b = ''	# -UCLOCK_THREAD_CPUTIME_ID '
 		for x in defines: b += '-D%s ' %x
-
 		asmobjects = []
 		for path in paths:
 			# -c (do not run linker)
@@ -2173,8 +2174,10 @@ class GCC(object):
 			asmob = '/tmp/%s.o' %n
 			asmobjects.append( asmob )
 			cmd = 'gcc -c -fPIC %s ' %path
-			if optimize: cmd += ' -O%s ' %optimize
-			if pthread: cmd += ' -pthread '
+			if optimize:
+				cmd += ' -O%s ' %optimize
+				cmd += ' -fomit-frame-pointer -Wall -Wno-unused '
+			#if pthread: cmd += ' -pthread '
 			if not warnings: cmd += ' -w '
 			cmd += '-o %s %s %s' %(asmob,a,b)
 			print('-'*80)
@@ -4375,13 +4378,13 @@ class RPython(object):
 			gc=self._gc,
 		)
 
-		pre = os.path.join( 'genctypes', mname )
-		mdir = os.path.join( CACHEDIR, pre )
+		#pre = os.path.join( 'genctypes', mname )
+		mdir = os.path.join( CACHEDIR, mname )
 		if not os.path.isdir( mdir ):
 			os.makedirs( mdir )
-			open( os.path.join(os.path.join(CACHEDIR,'genctypes'),'__init__.py'), 'wb' )
+			#open( os.path.join(os.path.join(CACHEDIR,'genctypes'),'__init__.py'), 'wb' )
 
-		CTYPES_OUTPUT = os.path.join(pre,'__init__.py')
+		CTYPES_OUTPUT = os.path.join(mname,'__init__.py')	# not full path
 		LIBS.append( 'lib%s.so' %mname)
 		a = C( pypygen['implement.c'].strpath, debug=0 )
 		a.save()
