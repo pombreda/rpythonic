@@ -6,12 +6,14 @@ rpythonic.set_pypy_root( '../../pypy' )
 ################################
 rpy = rpythonic.RPython( 'test1' )
 
-@rpy.bind()							# declare arg types is optional if,
+@rpy.bind()					# declare arg types is optional if,
 def add( a=1, b=1000 ):			# keyword defaults are given
+	print('rpy.add %s %s' %(a,b))
 	return a+b
 
 @rpy.bind(a=float, b=float)
 def sub( a, b ):
+	print('rpy.sub %s %s' %(a,b))
 	return a-b
 
 @rpy.bind( values=[float] )	# lists not working yet
@@ -38,7 +40,7 @@ rpy.cache( refresh=1)					# only compiles if cache is dirty
 
 print add( 100, 9 )
 print add( 1, 99 )
-print sub( 1.0, .8 )		# opps, TODO fixme: 3219623024
+print sub( 1.0, .8 )
 
 test_R( [.1, .2, .3] )
 

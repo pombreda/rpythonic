@@ -465,4 +465,8 @@ if '--verse' in sys.argv or ALL:
 		strip_prefixes = ['ve_'],
 	)
 
+if '--test' in sys.argv:
+	rpythonic.wrap( 'testing', 
+		header='./test.h',
+	)
 

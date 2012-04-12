@@ -2,7 +2,7 @@
 # RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.5b'
+VERSION = '0.4.5c'
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -1198,7 +1198,6 @@ class Enum( SomeThing ):		# an enum can be nameless
 class Function( SomeThing ):
 
 	def setup(self):
-		ast = self.ast
 		#ast.show()
 		#print 'function', ast.coord.file, ast.coord.line
 		self.returns = None
@@ -1206,21 +1205,27 @@ class Function( SomeThing ):
 		self.body = None
 		self.static = False
 		args = None
-		if isclass( self.ast, 'FuncDecl' ):
-			decl = self.ast
-			if ast.args: args = ast.args
 
-		elif isclass( self.ast, 'FuncDef' ):
-			decl = self.ast.decl
-			#print( dir(decl) )
-			if decl.storage and 'static' in decl.storage: self.static = True
-			self.child = SomeThing( decl, parent=self )	# do not create sub-func type
-			if decl.type.args: args = decl.type.args
-			## TODO body
-			if ast.body.block_items:
-				self.body = True
-				for node in ast.body.block_items:
-					if isclass( node, 'Return' ): pass
+		if isclass( self.ast, 'FuncDef' ):
+			decl = self.ast.decl.type
+
+		elif isclass( self.ast, 'FuncDecl' ):
+			decl = self.ast
+			#if ast.args: args = ast.args
+
+		if decl.args: args = decl.args
+
+		#elif isclass( self.ast, 'FuncDef' ):
+		#	decl = self.ast.decl
+		#	#print( dir(decl) )
+		#	if decl.storage and 'static' in decl.storage: self.static = True
+		#	self.child = SomeThing( decl, parent=self )	# do not create sub-func type
+		#	if decl.type.args: args = decl.type.args
+		#	## TODO body
+		#	if ast.body.block_items:
+		#		self.body = True
+		#		for node in ast.body.block_items:
+		#			if isclass( node, 'Return' ): pass
 
 		if args:
 			for arg in args.children():
@@ -3433,7 +3438,12 @@ print( CTYPES_DLL._name )
 		#	self.structs.append( Struct(node) ); print 'this happens? struct without declare'; raise SyntaxError
 		#elif isclass( node, 'Union' ):
 		#	self.unions.append( Union(node) ); print 'this happens? union without declare'; raise SyntaxError
-		if isclass( node, 'FuncDef', 'FuncDecl' ):
+		#if isclass( node, 'FuncDef', 'FuncDecl' ):
+
+		#if isclass( node, 'FuncDef' ):		# IS THIS CORRECT? funcDefs are not normally found in .h files
+		#	print( 'skipping FuncDef', node )
+		#	pass
+		if isclass( node, 'FuncDecl', 'FuncDef' ):
 			o = Function(node)
 			self.funcs.append( o )
 			self.objects.append( o )
@@ -4249,7 +4259,8 @@ class RPython(object):
 			klass._rpyinit_ = rpyinits[n]
 
 
-			la = lambda s, *args: setattr( s, '_pointer', ctypes.cast(s._rpyinit_(*args),s._rpytype_)  )
+			#la = lambda s, *args: setattr( s, '_pointer', ctypes.cast(s._rpyinit_(*args),s._rpytype_)  )
+			la = lambda s, *args: setattr( s, 'POINTER', ctypes.cast(s._rpyinit_(*args),s._rpytype_)  )
 			setattr( klass, '__init__', la )		# changes init of class to call generated rpyinit, that returns ctypes pointer
 
 			for f in mod.RPYTHONIC_WRAPPER_FUNCTIONS:
@@ -4267,77 +4278,6 @@ class RPython(object):
 					else:
 						print( 'WARN: meth not found in class', n )
 
-
-	def _gen_deprecated(self,mname):
-		#g = ['_float=.0; _int=0']	# this wont work because pypy is too smart
-		g = [									# workaround, declare non-concrete variables
-			'from pypy.rlib import streamio',
-			's = streamio.fdopen_as_stream(1, "r", 0)',
-			'_int = int( s.read(1) )',
-			'_float = float( s.read(1) )',
-			'_str = str( s.read(2) )',
-			'_char = str( s.read(1) )',
-			'_bool = bool( _int )',
-			'_float_list = [ _float for i in range(_int) ]',
-			'_str_list = [ _str for i in range(_int) ]',
-		]
-
-		for klass in self.classes:
-			n = klass.__name__
-
-			#if self._threading and klass is self.Lock:
-			#	g.append( '_RPY_._lock_ = _RPY_._new_%s()' %n )
-			#	g.append( 'a = _RPY_._lock_' )
-			#else:
-			g.append( 'a = _RPY_._rpyinit_%s()' %n )	# could do proper init here, and below class() no-args
-			g.append( 'print str(a)' )
-
-
-			for aname in dir( klass ):
-				attr = getattr( klass, aname )
-				if not aname.startswith('_') and inspect.ismethod(attr):
-					spec = inspect.getargspec( attr )
-					s = ''
-					if spec.args:
-						for ai,an in enumerate(spec.args):
-							if ai == 0: continue
-							arg = type( spec.defaults[ ai-1 ] )
-							if arg is int: s += '_int,'
-							elif arg is float: s += '_float,'
-							elif arg is str: s += '_str,'
-							elif arg is ctypes.c_char: s += '_char,'
-							elif arg is bool: s += '_bool,'
-							else: s += '%s(),' %arg.__name__		# TODO, this is tricky
-
-					g.append( 'b = a.%s( %s )'%(aname,s) )
-					g.append( 'print str(b)' )
-
-		for i,fw in enumerate(self.wrapped):
-			if fw.name == '__init__': continue
-			setattr(_RPY_, fw.name, fw.function)
-			s = 'val%s = _RPY_.%s(' %(i,fw.name)		# tricky - part1
-			for arg in fw.arguments:	# TODO detect global singleton instances?
-				if arg is int: s += '_int,'
-				elif arg is float: s += '_float,'
-				elif arg is str: s += '_str,'
-				elif arg is ctypes.c_char: s += '_char,'
-				elif arg is bool: s += '_bool,'
-				elif type(arg) is list:
-					if arg[0] is float:
-						s += '_float_list,'
-					elif arg[0] is str:
-						s += '_str_list,'
-					else: assert 0
-				else: s += '%s(),' %arg.__name__		# TODO, tricky - save instances above?
-			s += ')'
-			g.append( s )
-			g.append( 'print val%s' %i )		# tricky - part2: prevents pypy from inlining
-
-		g.insert(0, 'print "generated ugly declare - this should never be called directly"' )
-		#g.append( 'return 1' )
-		g = 'def declare_ugly():\n\t' + '\n\t'.join( g )
-		print( g )
-		exec( g )
 
 	def _gen(self,mname):
 		global CTYPES_OUTPUT
