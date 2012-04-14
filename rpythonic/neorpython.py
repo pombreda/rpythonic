@@ -9,9 +9,10 @@ def get_class_helper( block, var ):
 	'''
 	for op in block.operations:
 		if op.result is var:
-			if op.opname == 'simple_call':
-				cls = op.args[0].value	# <class 'pypy.objspace.flow.model.Constant'>
+			if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+				cls = op.args[0].value
 				return cls
+
 
 def make_rpython_compatible( blocks, delete_class_properties=True ):
 	import pypy.objspace.flow.model
@@ -22,9 +23,40 @@ def make_rpython_compatible( blocks, delete_class_properties=True ):
 		cache = {}
 		insert = []
 		for op in block.operations:
-			if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
+			if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
 				instance_var = op.args[0]
 				cls = get_class_helper( block, instance_var )
+				if not cls: continue
+
+				if op.opname == 'getitem': func_name = '__getitem__'
+				else: func_name = '__setitem__'
+				assert hasattr(cls, func_name)
+
+				if (cls, func_name) in cache: 	## saves a lookup ##
+					method_var = cache[ (cls,func_name) ]
+				else:
+					## create a new variable to hold the pointer to method ##
+					method_var = pypy.objspace.flow.model.Variable()
+					func_const = pypy.objspace.flow.model.Constant( func_name )
+					## create a new op to get the method and assign to method_var ##
+					getop = pypy.objspace.flow.model.SpaceOperation(
+						'getattr',					# opname
+						[ instance_var, func_const ],	# op args
+						method_var				# op result
+					)
+					## cache this lookup ##
+					cache[ (cls,func_name) ] = method_var
+					insert.append( (op,getop) )
+
+				op.opname = 'simple_call'
+				op.args = [ method_var ] + op.args[1:]
+
+
+			elif op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
+				instance_var = op.args[0]
+				cls = get_class_helper( block, instance_var )
+				if not cls: continue
+
 				func_name = '__call__'
 				assert hasattr(cls, func_name)
 
@@ -52,7 +84,7 @@ def make_rpython_compatible( blocks, delete_class_properties=True ):
 				name = name_const.value	# <class 'pypy.objspace.flow.model.Constant'>
 				cls = get_class_helper( block, instance_var )
 
-				if hasattr(cls, name) and type(getattr(cls,name)) is property:
+				if cls and hasattr(cls, name) and type(getattr(cls,name)) is property:
 					prop = getattr(cls,name)
 
 					if cls not in class_props: class_props[ cls ] = []
@@ -111,6 +143,13 @@ class A(object):
 	'''
 	myattr = property( get_myattr, set_myattr )
 	def __call__(self, arg): self.xxx = arg
+	def __getitem__(self, index): return self.array[ index ]
+	def __setitem__(self, index, value): self.array[ index ] = value
+
+	def __init__(self):
+		self.array = []
+
+
 
 def func(arg):
 	a = A()
@@ -118,6 +157,8 @@ def func(arg):
 	s = a.myattr
 	a.myattr = s + 'bar'
 	a(99)
+	a.array.append( 123.4 )
+	a.x = a[0] + a[0]
 	return 1
 
 
