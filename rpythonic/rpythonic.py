@@ -477,17 +477,41 @@ CONFIG = {
 
 
 def translate_rpython( func, inline=True, compile=False, stackless=False, gc='ref', functions=[] ):
+	import neorpython
 	from pypy.translator.interactive import Translation
-	if stackless: assert gc != 'ref'	# this can go away later when pypy supports stackless+ref
-	# other gc types: 'ref', 'framework', 'framework+asmgcroot', 'hybrid'
 
-	#t = Translation( func, standalone=True, inline=inline, gc=gc, stackless=stackless)
+	assert gc in ('ref', 'framework', 'framework+asmgcroot', 'hybrid')
+	if stackless: print('STACKLESS OPTION IS DEPRECATED')
+
 	t = Translation( func, standalone=True, inline=inline, gc=gc)
+	'''
+	the Translation instance __init__ contains:
+		self.driver = driver.TranslationDriver(overrides=DEFAULTS)
+		self.config = self.driver.config
+		self.entry_point = entry_point
+		self.context = TranslationContext(config=self.config)
+		...
+		self.update_options(argtypes, kwds)
+		self.context.buildflowgraph(entry_point)
 
+	'''
 	t.driver.secondary_entrypoints = functions
-	print( 'secondary entry points', t.driver.secondary_entrypoints )
+	'''
+	setting t.driver.secondary_entrypoints triggers annotator.build_types on t.annotate()
+	annotator.build_types builds a flowgraph, and adds it to graphs
+	'''
+	if functions:
+		for func,argtypes in functions:
+			graph = t.context.buildflowgraph( func )
+			t.context._prebuilt_graphs[ func ] = graph
 
+
+	print( 'secondary entry points', t.driver.secondary_entrypoints )
 	print('-'*80); print('#### PYPY FLOWGRAPH STEP1 COMPLETE ####'); print('-'*80)
+
+	for graph in t.driver.translator.graphs:
+		neorpython.make_rpython_compatible( graph.iterblocks() )
+
 	t.annotate()
 	print('-'*80); print('#### PYPY ANNONTATION STEP2 COMPLETE ####'); print('-'*80)
 	#print( 'ann_argtypes', t.ann_argtypes )
@@ -4239,9 +4263,9 @@ class RPython(object):
 
 				elif fw:
 					print( 'replacing python function with ctypes function', fw.name )
-					if fw.stackless:
-						fw.wrapper.function = mod.RPYTHONIC_WRAPPER_FUNCTIONS[ 'pypy_g_slp_entry_point' ]
-					else: fw.wrapper.function = mod.RPYTHONIC_WRAPPER_FUNCTIONS[ n ]
+					#if fw.stackless:
+					#	fw.wrapper.function = mod.RPYTHONIC_WRAPPER_FUNCTIONS[ 'pypy_g_slp_entry_point' ]
+					fw.wrapper.function = mod.RPYTHONIC_WRAPPER_FUNCTIONS[ n ]
 
 		for klass in self.classes:
 			n = klass.__name__

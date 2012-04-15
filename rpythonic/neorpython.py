@@ -1,28 +1,26 @@
-import sys
-sys.path.append('../../pypy')
+# Neo-Rpython - April 15, 2012
+# by Brett and The Blender Research Lab.
+# License: BSD
 
-
-def get_class_helper( block, var ):
+def make_rpython_compatible( blocks, delete_class_properties=True, debug=True ):
 	'''
-	TODO find a better way to find the class of an instance,
-	if the creation of the instance is outside of the block this fails.
+	modifies the flowgraph in place to make it strict-Rpython compatible
 	'''
-	for op in block.operations:
-		if op.result is var:
-			if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
-				cls = op.args[0].value
-				return cls
 
-
-def make_rpython_compatible( blocks, delete_class_properties=True ):
 	import pypy.objspace.flow.model
-
 	class_props = {}	# return dict of: class : [ prop names ]
+
+	if debug:
+		print('--------- make rpython compatible ---------')
 
 	for block in blocks:
 		cache = {}
 		insert = []
+		if debug: print( block )
+
 		for op in block.operations:
+			if debug: print( op )
+
 			if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
 				instance_var = op.args[0]
 				cls = get_class_helper( block, instance_var )
@@ -125,6 +123,10 @@ def make_rpython_compatible( blocks, delete_class_properties=True ):
 			op, getop = insert.pop()
 			index = block.operations.index( op )
 			block.operations.insert( index, getop )
+		if debug:
+			print('------- modified ops -------')
+			for op in block.operations: print(op)
+			print('-'*80)
 
 	if delete_class_properties:
 		for cls in class_props:	# delete the properties
@@ -132,8 +134,22 @@ def make_rpython_compatible( blocks, delete_class_properties=True ):
 
 	return class_props		# returns class props to be removed before annotation
 
-##############################################################################
 
+def get_class_helper( block, var ):
+	'''
+	if the creation of the instance is outside of the block this fails.
+	TODO traverse ancestor blocks until class is found.
+	'''
+	import pypy.objspace.flow.model
+
+	for op in block.operations:
+		if op.result is var:
+			if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+				cls = op.args[0].value
+				return cls
+
+
+############################## TESTING ######################################
 class A(object):
 	def set_myattr(self,v): self.myattr = v
 	def get_myattr(self): return self.myattr
@@ -147,9 +163,7 @@ class A(object):
 	def __setitem__(self, index, value): self.array[ index ] = value
 
 	def __init__(self):
-		self.array = []
-
-
+		self.array = [ 100.0 ]
 
 def func(arg):
 	a = A()
@@ -158,34 +172,24 @@ def func(arg):
 	a.myattr = s + 'bar'
 	a(99)
 	a.array.append( 123.4 )
-	a.x = a[0] + a[0]
+	a[0] = a[0] + a[0]
 	return 1
 
+if __name__ == '__main__':
+	import sys
+	sys.path.append('../../pypy')
 
-###################################### Testing ################################
-import pypy.translator.interactive
-T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
+	import pypy.translator.interactive
+	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
 
-graphs = T.driver.translator.graphs
-graph = graphs[0]
-blocks = list(graph.iterblocks())
-links = list(graph.iterlinks())
+	graphs = T.driver.translator.graphs
+	graph = graphs[0]
+	blocks = list(graph.iterblocks())
+	links = list(graph.iterlinks())
 
-print('-'*80)
-for op in blocks[0].operations: print( op )
-print('-'*80)
+	make_rpython_compatible( blocks, debug=True )
 
-make_rpython_compatible( blocks )
-
-print('-'*80)
-for op in blocks[0].operations: print( op )
-print('-'*80)
-
-## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
-T.annotate()
-T.rtype()
-
-print('-'*80)
-for op in blocks[0].operations: print( op )
-print('-'*80)
+	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
+	T.annotate()
+	T.rtype()
 
