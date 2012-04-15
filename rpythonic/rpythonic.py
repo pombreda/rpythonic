@@ -476,12 +476,11 @@ CONFIG = {
 }
 
 
-def translate_rpython( func, inline=True, compile=False, stackless=False, gc='ref', functions=[] ):
+def translate_rpython( func, inline=True, compile=False, gc='ref', functions=[] ):
 	import neorpython
 	from pypy.translator.interactive import Translation
 
 	assert gc in ('ref', 'framework', 'framework+asmgcroot', 'hybrid')
-	if stackless: print('STACKLESS OPTION IS DEPRECATED')
 
 	t = Translation( func, standalone=True, inline=inline, gc=gc)
 	'''
@@ -3828,50 +3827,49 @@ class _rpy_func_bind(object):		# @sub-decorator
 		self.wrapper = _rpy_func_wrapper(func)
 		return self.wrapper
 
+if 0:	# DEPRECATED
+	class _rsingleton_(object):
+		def __init__(self):
+			self._locks_ = {}
+		def _create_default_lock( self ): self._Lock_()
+
+	#class _RPY_(object): pass		# this works until you start dynamically adding things to _RPY_ from rpython-space
+	_RPY_ = _rsingleton_()		# just a container for the hacks below
+
+	def _rpy_object_getattr(self,name):
+		#print 'get prop', name
+		if hasattr( self._pointer.contents, 'mro_inst_'+name ):
+			return getattr( self._pointer.contents, 'mro_inst_'+name )
+		else:
+			return getattr( self._pointer.contents, 's_inst_'+name )
+
+	def _rpy_threadsafe(func, lockname, *args ):	# RPYTHON
+		if lockname in _RPY_._locks_:		# the lock is created Python-side, so it may or may not exist
+			lock = _RPY_._locks_[ lockname ]
+			lock.acquire()
+			func(*args)
+			lock.release()
+		else:
+			func(*args)
+
+	def _rpy_stackless_entrypoint( argc ):
+		_RPY_._create_default_lock()
+		_RPY_._stackless_()		# stackless entry point can take args anyways
+		return 1
 
 
-class _rsingleton_(object):
-	def __init__(self):
-		self._locks_ = {}
-	def _create_default_lock( self ): self._Lock_()
-
-#class _RPY_(object): pass		# this works until you start dynamically adding things to _RPY_ from rpython-space
-_RPY_ = _rsingleton_()		# just a container for the hacks below
-
-def _rpy_object_getattr(self,name):
-	#print 'get prop', name
-	if hasattr( self._pointer.contents, 'mro_inst_'+name ):
-		return getattr( self._pointer.contents, 'mro_inst_'+name )
-	else:
-		return getattr( self._pointer.contents, 's_inst_'+name )
-
-def _rpy_threadsafe(func, lockname, *args ):	# RPYTHON
-	if lockname in _RPY_._locks_:		# the lock is created Python-side, so it may or may not exist
-		lock = _RPY_._locks_[ lockname ]
-		lock.acquire()
-		func(*args)
-		lock.release()
-	else:
-		func(*args)
-
-def _rpy_stackless_entrypoint( argc ):
-	_RPY_._create_default_lock()
-	_RPY_._stackless_()		# stackless entry point can take args anyways
-	return 1
+	class _threadsafe(object):
+		def __init__(self, name ):
+			self.name = name		# semaphore name
+		def __call__(self, func):
+			setattr( _RPY_, '_threadsafe_%s' %func.func_name, func )
+			e = 'lambda *args: _rpy_threadsafe(_RPY_._threadsafe_%s, "%s", *args)' %(func.func_name, self.name)
+			g = eval( e )
+			g.func_name = func.func_name
+			return g
 
 
-class _threadsafe(object):
-	def __init__(self, name ):
-		self.name = name		# semaphore name
-	def __call__(self, func):
-		setattr( _RPY_, '_threadsafe_%s' %func.func_name, func )
-		e = 'lambda *args: _rpy_threadsafe(_RPY_._threadsafe_%s, "%s", *args)' %(func.func_name, self.name)
-		g = eval( e )
-		g.func_name = func.func_name
-		return g
-
-# the host may not allow this #
-try:
+try:	# this only works on Linux? #
 	ctypes.CDLL('')
 	ALLOWS_CTYPES_HOST_CDLL = True
 except:
@@ -4013,21 +4011,21 @@ class LinuxPackage( object ):
 
 
 class RPython(object):
-	@staticmethod
-	def acquire_lock(): _RPY_._locks_[ SEM_NAME ].acquire()
-	@staticmethod
-	def release_lock(): _RPY_._locks_[ SEM_NAME ].release()
+	#@staticmethod
+	#def acquire_lock(): _RPY_._locks_[ SEM_NAME ].acquire()
+	#@staticmethod
+	#def release_lock(): _RPY_._locks_[ SEM_NAME ].release()
 
-	def rimport( self, mname, namespace=None):
-		#return _load( mname, type='rffi', platform=self.platform )
-		mod = __import__( 
-			'rffi%s.%s'%(self.platform, mname), 
-			fromlist=[mname] 
-		)
-		if type(namespace) is dict:
-			for n in dir(mod):
-				if not n.startswith('_'): namespace[ n ] = getattr(mod,n)
-		return mod
+	#def rimport( self, mname, namespace=None):
+	#	#return _load( mname, type='rffi', platform=self.platform )
+	#	mod = __import__( 
+	#		'rffi%s.%s'%(self.platform, mname), 
+	#		fromlist=[mname] 
+	#	)
+	#	if type(namespace) is dict:
+	#		for n in dir(mod):
+	#			if not n.startswith('_'): namespace[ n ] = getattr(mod,n)
+	#	return mod
 
 
 	def rcallback( self, signature_pointer, callback ):
@@ -4049,17 +4047,11 @@ class RPython(object):
 			if platform == 'android':
 				self.engine = AndroidEngine( self )
 
-		self._stackless = False
-		self._threading = threading
+		#self._stackless = False
+		#self._threading = threading
 		self._gc = gc
 		self.wrapped = []
 		self.classes = []
-		#if stackless:
-		try: self._setup()
-		except:
-			print( 'pypy not found, this is ok if your only loading from cache' )
-			self.AbstractThunk = object
-		if threading: self._setup_threading()
 
 
 
@@ -4099,6 +4091,8 @@ class RPython(object):
 	#	return w
 
 	def _setup_threading(self):
+		print( 'DEPRECATED' )
+		assert 0
 		from pypy.rpython.lltypesystem import rffi, lltype
 		self._threading = True
 		@self.object
@@ -4146,6 +4140,9 @@ class RPython(object):
 
 
 	def _setup(self):
+		print( 'DEPRECATED' )
+		assert 0
+
 		import pypy.rlib.rcoroutine
 		d = pypy.rlib.rcoroutine.make_coroutine_classes(object)
 		RPython._stackless_syncstate = d['syncstate']
@@ -4196,25 +4193,25 @@ class RPython(object):
 		for w in self.classes:
 			if w.__name__ == name: return w
 
-	def object(self, klass):
+	def object(self, klass):				# @decorator
 		n = klass.__name__
-		setattr( _RPY_, n, klass )
-		rpyinit = eval('lambda : _RPY_.%s()'%n)
-		rpyinit.func_name = '_rpyinit_%s' %n
-		setattr( _RPY_, '_rpyinit_%s'%n, rpyinit )
+		#setattr( _RPY_, n, klass )
+		#rpyinit = eval('lambda : _RPY_.%s()'%n)
+		#rpyinit.func_name = '_rpyinit_%s' %n
+		#setattr( _RPY_, '_rpyinit_%s'%n, rpyinit )
 		self.classes.append( klass )
 		return klass	# must return same classobject because pypy needs to see it
 
-	def stackless(self, func):
-		assert not self._stackless		# only one stackless loop allowed
-		self._stackless = True
-		if not self._threading: self._setup_threading()
-		self._threading = True
-		fw = _rpy_func_bind( {}, stackless=True )
-		fw( func )
-		self.wrapped.append( fw )
-		_RPY_._stackless_ = func
-		return fw.wrapper
+	#def stackless(self, func):
+	#	assert not self._stackless		# only one stackless loop allowed
+	#	self._stackless = True
+	#	if not self._threading: self._setup_threading()
+	#	self._threading = True
+	#	fw = _rpy_func_bind( {}, stackless=True )
+	#	fw( func )
+	#	self.wrapped.append( fw )
+	#	_RPY_._stackless_ = func
+	#	return fw.wrapper
 
 	def bind(self, **kw ):					# @decorator
 		fw = _rpy_func_bind( kw )
@@ -4314,14 +4311,12 @@ class RPython(object):
 			if w.name == '__init__': continue
 			secondary_entrypoints.append( (w.function, w.arguments) )
 
-		if self._stackless: entry = _rpy_stackless_entrypoint
-		else: entry = lambda x: 1
+		entry = lambda x: 1
 
 		print( '--------compiling rpython-----------' )
 		headers,sources = translate_rpython( 
 			entry, 
 			inline=False, 
-			stackless=self._stackless, 
 			gc=self._gc,
 			functions=secondary_entrypoints,
 		)
