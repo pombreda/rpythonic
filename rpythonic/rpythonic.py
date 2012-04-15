@@ -2,7 +2,29 @@
 # RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.5c'
+VERSION = '0.4.6'
+
+_doc_ = '''
+NAME
+	RPythonic
+
+DESCRIPTION
+	RPythonic is a frontend for using RPython (the translation toolchain of PyPy), it simplifies: wrapper generation, compiling (standalone or modules), and Android integration.  It can also be used as a tool to automatically wrap C/C++ libraries using ctypes.
+
+INSTALLING
+		PLY (apt-get install python-ply)
+		python setup.py install
+
+RPYTHON API
+	import rpythonic
+	rpy = rpythonic.RPython()
+	@rpy.bind(a=float, b=float)
+	def sub( a, b ): return a-b
+	rpy.cache('test1')
+	sub(10,100)		# compiled
+
+'''
+
 
 import os, sys, ctypes, inspect
 import subprocess
@@ -35,87 +57,18 @@ CTYPES_HEADER += '\n' + open( os.path.join(RPYTHONIC_DIR,'magicheader.py'), 'rb'
 
 
 
-_doc_ = '''
-NAME
-	RPythonic
-
-DESCRIPTION
-	RPythonic is a frontend for using RPython (the translation toolchain of PyPy), it simplifies: wrapper generation, compiling (standalone or modules), and Android integration.  It can also be used as a tool to automatically wrap C/C++ libraries using ctypes.
-
-INSTALLING
-		PLY (apt-get install python-ply)
-		python setup.py install
-
-RPYTHON API
-	import rpythonic
-	rpythonic.set_pypy_root( '../../pypy' )
-	rpy = rpythonic.RPython()
-	@rpy.bind(a=float, b=float)
-	def sub( a, b ): return a-b
-	rpy.cache('test1')
-	sub(10,100)		# compiled
-
-WRAPPER API
-	import rpythonic
-	try: module = rpythonic.load( 'OpenNI' )
-	except: module = rpythonic.wrap( 'OpenNI', header='/usr/include/ni/XnOpenNI.h', library='/usr/lib/libOpenNI.so' )
-
-
-'''
 
 # TODO enable inlining
 # func._dont_inline_ = True 
 # func._always_inline_ = True
-# stackless test1 - april25
+
 #flow space unrolls loops
 #wrapped = rlib.unrolling_iterable( somelist )
-# moving to using secondary_entrypoints using carbonpython's style
-#apt-get install libgc-dev
-#apt-get install git-core cmake libglut3-dev pkg-config build-essential libxmu-dev libxi-dev libusb-1.0-0-dev
-
-
-#############################################################
-# from pypy/translator/stackless/transform.py
-# a simple example of what the stackless transform does
-#
-# def func(x):
-#     return g() + x + 1
-#
-# STATE_func_0 = lltype.Struct('STATE_func_0',
-#                              ('header', STATE_HEADER),
-#                              ('saved_long_0', Signed))
-#
-# def func(x):
-#     state = global_state.restart_substate
-#     if state == -1:   # normal case
-#         try:
-#             retval = g(x)
-#         except code.UnwindException, u:
-#             state = lltype.malloc(STATE_func_0, flavor='gc_nocollect')
-#             state.header.f_restart = <index in array of frame.FRAMEINFO>
-#             state.saved_long_0 = x
-#             code.add_frame_state(u, state.header)
-#             raise
-#     elif state == 0:
-#         global_state.restart_substate = -1
-#         state = lltype.cast_pointer(lltype.Ptr(STATE_func_0),
-#                                     global_state.top)
-#         global_state.top = null_state
-#         x = state.saved_long_0
-#         retval = code.fetch_retval_long() # can raise an exception
-#     elif state == 1:
-#         ...
-#     elif state == 2:
-#         ...
-#     else:
-#         abort()
-#     return retval + x + 1
-
 
 
 IS32BIT = (ctypes.sizeof(ctypes.c_void_p)==4)
 SEM_NAME = '/rpython_mutex'
-PATH2PYPY = '../pypy'
+PATH2PYPY = RPYTHONIC_DIR	#'../pypy'
 
 
 RAYMOND_HETTINGER = '''
@@ -301,6 +254,8 @@ if not os.path.isdir( DEFAULT_CACHEDIR ): os.mkdir( DEFAULT_CACHEDIR )
 set_cache( DEFAULT_CACHEDIR )
 
 def set_pypy_root( path ):
+	print('set_pypy_root is DEPRECATED')
+	assert 0	# DEPRECATED!
 	global PATH2PYPY
 	path = os.path.abspath( path )
 	assert os.path.isdir( path )
@@ -4009,31 +3964,12 @@ class LinuxPackage( object ):
 
 
 class RPython(object):
-	#@staticmethod
-	#def acquire_lock(): _RPY_._locks_[ SEM_NAME ].acquire()
-	#@staticmethod
-	#def release_lock(): _RPY_._locks_[ SEM_NAME ].release()
-
-	#def rimport( self, mname, namespace=None):
-	#	#return _load( mname, type='rffi', platform=self.platform )
-	#	mod = __import__( 
-	#		'rffi%s.%s'%(self.platform, mname), 
-	#		fromlist=[mname] 
-	#	)
-	#	if type(namespace) is dict:
-	#		for n in dir(mod):
-	#			if not n.startswith('_'): namespace[ n ] = getattr(mod,n)
-	#	return mod
-
-
 	def rcallback( self, signature_pointer, callback ):
 		from pypy.rpython.annlowlevel import llhelper
 		return llhelper(signature_pointer, callback)
 	def get_rprint(self):	# required for javascript translation
 		from pypy.rlib.debug import debug_print
 		return debug_print
-
-
 
 	def __init__(self, name, platform='linux', threading=False, gc='ref'):
 		self.name = name
@@ -4045,12 +3981,9 @@ class RPython(object):
 			if platform == 'android':
 				self.engine = AndroidEngine( self )
 
-		#self._stackless = False
-		#self._threading = threading
 		self._gc = gc
 		self.wrapped = []
 		self.classes = []
-
 
 
 	_STANDALONE_ = None

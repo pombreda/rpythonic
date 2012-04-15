@@ -2,9 +2,8 @@
 import os, sys, thread, time, math
 sys.path.append('..')
 import rpythonic
-rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython('threadsafety_test')
+rpy = rpythonic.RPython('test_threadsafe')
 
 @rpy.object
 class MyRpyObject(object):

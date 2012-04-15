@@ -2,7 +2,6 @@
 import os, sys
 sys.path.append('..')
 import rpythonic
-rpythonic.set_pypy_root( '../../pypy' )
 ################################
 rpy = rpythonic.RPython( 'test1' )
 

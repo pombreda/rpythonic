@@ -2,9 +2,8 @@
 import os, sys, array, time, ctypes
 sys.path.append('..')
 import rpythonic
-rpythonic.set_pypy_root( '../../pypy' )
 ################################
-rpy = rpythonic.RPython('rpyarraytest')
+rpy = rpythonic.RPython('test_rpyarray')
 
 import pypy.rpython.lltypesystem.rffi as rffi
 

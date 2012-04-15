@@ -1,4 +1,7 @@
 #!/usr/bin/python
+print('THIS TEST IS DEPRECATED')
+assert 0
+
 import os, sys, thread, time
 sys.path.append('..')
 import rpythonic

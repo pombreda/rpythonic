@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # The Computer Language Benchmarks Game
 # http://shootout.alioth.debian.org/
 #
@@ -11,8 +12,7 @@ import sys, math, time
 
 if '..' not in sys.path: sys.path.append( '..' )
 import rpythonic
-rpythonic.set_pypy_root( '../../pypy' )
-rpy = rpythonic.RPython( 'linux' )
+rpy = rpythonic.RPython( 'testnbody', platform='linux' )
 
 
 def combinations(l):
