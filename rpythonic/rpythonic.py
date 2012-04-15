@@ -533,17 +533,11 @@ def translate_rpython( func, inline=True, compile=False, gc='ref', functions=[] 
 	else: return headers, sources
 
 
-
-
 def isclass( ob, *names ):
 	cname = ob.__class__.__name__
 	for name in names:
 		if cname == name: return True
 
-
-
-b7 = bug = b2=None
-odebug = None
 
 def _reset_wrapper_state():
 	SomeThing.Structs.clear()
@@ -3789,21 +3783,26 @@ class _rpy_func_wrapper(object):		# NOT RPYTHON
 	def __call__( self, *args, **kw ):
 		return self.function( *args, **kw )
 
+def get_function_default_kwargs( func ):
+	defaults = []
+	if ISPYTHON2:
+		if func.func_defaults: defaults = list(func.func_defaults)
+	else:
+		if func.__defaults__: defaults = list(func.__defaults__)
+	return defaults
+
+
 class _rpy_func_bind(object):		# @sub-decorator
-	# NOT RPYTHON, because of __call__
-	# pypy reports error: File "../../pypy/pypy/annotation/bookkeeper.py", line 530, in getdesc pyobj,))
-	#Exception: unexpected prebuilt constant: <rpythonic.rpythonic._rpy_func_bind object at 0xb766ab8c>
-	def __init__(self,kw, stackless=False):
+	def __init__(self,kw=None):
 		self.argtypes = kw
-		self.stackless = stackless
 
 	def __call__(self,func):
+		assert not inspect.ismethod( func )
+
 		self.function = func
 		self.arguments = args = []
-		if ISPYTHON2:
-			self.name = func.func_name
-		else:
-			self.name = func.__name__
+		if ISPYTHON2: self.name = func.func_name
+		else: self.name = func.__name__
 
 		spec = inspect.getargspec( func )
 		if spec.args: nargs = len(spec.args)
@@ -3812,20 +3811,25 @@ class _rpy_func_bind(object):		# @sub-decorator
 		#elif not func.func_defaults and spec.args:		# force defaults
 		#	for arg in spec.args: args.append( self.argtypes[arg] )
 		#	func.func_defaults = tuple( args )
+		defaults = get_function_default_kwargs( func )
 
 		if spec.args:
-			if self.argtypes:
+			if self.argtypes:	# user defined types, ie: @rpy.bind(int, int) #
 				for arg in spec.args: args.append( self.argtypes[arg] )
-			elif ISPYTHON2:
-				assert len(spec.args) == len(func.func_defaults)
-				for i,arg in enumerate(spec.args): args.append( type(func.func_defaults[i]) )
-			else:
-				assert len(spec.args) == len(func.__defaults__)
-				for i,arg in enumerate(spec.args): args.append( type(func.__defaults__[i]) )
-
+			else:			# use introspected type info from defaults
+				assert len(spec.args) == len(defaults)
+				for i,arg in enumerate(spec.args): args.append( type(defaults[i]) )
 
 		self.wrapper = _rpy_func_wrapper(func)
 		return self.wrapper
+
+
+def _rpy_object_getattr(self,name):
+	#print 'get prop', name
+	if hasattr( self.POINTER.contents, 'mro_inst_'+name ):
+		return getattr( self.POINTER.contents, 'mro_inst_'+name )
+	else:
+		return getattr( self.POINTER.contents, 's_inst_'+name )
 
 if 0:	# DEPRECATED
 	class _rsingleton_(object):
@@ -3836,12 +3840,6 @@ if 0:	# DEPRECATED
 	#class _RPY_(object): pass		# this works until you start dynamically adding things to _RPY_ from rpython-space
 	_RPY_ = _rsingleton_()		# just a container for the hacks below
 
-	def _rpy_object_getattr(self,name):
-		#print 'get prop', name
-		if hasattr( self._pointer.contents, 'mro_inst_'+name ):
-			return getattr( self._pointer.contents, 'mro_inst_'+name )
-		else:
-			return getattr( self._pointer.contents, 's_inst_'+name )
 
 	def _rpy_threadsafe(func, lockname, *args ):	# RPYTHON
 		if lockname in _RPY_._locks_:		# the lock is created Python-side, so it may or may not exist
@@ -4195,23 +4193,46 @@ class RPython(object):
 
 	def object(self, klass):				# @decorator
 		n = klass.__name__
-		#setattr( _RPY_, n, klass )
-		#rpyinit = eval('lambda : _RPY_.%s()'%n)
-		#rpyinit.func_name = '_rpyinit_%s' %n
-		#setattr( _RPY_, '_rpyinit_%s'%n, rpyinit )
 		self.classes.append( klass )
-		return klass	# must return same classobject because pypy needs to see it
 
-	#def stackless(self, func):
-	#	assert not self._stackless		# only one stackless loop allowed
-	#	self._stackless = True
-	#	if not self._threading: self._setup_threading()
-	#	self._threading = True
-	#	fw = _rpy_func_bind( {}, stackless=True )
-	#	fw( func )
-	#	self.wrapped.append( fw )
-	#	_RPY_._stackless_ = func
-	#	return fw.wrapper
+		for name in dir(klass):
+			#if name.startswith('__'): continue
+			attr = getattr(klass,name)
+			if inspect.ismethod(attr):
+				defaults = get_function_default_kwargs( attr )
+				spec = inspect.getargspec( attr )
+				assert len(spec.args)-1 == len(defaults)	# methods must use keyword arguments
+				a = []; b = []
+				for i,v in enumerate(defaults):
+					## TODO str - var%s="%s"
+					a.append( 'var%s=%s' %(i,v) )
+					b.append( 'var%s'%i )
+
+				if name == '__init__':	# special case
+					g = 'lambda %s: %s( %s )'%(','.join(a),klass.__name__, ','.join(b))
+					print('gen init wrapper-> %s'%g)
+					func = eval( g, {klass.__name__:klass} )
+					func.func_name = '_rpyinit_%s' %klass.__name__
+				else:
+					g = 'lambda %s: %s().%s( %s )'%(','.join(a),klass.__name__, name, ','.join(b))
+					print('gen method wrapper-> %s'%g)
+					func = eval( g, {klass.__name__:klass} )
+
+				fw = _rpy_func_bind()
+				fw( func )
+				self.wrapped.append( fw )
+
+		#init = eval(
+		#	'lambda : %s()' %klass.__name__,
+		#	{klass.__name__:klass},
+		#)
+		#init = lambda : klass()
+		#init.func_name = '_rpyinit_%s' %klass.__name__
+		#fw = _rpy_func_bind()
+		#fw( init )
+		#self.wrapped.append( fw )
+
+		return klass	# must return same classobject because pypy needs to see it
 
 	def bind(self, **kw ):					# @decorator
 		fw = _rpy_func_bind( kw )
@@ -4254,7 +4275,7 @@ class RPython(object):
 				m = n[7:]
 				fw = self.get_function( m )
 				if m.startswith('_rpyinit_'):
-					assert not fw
+					#assert not fw
 					klass = m.split('_rpyinit_')[-1]
 					rpyinits[ klass ] = mod.RPYTHONIC_WRAPPER_FUNCTIONS[ n ]
 
@@ -4272,12 +4293,15 @@ class RPython(object):
 			assert n in rpyinits
 
 			setattr( klass, '__getattr__', _rpy_object_getattr )
+
 			#setattr( klass, '_rpystruct_', struct )
 			#klass.__dict__ = struct.__dict__.copy()	# why readonly?
 			klass._rpythonic_ = True	# tells wrapper methods to use self._pointer
 			# TODO get struct safe API, struct()(type=True) fails
-			klass._rpytype_ = ctypes.POINTER(struct._ctypes_struct_)
-			klass._rpyinit_ = rpyinits[n]
+			klass._rpytype_ = ctypes.POINTER(struct.CSTRUCT)
+			cinit = rpyinits[n]
+			cinit.return_wrapper = None
+			klass._rpyinit_ = cinit
 
 
 			#la = lambda s, *args: setattr( s, '_pointer', ctypes.cast(s._rpyinit_(*args),s._rpytype_)  )
@@ -4308,7 +4332,7 @@ class RPython(object):
 		secondary_entrypoints = []
 
 		for i,w in enumerate(self.wrapped):
-			if w.name == '__init__': continue
+			#if w.name == '__init__': continue
 			secondary_entrypoints.append( (w.function, w.arguments) )
 
 		entry = lambda x: 1

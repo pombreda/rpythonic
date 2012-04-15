@@ -10,13 +10,15 @@ rpy = rpythonic.RPython('test2')
 class MyRpyObject(object):
 	def __init__(self, x=.0, y=.0, z=.0):
 		self.x = x; self.y = y; self.z = z
-	def add( self, x=.0,y=.0,z=.0 ): self.x += x; self.y += y; self.z += z
+	def add( self, x=.0,y=.0,z=.0 ):
+		print( 'add( %s, %s, %s )' %(x,y,z) )
+		self.x += x; self.y += y; self.z += z
 	def sum( self ): return self.x + self.y + self.z
 	def show( self ): print( '<%s %s %s>' %(self.x, self.y, self.z))
 
 rpy.cache(refresh=1)	
 
-o = MyRpyObject()
+o = MyRpyObject(.99, 0.33, 0.45)
 print( o.x )
 o.add( 1.1, 2.2, 3.3 )
 print( o.x )
