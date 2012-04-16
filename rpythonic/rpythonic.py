@@ -4292,7 +4292,7 @@ def translate_rpython( func, inline=True, compile=False, gc='ref', functions=[] 
 	print('-'*80); print('#### PYPY FLOWGRAPH STEP1 COMPLETE ####'); print('-'*80)
 	import neorpython
 	for graph in t.driver.translator.graphs:
-		neorpython.make_rpython_compatible( graph.iterblocks() )
+		neorpython.make_rpython_compatible( graph )
 
 	t.annotate()
 	print('-'*80); print('#### PYPY ANNONTATION STEP2 COMPLETE ####'); print('-'*80)

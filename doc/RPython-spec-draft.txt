@@ -1,4 +1,6 @@
-There is no comprehensive plain english list of what RPython is, here is a draft. 
+==============================
+		Strict Rpython 1.0
+==============================
 
 RPython rule1: All rules can be broken if you can meta-program your way around them
 ( using function decorators to rewrite functions to comply with the rules below )

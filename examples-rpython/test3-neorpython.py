@@ -20,13 +20,8 @@ def test_neo_rpy( arg=1 ):
 	r.append( arg )
 	r.append( 100 )
 	r[0] = r[0] + r[1]
-	#r.append( _sub_test(r) )
 	return r[0]
 
-def _sub_test( r ):
-	assert isinstance(r, R)
-	a = r[1]
-	return a
 
 rpy.cache( refresh=1)
 

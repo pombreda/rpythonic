@@ -2,35 +2,40 @@
 # by Brett and The Blender Research Lab.
 # License: BSD
 
-def make_rpython_compatible( blocks, delete_class_properties=True, debug=True ):
+def make_rpython_compatible( graph, delete_class_properties=True, debug=True ):
 	'''
 	modifies the flowgraph in place to make it strict-Rpython compatible
 	'''
+	if debug: print('=============== make rpython compatible ===============')
+
+	class_props = process_blocks( graph.iterblocks() )
+
+	blocks = [ link.target for link in graph.iterlinks() ]
+	process_blocks( blocks )
+
+	if delete_class_properties:
+		for cls in class_props:	# delete the properties
+			for name in class_props[ cls ]: delattr( cls, name )
+
+
+def process_blocks( blocks, debug=True ):
 	import pypy.objspace.flow.model
 
 	class_props = {}	# return dict of: class : [ prop names ]
-
-	if debug:
-		print('=============== make rpython compatible ===============')
 
 	for block in blocks:
 		cache = {}
 		insert = []
 		if debug: print( block )
 
+		if block.exits:
+			print( 'SUB BLOCKS', block.exits )
+			process_blocks( [link.target for link in block.exits] )
+
 		for op in block.operations:
 			if debug: print( op )
 
-			if op.opname in ('getitem','setitem'):
-				if debug: print('---checking getitem/setitem op---')
-				cls = type(op.args[0])
-				print( op.args[0], cls )
-				print( cls.__module__ )
-				print( pypy.objspace.flow.model.Variable.__module__ )
-				assert cls is pypy.objspace.flow.model.Variable
-
-				assert isinstance( op.args[0], pypy.objspace.flow.model.Variable )
-
+			if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
 				instance_var = op.args[0]
 				cls = get_class_helper( block, instance_var )
 				if not cls:
@@ -139,10 +144,6 @@ def make_rpython_compatible( blocks, delete_class_properties=True, debug=True ):
 			for op in block.operations: print(op)
 			print('-'*80)
 
-	if delete_class_properties:
-		for cls in class_props:	# delete the properties
-			for name in class_props[ cls ]: delattr( cls, name )
-
 	return class_props		# returns class props to be removed before annotation
 
 
@@ -162,6 +163,9 @@ def get_class_helper( block, var ):
 
 ############################## TESTING ######################################
 if __name__ == '__main__':
+	import sys
+	sys.path.append( '../' )
+
 	class A(object):
 		def set_myattr(self,v): self.myattr = v
 		def get_myattr(self): return self.myattr
@@ -185,21 +189,20 @@ if __name__ == '__main__':
 		a(99)
 		a.array.append( 123.4 )
 		a[0] = a[0] + a[0]
+		#other_func( a )		# TODO
 		return 1
 
-
+	def other_func(a):
+		#a[0] = a[0] * a[0]
+		print(a)
 
 	import pypy.translator.interactive
 	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
 
 	graphs = T.driver.translator.graphs
-	graph = graphs[0]
-	blocks = list(graph.iterblocks())
-	links = list(graph.iterlinks())
-
-	make_rpython_compatible( blocks, debug=True )
+	make_rpython_compatible( graphs[0], debug=True )
 
 	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
-	T.annotate()
-	T.rtype()
+	#T.annotate()
+	#T.rtype()
 

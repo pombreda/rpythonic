@@ -2,7 +2,6 @@
 import os, sys, time
 sys.path.append('..')
 import rpythonic
-#rpythonic.set_pypy_root( '../../pypy' )
 ################################
 rpy = rpythonic.RPython('test2')
 
@@ -16,13 +15,24 @@ class MyRpyObject(object):
 	def sum( self ): return self.x + self.y + self.z
 	def show( self ): print( '<%s %s %s>' %(self.x, self.y, self.z))
 
-rpy.cache(refresh=1)	
+rpy.cache(refresh=1)
 
 o = MyRpyObject(.99, 0.33, 0.45)
 print( o.x )
 o.add( 1.1, 2.2, 3.3 )
 print( o.x )
 o.show()
+
+
+
+
+
+
+
+
+
+
+
 
 if '--thread-test' in sys.argv:
 	import thread
