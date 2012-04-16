@@ -21,7 +21,7 @@ PYPY NOTES:
 	it is no longer required you fetch the PyPy source and patch it.
 
 	Custom Hacks:
-		copy "pypy-trunk/pypy" to "rpythonic-trunk/rpythonic"
+		copy "pypy-trunk/pypy" to "rpythonic"
 
 		pypy/translator/c/debug_print.c
 			line 92, remove the ifndef block using "clock_gettime"
@@ -36,11 +36,13 @@ PYPY NOTES:
 			    import os
 			    opcode_path = os.path.join( os.path.split(os.path.abspath(__file__))[0], 'opcode.py' )
 
-		from "pypy-trunk" copy to "rpythonic-trunk/rpythonic:
-			py
-			lib_pypy
-			pytest.py
-			_pytest
+		from "pypy-trunk/" copy "py" and "lib_pypy" to "rpythonic"
+
+		from "pypy-trunk/" copy "pytest.py" and "_pytest" to "rpythonic/pypy"
+			modify pytest.py:
+				import os
+				DIR = os.path.split(os.path.abspath(__file__))[0]
+				if DIR not in sys.path: sys.path.append( DIR )
 
 
 

@@ -6,12 +6,12 @@ def make_rpython_compatible( blocks, delete_class_properties=True, debug=True ):
 	'''
 	modifies the flowgraph in place to make it strict-Rpython compatible
 	'''
-
 	import pypy.objspace.flow.model
+
 	class_props = {}	# return dict of: class : [ prop names ]
 
 	if debug:
-		print('--------- make rpython compatible ---------')
+		print('=============== make rpython compatible ===============')
 
 	for block in blocks:
 		cache = {}
@@ -21,10 +21,21 @@ def make_rpython_compatible( blocks, delete_class_properties=True, debug=True ):
 		for op in block.operations:
 			if debug: print( op )
 
-			if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
+			if op.opname in ('getitem','setitem'):
+				if debug: print('---checking getitem/setitem op---')
+				cls = type(op.args[0])
+				print( op.args[0], cls )
+				print( cls.__module__ )
+				print( pypy.objspace.flow.model.Variable.__module__ )
+				assert cls is pypy.objspace.flow.model.Variable
+
+				assert isinstance( op.args[0], pypy.objspace.flow.model.Variable )
+
 				instance_var = op.args[0]
 				cls = get_class_helper( block, instance_var )
-				if not cls: continue
+				if not cls:
+					print("WARN, can't find class")
+					continue
 
 				if op.opname == 'getitem': func_name = '__getitem__'
 				else: func_name = '__setitem__'
@@ -150,34 +161,33 @@ def get_class_helper( block, var ):
 
 
 ############################## TESTING ######################################
-class A(object):
-	def set_myattr(self,v): self.myattr = v
-	def get_myattr(self): return self.myattr
-	'''
-	if myattr is not removed from the class before T.annotate() is called,
-	then annotate will fail with a Degenerates to SomeObject error!
-	'''
-	myattr = property( get_myattr, set_myattr )
-	def __call__(self, arg): self.xxx = arg
-	def __getitem__(self, index): return self.array[ index ]
-	def __setitem__(self, index, value): self.array[ index ] = value
-
-	def __init__(self):
-		self.array = [ 100.0 ]
-
-def func(arg):
-	a = A()
-	a.myattr = 'foo'
-	s = a.myattr
-	a.myattr = s + 'bar'
-	a(99)
-	a.array.append( 123.4 )
-	a[0] = a[0] + a[0]
-	return 1
-
 if __name__ == '__main__':
-	import sys
-	sys.path.append('../../pypy')
+	class A(object):
+		def set_myattr(self,v): self.myattr = v
+		def get_myattr(self): return self.myattr
+		'''
+		if myattr is not removed from the class before T.annotate() is called,
+		then annotate will fail with a Degenerates to SomeObject error!
+		'''
+		myattr = property( get_myattr, set_myattr )
+		def __call__(self, arg): self.xxx = arg
+		def __getitem__(self, index): return self.array[ index ]
+		def __setitem__(self, index, value): self.array[ index ] = value
+
+		def __init__(self):
+			self.array = [ 100.0 ]
+
+	def func(arg):
+		a = A()
+		a.myattr = 'foo'
+		s = a.myattr
+		a.myattr = s + 'bar'
+		a(99)
+		a.array.append( 123.4 )
+		a[0] = a[0] + a[0]
+		return 1
+
+
 
 	import pypy.translator.interactive
 	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
