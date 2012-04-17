@@ -11,7 +11,10 @@ class Cache(object):
 		self.functions = translator.context._prebuilt_graphs	# dict - func:graph
 		self.graphs = translator.driver.translator.graphs		# list - graphs
 		self.debug = debug
+		self.variable_class_cache = {}	# var : class
+
 		## check all simple_call ops, and build new graphs as needed ##
+		self.graphs_using_function = {}	# func : [graphs]
 		for graph in self.graphs:
 			for block in graph.iterblocks():
 				for op in block.operations:
@@ -26,6 +29,10 @@ class Cache(object):
 								print('USER FUNC')
 								if a not in self.functions:
 									self.build_graph( a )
+									if a not in self.graphs_using_function: self.graphs_using_function[ a ] = []
+									assert graph not in self.graphs_using_function[ a ]
+									self.graphs_using_function[ a ].append( graph )
+
 		print('@'*80)
 
 	def enter_block(self, block):
@@ -73,6 +80,74 @@ class Cache(object):
 		print('>>> building new graph >>>', func)
 		graph = self.translator.context.buildflowgraph( func )
 		self.functions[ func ] = graph	# also sets -> t.context._prebuilt_graphs
+		return graph
+
+	def get_graph_function( self, graph ):
+		for func in self.functions:
+			if self.functions[func] is graph: return func
+
+	def get_class_helper( self, graph, block, var ):
+		'''
+		if the creation of the instance is outside of the block this fails.
+		TODO traverse ancestor blocks until class is found.
+		'''
+		import pypy.objspace.flow.model
+
+		if var in self.variable_class_cache: return self.variable_class_cache[ var ]
+
+		#if block.exits:
+		#	print( 'SUB BLOCKS', block.exits )
+		#	blocks = [link.target for link in block.exits]
+		#	for b in blocks:
+		#		cls = get_class_helper( b, var )
+		#		if cls: return cls
+		if var in block.inputargs:		# if var is in the blocks input args, we need to check the other blocks
+			print('VAR in block.inputargs')
+			for b in graph.iterblocks():
+				if b is block: continue
+				check = False
+				for link in b.exits:
+					if link.target is block: check = link; break
+				if not check: continue
+				prevar = var
+				var = link.args[ block.inputargs.index(var) ]
+
+				for op in b.operations:
+					## "assert isinstance(a, A)" the hijacked type decl of Rpython,
+					## this always appears in an outside block from the one we are checking ##
+					if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ) and len(op.args)==3:
+						a,b,c = op.args
+						if a.value is isinstance and b is var:
+							cls = c.value
+							self.variable_class_cache[ prevar ] = cls
+							return cls
+					elif op.result is var:
+						if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+							cls = op.args[0].value
+							if type(cls) is type:	# how to ensure its a class?
+								self.variable_class_cache[ prevar ] = cls
+								return cls
+			print('*'*80)
+			func = self.get_graph_function( graph )
+			for g in self.graphs_using_function[ func ]:
+				print('          CHECKING',g, func)
+				for b in g.iterblocks():
+					for op in b.operations:
+						if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+							if op.args[0].value is func:
+								if op.args[1] in self.variable_class_cache:
+									return self.variable_class_cache[ op.args[1] ]
+
+		else:
+			for op in block.operations:
+				if op.result is var:
+					## check if the instance is created inside this block ##
+					if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+						cls = op.args[0].value
+						if type(cls) is type:	# how to ensure its a class?
+							self.variable_class_cache[ var ] = cls
+							return cls
+
 
 def make_rpython_compatible( translator, delete_class_properties=True, debug=True ):
 	'''
@@ -96,7 +171,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 				if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
 					instance_var = op.args[0]
-					cls = get_class_helper( graph, block, instance_var )
+					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls:
 						print("WARN, can't find class")
 						continue
@@ -112,7 +187,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 				elif op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
 					instance_var = op.args[0]
-					cls = get_class_helper( graph, block, instance_var )
+					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls: continue
 
 					func_name = '__call__'
@@ -125,7 +200,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 				elif op.opname in ('setattr', 'getattr'):
 					instance_var = op.args[0]; name_const = op.args[1]
 					name = name_const.value	# <class 'pypy.objspace.flow.model.Constant'>
-					cls = get_class_helper( graph, block, instance_var )
+					cls = cache.get_class_helper( graph, block, instance_var )
 
 					if cls and hasattr(cls, name) and type(getattr(cls,name)) is property:
 						prop = getattr(cls,name)
@@ -161,49 +236,6 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 	return class_props		# returns class props to be removed before annotation
 
 
-def get_class_helper( graph, block, var ):
-	'''
-	if the creation of the instance is outside of the block this fails.
-	TODO traverse ancestor blocks until class is found.
-	'''
-	import pypy.objspace.flow.model
-
-	#if block.exits:
-	#	print( 'SUB BLOCKS', block.exits )
-	#	blocks = [link.target for link in block.exits]
-	#	for b in blocks:
-	#		cls = get_class_helper( b, var )
-	#		if cls: return cls
-	if var in block.inputargs:		# if var is in the blocks input args, we need to check the other blocks
-		for b in graph.iterblocks():
-			if b is block: continue
-			check = False
-			for link in b.exits:
-				if link.target is block: check = link; break
-			if not check: continue
-			var = link.args[ block.inputargs.index(var) ]
-
-			for op in b.operations:
-				## "assert isinstance(a, A)" the hijacked type decl of Rpython,
-				## this always appears in an outside block from the one we are checking ##
-				if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ) and len(op.args)==3:
-					a,b,c = op.args
-					if a.value is isinstance and b is var:
-						return c.value
-				elif op.result is var:
-					if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
-						cls = op.args[0].value
-						if type(cls) is type:	# how to ensure its a class?
-							return cls
-
-	else:
-		for op in block.operations:
-			if op.result is var:
-				## check if the instance is created inside this block ##
-				if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
-					cls = op.args[0].value
-					if type(cls) is type:	# how to ensure its a class?
-						return cls
 
 
 ############################## TESTING ######################################
@@ -247,6 +279,6 @@ if __name__ == '__main__':
 	make_rpython_compatible( T, debug=True )
 
 	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
-	#T.annotate()
-	#T.rtype()
+	T.annotate()
+	T.rtype()
 
