@@ -1,141 +1,156 @@
-# Neo-Rpython - April 17, 2012
+# Neo-Rpython - April 18, 2012
 # by Brett and The Blender Research Lab.
 # License: BSD
+import inspect
 
-def make_rpython_compatible( graph, delete_class_properties=True, debug=True ):
+class Cache(object):
+	def __init__( self, translator, debug=True ):
+		import pypy.objspace.flow.model
+
+		self.translator = translator
+		self.functions = translator.context._prebuilt_graphs	# dict - func:graph
+		self.graphs = translator.driver.translator.graphs		# list - graphs
+		self.debug = debug
+		## check all simple_call ops, and build new graphs as needed ##
+		for graph in self.graphs:
+			for block in graph.iterblocks():
+				for op in block.operations:
+					if op.opname != 'simple_call': continue
+					print( op )
+					if isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+						a = op.args[0].value
+						print( 'XXX', a )
+						if a in __builtins__.__dict__.values(): print('BUILTIN')
+						elif inspect.isfunction( a ):
+							if a.func_name not in 'rpython_print_item rpython_print_newline'.split():
+								print('USER FUNC')
+								if a not in self.functions:
+									self.build_graph( a )
+		print('@'*80)
+
+	def enter_block(self, block):
+		self._block = block
+		self._block_method_cache = {}	# (class,func-name) : method_var
+		self._block_insert = []
+
+	def leave_block( self, block ):
+		assert block is self._block
+		## insert the get-method-op before the simple_call ##
+		insert = self._block_insert
+		modified = bool( insert )
+		while insert:
+			op, getop = insert.pop()
+			index = block.operations.index( op )
+			block.operations.insert( index, getop )
+		if modified and self.debug:
+			print('------- modified ops -------')
+			for op in block.operations: print(op)
+			print('-'*80)
+
+	def get_method_var( self, cls, func_name, op ):
+		if (cls, func_name) in self._block_method_cache: 	## saves a lookup ##
+			method_var = self._block_method_cache[ (cls,func_name) ]
+		else:
+			import pypy.objspace.flow.model
+			## create a new variable to hold the pointer to method ##
+			instance_var = op.args[0]
+			method_var = pypy.objspace.flow.model.Variable()
+			func_const = pypy.objspace.flow.model.Constant( func_name )
+			## create a new op to get the method and assign to method_var ##
+			getop = pypy.objspace.flow.model.SpaceOperation(
+				'getattr',					# opname
+				[ instance_var, func_const ],	# op args
+				method_var				# op result
+			)
+			## cache this lookup ##
+			self._block_method_cache[ (cls,func_name) ] = method_var
+			self._block_insert.append( (op,getop) )
+
+		return method_var
+
+	def build_graph( self, func ):
+		assert func not in self.functions
+		print('>>> building new graph >>>', func)
+		graph = self.translator.context.buildflowgraph( func )
+		self.functions[ func ] = graph	# also sets -> t.context._prebuilt_graphs
+
+def make_rpython_compatible( translator, delete_class_properties=True, debug=True ):
 	'''
 	modifies the flowgraph in place to make it strict-Rpython compatible
 	'''
 	if debug: print('=============== make rpython compatible ===============')
 	import pypy.objspace.flow.model
 
-	#class_props = process_blocks( graph.iterblocks() )
-	#blocks = [ link.target for link in graph.iterlinks() ]
-	#process_blocks( blocks )
-
 	class_props = {}	# return dict of: class : [ prop names ]
-	blocks = list(graph.iterblocks())
-	for block in blocks:
-		cache = {}
-		insert = []
-		if debug: print( block )
+	cache = Cache( translator, debug=debug )
 
-		#if block.exits:
-		#	print( 'SUB BLOCKS', block.exits )
-		#	process_blocks( [link.target for link in block.exits] )
+	graphs = translator.driver.translator.graphs
+	for graph in graphs:
+		blocks = list(graph.iterblocks())
+		for block in blocks:
+			cache.enter_block( block )
+			if debug: print( block )
 
-		for op in block.operations:
-			if debug: print( op )
+			for op in block.operations:
+				if debug: print( op )
 
-			if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
-				instance_var = op.args[0]
-				cls = get_class_helper( graph, block, instance_var )
-				if not cls:
-					print("WARN, can't find class")
-					continue
+				if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
+					instance_var = op.args[0]
+					cls = get_class_helper( graph, block, instance_var )
+					if not cls:
+						print("WARN, can't find class")
+						continue
 
-				if op.opname == 'getitem': func_name = '__getitem__'
-				else: func_name = '__setitem__'
-				assert hasattr(cls, func_name)
+					if op.opname == 'getitem': func_name = '__getitem__'
+					else: func_name = '__setitem__'
+					assert hasattr(cls, func_name)
 
-				if (cls, func_name) in cache: 	## saves a lookup ##
-					method_var = cache[ (cls,func_name) ]
-				else:
-					## create a new variable to hold the pointer to method ##
-					method_var = pypy.objspace.flow.model.Variable()
-					func_const = pypy.objspace.flow.model.Constant( func_name )
-					## create a new op to get the method and assign to method_var ##
-					getop = pypy.objspace.flow.model.SpaceOperation(
-						'getattr',					# opname
-						[ instance_var, func_const ],	# op args
-						method_var				# op result
-					)
-					## cache this lookup ##
-					cache[ (cls,func_name) ] = method_var
-					insert.append( (op,getop) )
-
-				op.opname = 'simple_call'
-				op.args = [ method_var ] + op.args[1:]
-
-
-			elif op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
-				instance_var = op.args[0]
-				cls = get_class_helper( graph, block, instance_var )
-				if not cls: continue
-
-				func_name = '__call__'
-				assert hasattr(cls, func_name)
-
-				if (cls, func_name) in cache: 	## saves a lookup ##
-					method_var = cache[ (cls,func_name) ]
-				else:
-					## create a new variable to hold the pointer to method ##
-					method_var = pypy.objspace.flow.model.Variable()
-					func_const = pypy.objspace.flow.model.Constant( func_name )
-					## create a new op to get the method and assign to method_var ##
-					getop = pypy.objspace.flow.model.SpaceOperation(
-						'getattr',					# opname
-						[ instance_var, func_const ],	# op args
-						method_var				# op result
-					)
-					## cache this lookup ##
-					cache[ (cls,func_name) ] = method_var
-					insert.append( (op,getop) )
-
-				op.args = [ method_var ] + op.args[1:]
-
-
-			elif op.opname in ('setattr', 'getattr'):
-				instance_var = op.args[0]; name_const = op.args[1]
-				name = name_const.value	# <class 'pypy.objspace.flow.model.Constant'>
-				cls = get_class_helper( graph, block, instance_var )
-
-				if cls and hasattr(cls, name) and type(getattr(cls,name)) is property:
-					prop = getattr(cls,name)
-
-					if cls not in class_props: class_props[ cls ] = []
-					if name not in class_props[ cls ]: class_props[ cls ].append( name )
-
-					if op.opname == 'setattr':
-						func_name = prop.fset.func_name
-					elif op.opname == 'getattr':
-						func_name = prop.fget.func_name
-
-					if (cls, func_name) in cache:		## saves a lookup ##
-						method_var = cache[ (cls,func_name) ]
-					else:
-						## create a new variable to hold the pointer to get/set-method ##
-						method_var = pypy.objspace.flow.model.Variable()
-						func_const = pypy.objspace.flow.model.Constant( func_name )
-						## create a new op to get the method and assign to method_var ##
-						getop = pypy.objspace.flow.model.SpaceOperation(
-							'getattr',					# opname
-							[ instance_var, func_const ],	# op args
-							method_var				# op result
-						)
-						## cache this lookup ##
-						cache[ (cls,func_name) ] = method_var
-						insert.append( (op,getop) )
-
-					## modify op in-place ##
-					if op.opname == 'setattr':
-						value = op.args[2]
-						op.args = [ method_var, value ]
-					elif op.opname == 'getattr':
-						op.args = [ method_var ]
-					## change the op in-place to a simple_call ##
+					method_var = cache.get_method_var( cls, func_name, op )
 					op.opname = 'simple_call'
+					op.args = [ method_var ] + op.args[1:]
 
-		## insert the get-method-op before the simple_call ##
-		modified = bool( insert )
-		while insert:
-			op, getop = insert.pop()
-			index = block.operations.index( op )
-			block.operations.insert( index, getop )
-		if modified and debug:
-			print('------- modified ops -------')
-			for op in block.operations: print(op)
-			print('-'*80)
+
+				elif op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
+					instance_var = op.args[0]
+					cls = get_class_helper( graph, block, instance_var )
+					if not cls: continue
+
+					func_name = '__call__'
+					assert hasattr(cls, func_name)
+
+					method_var = cache.get_method_var( cls, func_name, op )
+					op.args = [ method_var ] + op.args[1:]
+
+
+				elif op.opname in ('setattr', 'getattr'):
+					instance_var = op.args[0]; name_const = op.args[1]
+					name = name_const.value	# <class 'pypy.objspace.flow.model.Constant'>
+					cls = get_class_helper( graph, block, instance_var )
+
+					if cls and hasattr(cls, name) and type(getattr(cls,name)) is property:
+						prop = getattr(cls,name)
+
+						if cls not in class_props: class_props[ cls ] = []
+						if name not in class_props[ cls ]: class_props[ cls ].append( name )
+
+						if op.opname == 'setattr':
+							func_name = prop.fset.func_name
+						elif op.opname == 'getattr':
+							func_name = prop.fget.func_name
+
+						method_var = cache.get_method_var( cls, func_name, op )
+
+						## modify op in-place ##
+						if op.opname == 'setattr':
+							value = op.args[2]
+							op.args = [ method_var, value ]
+						elif op.opname == 'getattr':
+							op.args = [ method_var ]
+						## change the op in-place to a simple_call ##
+						op.opname = 'simple_call'
+
+			## insert the get-method-op before the simple_call ##
+			cache.leave_block( block )
 
 
 
@@ -220,18 +235,16 @@ if __name__ == '__main__':
 		a(99)
 		a.array.append( 123.4 )
 		a[0] = a[0] + a[0]
-		#other_func( a )		# TODO
+		other_func( a )		# TODO
 		return 1
 
 	def other_func(a):
-		#a[0] = a[0] * a[0]
+		a[0] = a[0] * a[0]
 		print(a)
 
 	import pypy.translator.interactive
 	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
-
-	graphs = T.driver.translator.graphs
-	make_rpython_compatible( graphs[0], debug=True )
+	make_rpython_compatible( T, debug=True )
 
 	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
 	#T.annotate()
