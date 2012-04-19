@@ -11,7 +11,7 @@ class Cache(object):
 		self.functions = translator.context._prebuilt_graphs	# dict - func:graph
 		self.graphs = translator.driver.translator.graphs		# list - graphs
 		self.debug = debug
-		self.variable_class_cache = {}	# var : class
+		self.variable_class_cache = {}	# var : class	[ this could grow huge ]
 
 		## check all simple_call ops, and build new graphs as needed ##
 		self.graphs_using_function = {}	# func : [graphs]
@@ -19,28 +19,30 @@ class Cache(object):
 			for block in graph.iterblocks():
 				for op in block.operations:
 					if op.opname != 'simple_call': continue
-					print( op )
-					if isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
-						a = op.args[0].value
-						print( 'XXX', a )
-						if a in __builtins__.__dict__.values(): print('BUILTIN')
-						elif inspect.isfunction( a ):
-							if a.func_name not in 'rpython_print_item rpython_print_newline'.split():
-								print('USER FUNC')
-								if a not in self.functions:
-									self.build_graph( a )
-									if a not in self.graphs_using_function: self.graphs_using_function[ a ] = []
-									assert graph not in self.graphs_using_function[ a ]
-									self.graphs_using_function[ a ].append( graph )
+					if isinstance( op.args[0], pypy.objspace.flow.model.Constant ) and inspect.isfunction(op.args[0].value):
+						func = op.args[0].value
+						if func.__module__ == '__builtins__' or func.__module__.startswith('pypy.'):
+							## do not flow into builtins or pypy internal functions ##
+							continue
+						if func not in self.functions:
+							self.build_graph( func )
+							if func not in self.graphs_using_function: self.graphs_using_function[ func ] = []
+							assert graph not in self.graphs_using_function[ func ]
+							self.graphs_using_function[ func ].append( graph )
 
-		print('@'*80)
 
 	def enter_block(self, block):
+		'''
+		deal with one block at a time, called at start of loop to make block rpy compatible
+		'''
 		self._block = block
 		self._block_method_cache = {}	# (class,func-name) : method_var
 		self._block_insert = []
 
 	def leave_block( self, block ):
+		'''
+		called at end of loop to make block rpy compatible
+		'''
 		assert block is self._block
 		## insert the get-method-op before the simple_call ##
 		insert = self._block_insert
@@ -50,11 +52,15 @@ class Cache(object):
 			index = block.operations.index( op )
 			block.operations.insert( index, getop )
 		if modified and self.debug:
-			print('------- modified ops -------')
-			for op in block.operations: print(op)
-			print('-'*80)
+			print('------- modified ops:')
+			for op in block.operations: print('\t%s' %op)
+		if self.debug: print('='*80)
 
 	def get_method_var( self, cls, func_name, op ):
+		'''
+		if method variable has already been created in this block,
+		return it from cache; otherwise create new one a queue insertion.
+		'''
 		if (cls, func_name) in self._block_method_cache: 	## saves a lookup ##
 			method_var = self._block_method_cache[ (cls,func_name) ]
 		else:
@@ -76,13 +82,18 @@ class Cache(object):
 		return method_var
 
 	def build_graph( self, func ):
+		'''
+		caches a new flow-graph
+		'''
 		assert func not in self.functions
-		print('>>> building new graph >>>', func)
 		graph = self.translator.context.buildflowgraph( func )
 		self.functions[ func ] = graph	# also sets -> t.context._prebuilt_graphs
 		return graph
 
 	def get_graph_function( self, graph ):
+		'''
+		to be safe, not using graph._function_
+		'''
 		for func in self.functions:
 			if self.functions[func] is graph: return func
 
@@ -95,59 +106,79 @@ class Cache(object):
 
 		if var in self.variable_class_cache: return self.variable_class_cache[ var ]
 
-		#if block.exits:
-		#	print( 'SUB BLOCKS', block.exits )
-		#	blocks = [link.target for link in block.exits]
-		#	for b in blocks:
-		#		cls = get_class_helper( b, var )
-		#		if cls: return cls
-		if var in block.inputargs:		# if var is in the blocks input args, we need to check the other blocks
-			print('VAR in block.inputargs')
+		## first check if the variable is in the block's input args,
+		## if so then it could be an "assert isinstance(a,A)"
+		## or it could be a simple_call from another graph to this function ##
+		if var in block.inputargs:
+			#print('VAR in block.inputargs', var)
 			for b in graph.iterblocks():
 				if b is block: continue
 				check = False
 				for link in b.exits:
 					if link.target is block: check = link; break
 				if not check: continue
-				prevar = var
-				var = link.args[ block.inputargs.index(var) ]
+				v = link.args[ block.inputargs.index(var) ]
 
 				for op in b.operations:
-					## "assert isinstance(a, A)" the hijacked type decl of Rpython,
+					## "assert isinstance(a, A)" [the hijacked type decl of Rpython],
 					## this always appears in an outside block from the one we are checking ##
 					if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ) and len(op.args)==3:
 						a,b,c = op.args
-						if a.value is isinstance and b is var:
+						if (a.value is isinstance) and b is v:
 							cls = c.value
-							self.variable_class_cache[ prevar ] = cls
+							self.variable_class_cache[ var ] = cls
 							return cls
-					elif op.result is var:
+					elif op.result is v:
 						if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
 							cls = op.args[0].value
 							if type(cls) is type:	# how to ensure its a class?
-								self.variable_class_cache[ prevar ] = cls
+								self.variable_class_cache[ var ] = cls
 								return cls
-			print('*'*80)
+						else: assert 0
+
+			#print('*'*80)
+			assert var in block.inputargs
+			if block is not graph.startblock:
+				var, link = self.trace_var_to_startblock( var, graph, block )
+				#print('TRACED', var, link)
 			func = self.get_graph_function( graph )
 			for g in self.graphs_using_function[ func ]:
-				print('          CHECKING',g, func)
+				#print('          CHECKING',g, func)
 				for b in g.iterblocks():
 					for op in b.operations:
 						if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
-							if op.args[0].value is func:
-								if op.args[1] in self.variable_class_cache:
-									return self.variable_class_cache[ op.args[1] ]
+							if op.args[0].value is func:	# found an operation that calls this graph/function
+								iargs = graph.startblock.inputargs
+								assert len(iargs) == len(op.args)-1
+								index = graph.startblock.inputargs.index( var )
+								v = op.args[ index+1 ]
+								if v in self.variable_class_cache: return self.variable_class_cache[ v ]
+								else: assert 0
 
 		else:
+			## check for simple case, the instance is created inside the block we are checking ##
 			for op in block.operations:
 				if op.result is var:
-					## check if the instance is created inside this block ##
 					if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
 						cls = op.args[0].value
 						if type(cls) is type:	# how to ensure its a class?
 							self.variable_class_cache[ var ] = cls
 							return cls
 
+	def trace_var_to_startblock( self, var, graph, block ):
+		#print('trace', var, graph, block)
+		for b in graph.iterblocks():
+			if b is block: continue
+			check = False
+			for link in b.exits:
+				if link.target is block: check = link; break
+			if not check: continue
+			oldvar = var
+			var = link.args[ block.inputargs.index(var) ]
+			if b is graph.startblock:
+				return var, link
+			else:
+				return self.trace_var_to_startblock( var, graph, b )
 
 def make_rpython_compatible( translator, delete_class_properties=True, debug=True ):
 	'''
@@ -230,7 +261,8 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 
 	if delete_class_properties:
-		for cls in class_props:	# delete the properties
+		## this is required to avoid "degenerate to SomeObject" error by the annotation phase
+		for cls in class_props:
 			for name in class_props[ cls ]: delattr( cls, name )
 
 	return class_props		# returns class props to be removed before annotation
@@ -260,25 +292,29 @@ if __name__ == '__main__':
 
 	def func(arg):
 		a = A()
-		assert isinstance( a, A )
+		#assert isinstance( a, A )
 		a.myattr = 'foo'
 		s = a.myattr
 		a.myattr = s + 'bar'
 		a(99)
 		a.array.append( 123.4 )
 		a[0] = a[0] + a[0]
-		other_func( a )		# TODO
+		other_func( a, a[0] )		# TODO
 		return 1
 
-	def other_func(a):
-		a[0] = a[0] * a[0]
-		print(a)
+	def other_func(a, b):
+		if b:	# makes a new flow-graph block
+			if a and a[0]:
+				a[0] = a[0] * a[0]
+				print(a)
+				print(b)
 
 	import pypy.translator.interactive
 	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
 	make_rpython_compatible( T, debug=True )
 
 	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
-	T.annotate()
-	T.rtype()
+	if '--test' in sys.argv:
+		T.annotate()
+		T.rtype()
 
