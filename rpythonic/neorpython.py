@@ -4,6 +4,9 @@
 import inspect
 
 class Cache(object):
+	def cache_instance_class(self, var, cls):
+		self.variable_class_cache[ var ] = cls
+
 	def __init__( self, translator, debug=True ):
 		import pypy.objspace.flow.model
 
@@ -55,6 +58,18 @@ class Cache(object):
 			print('------- modified ops:')
 			for op in block.operations: print('\t%s' %op)
 		if self.debug: print('='*80)
+
+
+	def change_to_method_call( self, op, cls, func_name, args, return_type=None ):
+		if return_type: self.variable_class_cache[ op.result ] = return_type
+
+		instance_var = op.args[0]
+		if instance_var not in self.variable_class_cache:
+			self.variable_class_cache[ instance_var ] = cls
+
+		method_var = self.get_method_var( cls, func_name, op )
+		op.opname = 'simple_call'
+		op.args = [ method_var ] + args
 
 	def get_method_var( self, cls, func_name, op ):
 		'''
@@ -164,6 +179,16 @@ class Cache(object):
 						if inspect.isclass(cls):
 							self.variable_class_cache[ var ] = cls
 							return cls
+					elif op.opname == 'getattr' or 1:
+						if isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
+							v = op.args[0]
+							if v in self.variable_class_cache:
+								return self.variable_class_cache[ v ]
+							else:
+								print('UNKNOWN', v, op)
+						else: assert 0	# TODO easy
+					else:
+						print('TODO', op)
 
 	def trace_var_to_startblock( self, var, graph, block ):
 		#print('trace', var, graph, block)
@@ -179,6 +204,18 @@ class Cache(object):
 				return var, link
 			else:
 				return self.trace_var_to_startblock( var, graph, b )
+
+
+
+
+
+#############################################################################
+#############################################################################
+OVERLOAD_OPS = {
+	'add'	:	'+',
+	'sub'	:	'-',
+}
+
 
 def make_rpython_compatible( translator, delete_class_properties=True, debug=True ):
 	'''
@@ -199,26 +236,36 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 			for op in block.operations:
 				if debug: print( op )
-				if not isinstance( op.args[0], pypy.objspace.flow.model.Variable ): continue
 
+				## check for a simple_call that creates a new instance, if so save it in cache ##
+				if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ) and inspect.isclass( op.args[0].value ):
+					cache.cache_instance_class( op.result, op.args[0].value )
+
+				##################################################################
+				if not isinstance( op.args[0], pypy.objspace.flow.model.Variable ): continue
 				instance_var = op.args[0]
 
-				if op.opname.startswith('inplace_'):
+				if op.opname.startswith('inplace_') or op.opname in OVERLOAD_OPS:
 					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls:
 						print("WARN, can't find class")
 						continue
-					tag = op.opname.split('_')[-1]
-					if hasattr(cls, '__i%s__'%tag): func_name = '__i%s__'%tag	# this is expected
-					elif hasattr(cls, '__%s__'%tag): func_name = '__%s__'%tag	# funny Python syntax rule
-					else: assert 0
+					if op.opname.startswith('inplace_'):
+						tag = op.opname.split('_')[-1]
+						if hasattr(cls, '__i%s__'%tag): func_name = '__i%s__'%tag	# this is expected
+						elif hasattr(cls, '__%s__'%tag): func_name = '__%s__'%tag	# funny Python syntax rule
+						else: raise SyntaxError
+					else:
+						tag = op.opname
+						if hasattr(cls, '__%s__'%tag): func_name = '__%s__'%tag		# this is expected
+						elif hasattr(cls, '__i%s__'%tag): func_name = '__i%s__'%tag	# funny syntax rule
+						else: raise SyntaxError
 
-					method_var = cache.get_method_var( cls, func_name, op )
-					op.opname = 'simple_call'
-					op.args = [ method_var ] + op.args[1:]
+					cache.change_to_method_call( op, cls, func_name, op.args[1:], return_type=cls )
 
 
-				elif op.opname in ('getitem','setitem'):
+
+				elif op.opname in ('getitem','setitem'):		# something[ index ]
 					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls:
 						print("WARN, can't find class")
@@ -228,9 +275,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 					else: func_name = '__setitem__'
 					assert hasattr(cls, func_name)
 
-					method_var = cache.get_method_var( cls, func_name, op )
-					op.opname = 'simple_call'
-					op.args = [ method_var ] + op.args[1:]
+					cache.change_to_method_call( op, cls, func_name, op.args[1:] )
 
 
 				elif op.opname == 'simple_call':
@@ -240,8 +285,8 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 					func_name = '__call__'
 					assert hasattr(cls, func_name)
 
-					method_var = cache.get_method_var( cls, func_name, op )
-					op.args = [ method_var ] + op.args[1:]
+					cache.change_to_method_call( op, cls, func_name, op.args[1:] )
+
 
 				elif op.opname in ('setattr', 'getattr'):
 					assert isinstance(op.args[1], pypy.objspace.flow.model.Constant)
@@ -259,16 +304,10 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 						elif op.opname == 'getattr':
 							func_name = prop.fget.func_name
 
-						method_var = cache.get_method_var( cls, func_name, op )
+						args = []
+						if op.opname == 'setattr': args.append( op.args[2] )
+						cache.change_to_method_call( op, cls, func_name, args )
 
-						## modify op in-place ##
-						if op.opname == 'setattr':
-							value = op.args[2]
-							op.args = [ method_var, value ]
-						elif op.opname == 'getattr':
-							op.args = [ method_var ]
-						## change the op in-place to a simple_call ##
-						op.opname = 'simple_call'
 
 			## insert the get-method-op before the simple_call ##
 			cache.leave_block( block )

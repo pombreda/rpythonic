@@ -3,7 +3,7 @@ Copyright: Brett Hartshorn (bhartsho@yahoo.com)
 License: BSD
 
 INSTALLING:
-	apt-get install python-ply libreadline-dev
+	apt-get install python-ply libreadline-dev python-llvm
 
 	Optional: 
 		java
