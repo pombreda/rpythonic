@@ -1,4 +1,4 @@
-# Neo-Rpython - April 18, 2012
+# Neo-Rpython - April 19, 2012
 # by Brett and The Blender Research Lab.
 # License: BSD
 import inspect
@@ -131,7 +131,7 @@ class Cache(object):
 					elif op.result is v:
 						if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
 							cls = op.args[0].value
-							if type(cls) is type:	# how to ensure its a class?
+							if inspect.isclass(cls):
 								self.variable_class_cache[ var ] = cls
 								return cls
 						else: assert 0
@@ -161,7 +161,7 @@ class Cache(object):
 				if op.result is var:
 					if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
 						cls = op.args[0].value
-						if type(cls) is type:	# how to ensure its a class?
+						if inspect.isclass(cls):
 							self.variable_class_cache[ var ] = cls
 							return cls
 
@@ -199,9 +199,26 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 			for op in block.operations:
 				if debug: print( op )
+				if not isinstance( op.args[0], pypy.objspace.flow.model.Variable ): continue
 
-				if op.opname in ('getitem','setitem') and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
-					instance_var = op.args[0]
+				instance_var = op.args[0]
+
+				if op.opname.startswith('inplace_'):
+					cls = cache.get_class_helper( graph, block, instance_var )
+					if not cls:
+						print("WARN, can't find class")
+						continue
+					tag = op.opname.split('_')[-1]
+					if hasattr(cls, '__i%s__'%tag): func_name = '__i%s__'%tag	# this is expected
+					elif hasattr(cls, '__%s__'%tag): func_name = '__%s__'%tag	# funny Python syntax rule
+					else: assert 0
+
+					method_var = cache.get_method_var( cls, func_name, op )
+					op.opname = 'simple_call'
+					op.args = [ method_var ] + op.args[1:]
+
+
+				elif op.opname in ('getitem','setitem'):
 					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls:
 						print("WARN, can't find class")
@@ -216,8 +233,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 					op.args = [ method_var ] + op.args[1:]
 
 
-				elif op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Variable ):
-					instance_var = op.args[0]
+				elif op.opname == 'simple_call':
 					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls: continue
 
@@ -227,10 +243,9 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 					method_var = cache.get_method_var( cls, func_name, op )
 					op.args = [ method_var ] + op.args[1:]
 
-
 				elif op.opname in ('setattr', 'getattr'):
-					instance_var = op.args[0]; name_const = op.args[1]
-					name = name_const.value	# <class 'pypy.objspace.flow.model.Constant'>
+					assert isinstance(op.args[1], pypy.objspace.flow.model.Constant)
+					name_const = op.args[1]; name = name_const.value
 					cls = cache.get_class_helper( graph, block, instance_var )
 
 					if cls and hasattr(cls, name) and type(getattr(cls,name)) is property:
@@ -286,6 +301,11 @@ if __name__ == '__main__':
 		def __call__(self, arg): self.xxx = arg
 		def __getitem__(self, index): return self.array[ index ]
 		def __setitem__(self, index, value): self.array[ index ] = value
+		def __iadd__(self, arg): self.xxx += arg
+		def __add__(self,arg):
+			a = A()
+			a.xxx = self.xxx + arg
+			return a
 
 		def __init__(self):
 			self.array = [ 100.0 ]
@@ -299,7 +319,10 @@ if __name__ == '__main__':
 		a(99)
 		a.array.append( 123.4 )
 		a[0] = a[0] + a[0]
-		other_func( a, a[0] )		# TODO
+		#other_func( a, a[0] )
+		a += 420
+		b = a + 999
+		print(b)
 		return 1
 
 	def other_func(a, b):
