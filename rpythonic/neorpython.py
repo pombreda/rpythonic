@@ -67,21 +67,21 @@ class Cache(object):
 		if instance_var not in self.variable_class_cache:
 			self.variable_class_cache[ instance_var ] = cls
 
-		method_var = self.get_method_var( cls, func_name, op )
+		method_var = self.get_method_var( instance_var, cls, func_name, op )
 		op.opname = 'simple_call'
 		op.args = [ method_var ] + args
 
-	def get_method_var( self, cls, func_name, op ):
+	def get_method_var( self, instance_var, cls, func_name, op ):
 		'''
 		if method variable has already been created in this block,
 		return it from cache; otherwise create new one a queue insertion.
 		'''
-		if (cls, func_name) in self._block_method_cache: 	## saves a lookup ##
-			method_var = self._block_method_cache[ (cls,func_name) ]
+		if (instance_var, cls, func_name) in self._block_method_cache: 	## saves a lookup ##
+			method_var = self._block_method_cache[ (instance_var,cls,func_name) ]
 		else:
 			import pypy.objspace.flow.model
 			## create a new variable to hold the pointer to method ##
-			instance_var = op.args[0]
+			#instance_var = op.args[0]
 			method_var = pypy.objspace.flow.model.Variable()
 			func_const = pypy.objspace.flow.model.Constant( func_name )
 			## create a new op to get the method and assign to method_var ##
@@ -91,7 +91,7 @@ class Cache(object):
 				method_var				# op result
 			)
 			## cache this lookup ##
-			self._block_method_cache[ (cls,func_name) ] = method_var
+			self._block_method_cache[ (cls,instance_var,func_name) ] = method_var
 			self._block_insert.append( (op,getop) )
 
 		return method_var
@@ -214,6 +214,8 @@ class Cache(object):
 OVERLOAD_OPS = {
 	'add'	:	'+',
 	'sub'	:	'-',
+	'mul'	:	'*',
+	'div'		:	'/',
 }
 
 
@@ -260,6 +262,14 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 						if hasattr(cls, '__%s__'%tag): func_name = '__%s__'%tag		# this is expected
 						elif hasattr(cls, '__i%s__'%tag): func_name = '__i%s__'%tag	# funny syntax rule
 						else: raise SyntaxError
+
+					if op.opname.startswith('inplace_'):
+						## need to patch all following op.args that use this op.result,
+						## to use the instance_var instead - UGLY! ##
+						for otherop in block.operations[ block.operations.index(op) : ]:
+							if op.result in otherop.args:
+								otherop.args[ otherop.args.index(op.result) ] = instance_var
+						#op.result = instance_var	# not a valid flow-graph?
 
 					cache.change_to_method_call( op, cls, func_name, op.args[1:], return_type=cls )
 
@@ -345,6 +355,7 @@ if __name__ == '__main__':
 			a = A()
 			a.xxx = self.xxx + arg
 			return a
+		def __imul__(self,arg): self.xxx *= arg
 
 		def __init__(self):
 			self.array = [ 100.0 ]
@@ -360,8 +371,13 @@ if __name__ == '__main__':
 		a[0] = a[0] + a[0]
 		#other_func( a, a[0] )
 		a += 420
+		#a += 421
 		b = a + 999
+		a *= 10
 		print(b)
+		b += 25
+		c = b + 4000
+		print(c)
 		return 1
 
 	def other_func(a, b):
