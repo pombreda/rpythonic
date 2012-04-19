@@ -2,6 +2,50 @@
 # by Brett and The Blender Research Lab.
 # License: BSD
 import inspect
+import llvm.core
+
+class JIT(object):
+	types = {
+		'Bool'	: llvm.core.Type.int(32),
+		'Void'	: llvm.core.Type.void(),
+		'Signed'	: llvm.core.Type.int(32),
+	}
+	def get_llvm_type( self, var ):
+		#if isinstance(ret, pypy.rpython.lltypesystem.lltype.Number):
+		#	llret = llvm.core.Type.int(32)
+		ctype = var.concretetype
+		#print(ctype, type(ctype))
+		if isinstance(ctype, pypy.rpython.lltypesystem.lltype.Ptr):
+			#return llvm.core.Type.pointer( llvm.core.Type.void() )
+			return self.types[ 'Signed' ]
+		else:
+			return self.types[ ctype._name ]
+
+	def __init__(self, graphs):
+		import pypy.rpython.lltypesystem.lltype
+		self.module = llvm.core.Module.new( 'myjit' )
+		for graph in graphs:
+			var = graph.returnblock.inputargs[0]
+			ret = self.get_llvm_type(var)
+			args = []
+			for arg in graph.startblock.inputargs:
+				args.append( self.get_llvm_type( arg ) )
+			ftype = llvm.core.Type.function( ret, args )
+			func = llvm.core.Function.new(
+				self.module,
+				ftype,
+				graph.name,
+			)
+			func.calling_convention = llvm.core.CC_C
+
+			print(func, dir(func))
+			blk = func.append_basic_block( 'entry' )
+
+			builder = llvm.core.Builder.new( blk )
+			for op in graph.startblock.operations:
+				print(op)
+
+			print(func)
 
 class Cache(object):
 	def cache_instance_class(self, var, cls):
@@ -39,7 +83,7 @@ class Cache(object):
 		deal with one block at a time, called at start of loop to make block rpy compatible
 		'''
 		self._block = block
-		self._block_method_cache = {}	# (class,func-name) : method_var
+		self._block_method_cache = {}	# (instance_var, class, func-name) : method_var
 		self._block_insert = []
 
 	def leave_block( self, block ):
@@ -156,19 +200,21 @@ class Cache(object):
 			if block is not graph.startblock:
 				var, link = self.trace_var_to_startblock( var, graph, block )
 				#print('TRACED', var, link)
+
 			func = self.get_graph_function( graph )
-			for g in self.graphs_using_function[ func ]:
-				#print('          CHECKING',g, func)
-				for b in g.iterblocks():
-					for op in b.operations:
-						if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
-							if op.args[0].value is func:	# found an operation that calls this graph/function
-								iargs = graph.startblock.inputargs
-								assert len(iargs) == len(op.args)-1
-								index = graph.startblock.inputargs.index( var )
-								v = op.args[ index+1 ]
-								if v in self.variable_class_cache: return self.variable_class_cache[ v ]
-								else: assert 0
+			if func in self.graphs_using_function:
+				for g in self.graphs_using_function[ func ]:
+					#print('          CHECKING',g, func)
+					for b in g.iterblocks():
+						for op in b.operations:
+							if op.opname == 'simple_call' and isinstance( op.args[0], pypy.objspace.flow.model.Constant ):
+								if op.args[0].value is func:	# found an operation that calls this graph/function
+									iargs = graph.startblock.inputargs
+									assert len(iargs) == len(op.args)-1
+									index = graph.startblock.inputargs.index( var )
+									v = op.args[ index+1 ]
+									if v in self.variable_class_cache: return self.variable_class_cache[ v ]
+									else: assert 0
 
 		else:
 			## check for simple case, the instance is created inside the block we are checking ##
@@ -252,6 +298,8 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 					if not cls:
 						print("WARN, can't find class")
 						continue
+					if cls in (bool, int, float, list, dict): continue
+
 					if op.opname.startswith('inplace_'):
 						tag = op.opname.split('_')[-1]
 						if hasattr(cls, '__i%s__'%tag): func_name = '__i%s__'%tag	# this is expected
@@ -369,9 +417,9 @@ if __name__ == '__main__':
 		a(99)
 		a.array.append( 123.4 )
 		a[0] = a[0] + a[0]
-		#other_func( a, a[0] )
+		other_func( a, a[0] )
 		a += 420
-		#a += 421
+		a += 421
 		b = a + 999
 		a *= 10
 		print(b)
@@ -388,11 +436,23 @@ if __name__ == '__main__':
 				print(b)
 
 	import pypy.translator.interactive
+	if '--jit' in sys.argv:
+		def func(arg):
+			a = int(arg[0])
+			b = int(arg[1])
+			c = a + b
+			return c
+
 	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
 	make_rpython_compatible( T, debug=True )
+	graphs = T.driver.translator.graphs
 
 	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
-	if '--test' in sys.argv:
+	if '--jit' in sys.argv:
+		T.annotate()
+		T.rtype()
+		jit = JIT( [graphs[0]] )
+	elif '--test' in sys.argv:
 		T.annotate()
 		T.rtype()
 
