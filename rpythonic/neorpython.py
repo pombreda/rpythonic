@@ -1,9 +1,10 @@
-# Neo-Rpython - April 19, 2012
+# Neo-Rpython - April 20, 2012
 # by Brett and The Blender Research Lab.
 # License: BSD
 import inspect
 import llvm.core
 import llvm.ee
+import llvm.passes
 
 def translate( func, inline=True, gc='ref', functions=[], annotate=True, rtype=True ):
 	assert gc in ('ref', 'framework', 'framework+asmgcroot', 'hybrid')
@@ -75,6 +76,8 @@ class JIT(object):
 
 		self.module = llvm.core.Module.new( 'myjit' )
 		for graph in graphs:
+			print('============JIT: %s' %graph)
+
 			var = graph.returnblock.inputargs[0]
 			ret = self.llvm_type(var)
 			args = []
@@ -95,6 +98,14 @@ class JIT(object):
 				var.name = arg.name
 				vmap[ arg ] = var
 
+			def get( _arg, _cache ):
+				if _arg in _cache:	# assume variable
+					v = _cache[ _arg ]
+					v.name = _arg.name
+					return v
+				else:			# assume constant
+					return llvm.core.Constant.int( self.types['Signed'], _arg.value )
+
 			blk = func.append_basic_block( 'entry' )
 			builder = llvm.core.Builder.new( blk )
 			for op in graph.startblock.operations:
@@ -104,8 +115,8 @@ class JIT(object):
 					var.name = op.result.name
 					vmap[ op.result ] = var
 				elif op.opname == 'int_add':
-					a = vmap[ op.args[0] ]; a.name = op.args[0].name
-					b = vmap[ op.args[1] ]; b.name = op.args[1].name
+					a = get(op.args[0],vmap)
+					b = get(op.args[1],vmap)
 					var = builder.add( a, b, op.opname )
 					var.name = op.result.name
 					vmap[ op.result ] = var
@@ -326,8 +337,11 @@ class Cache(object):
 							if v in self.variable_class_cache:
 								return self.variable_class_cache[ v ]
 							else:
-								print('UNKNOWN', v, op)
-						else: assert 0	# TODO easy
+								#print('UNKNOWN', v, op)
+								pass	# probably a builtin type
+						else:
+							#assert 0	# TODO easy
+							pass
 					else:
 						print('TODO', op)
 
@@ -391,7 +405,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 				if op.opname.startswith('inplace_') or op.opname in OVERLOAD_OPS:
 					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls:
-						print("WARN, can't find class")
+						#print("WARN, can't find class")	# dont warn, probably a builtin.
 						continue
 					if cls in (bool, int, float, list, dict): continue
 
@@ -530,11 +544,30 @@ if __name__ == '__main__':
 				print(a)
 				print(b)
 
-	def simple_test(a, b):
-		c = a + b
-		return c
 
-	if '--jit' in sys.argv:
+
+	if '--jit-unroll' in sys.argv:
+		import pypy.rlib.unroll
+		CONST_VALUES = pypy.rlib.unroll.unrolling_iterable( range(10) )
+		def unroll_test(a, b):
+			c = 0
+			for v in CONST_VALUES:
+				c += a
+				c += b
+				c += v
+			return c
+
+		T = translate( lambda a: 1, functions=[ (unroll_test,(int,int)) ] )
+		jit = JIT( [T.driver.translator.graphs[1]] )
+		a = jit.call('unroll_test', 400, 20 )
+		print('jit-test:', a)
+
+
+	elif '--jit' in sys.argv:
+		def simple_test(a, b):
+			c = a + b
+			return c
+
 		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
 		jit = JIT( [T.driver.translator.graphs[1]] )
 		a = jit.call('simple_test', 400, 20 )
