@@ -3,33 +3,83 @@
 # License: BSD
 import inspect
 import llvm.core
+import llvm.ee
 
+def translate( func, inline=True, gc='ref', functions=[], annotate=True, rtype=True ):
+	assert gc in ('ref', 'framework', 'framework+asmgcroot', 'hybrid')
+	import pypy.translator.interactive
+	t = pypy.translator.interactive.Translation(
+		func,
+		standalone=True,	# must be True
+		inline=inline,
+		gc=gc
+	)
+	'''
+	the Translation instance __init__ contains:
+		self.driver = driver.TranslationDriver(overrides=DEFAULTS)
+		self.config = self.driver.config
+		self.entry_point = entry_point
+		self.context = TranslationContext(config=self.config)
+		...
+		self.update_options(argtypes, kwds)
+		self.context.buildflowgraph(entry_point)
+
+	'''
+	t.driver.secondary_entrypoints = functions
+	'''
+	setting t.driver.secondary_entrypoints triggers annotator.build_types on t.annotate()
+	annotator.build_types builds a flowgraph, and adds it to graphs
+	'''
+	if functions:
+		for func,argtypes in functions:
+			graph = t.context.buildflowgraph( func )
+			t.context._prebuilt_graphs[ func ] = graph
+
+	print( 'secondary entry points', t.driver.secondary_entrypoints )
+	print('-'*80); print('#### PYPY FLOWGRAPH STEP1 COMPLETE ####'); print('-'*80)
+	make_rpython_compatible( t )
+
+	if annotate:
+		t.annotate()
+		print('-'*80); print('#### PYPY ANNONTATION STEP2 COMPLETE ####'); print('-'*80)
+	if rtype:
+		t.rtype( None )
+		print('-'*80); print('#### PYPY RTYPER STEP3 COMPLETE ####'); print('-'*80)
+
+	return t
+
+
+######################################################################
+######################################################################
 class JIT(object):
 	types = {
 		'Bool'	: llvm.core.Type.int(32),
 		'Void'	: llvm.core.Type.void(),
 		'Signed'	: llvm.core.Type.int(32),
 	}
-	def get_llvm_type( self, var ):
+	def llvm_type( self, var ):
+		import pypy.rpython.lltypesystem.lltype
 		#if isinstance(ret, pypy.rpython.lltypesystem.lltype.Number):
 		#	llret = llvm.core.Type.int(32)
 		ctype = var.concretetype
 		#print(ctype, type(ctype))
 		if isinstance(ctype, pypy.rpython.lltypesystem.lltype.Ptr):
-			#return llvm.core.Type.pointer( llvm.core.Type.void() )
-			return self.types[ 'Signed' ]
+			return llvm.core.Type.pointer( llvm.core.Type.void() )
+			#return self.types[ 'Signed' ]
 		else:
 			return self.types[ ctype._name ]
 
 	def __init__(self, graphs):
-		import pypy.rpython.lltypesystem.lltype
+		#import pypy.rpython.lltypesystem.lltype
+		self.functions = {}
+
 		self.module = llvm.core.Module.new( 'myjit' )
 		for graph in graphs:
 			var = graph.returnblock.inputargs[0]
-			ret = self.get_llvm_type(var)
+			ret = self.llvm_type(var)
 			args = []
 			for arg in graph.startblock.inputargs:
-				args.append( self.get_llvm_type( arg ) )
+				args.append( self.llvm_type( arg ) )
 			ftype = llvm.core.Type.function( ret, args )
 			func = llvm.core.Function.new(
 				self.module,
@@ -37,15 +87,60 @@ class JIT(object):
 				graph.name,
 			)
 			func.calling_convention = llvm.core.CC_C
+			self.functions[ graph.name ] = func
 
-			print(func, dir(func))
+			vmap = {}
+			for i,arg in enumerate(graph.startblock.inputargs):
+				var = func.args[ i ]
+				var.name = arg.name
+				vmap[ arg ] = var
+
 			blk = func.append_basic_block( 'entry' )
-
 			builder = llvm.core.Builder.new( blk )
 			for op in graph.startblock.operations:
 				print(op)
+				if op.opname == 'direct_call' and len(op.args)==3:
+					var = builder.malloc( self.llvm_type(op.result) )
+					var.name = op.result.name
+					vmap[ op.result ] = var
+				elif op.opname == 'int_add':
+					a = vmap[ op.args[0] ]; a.name = op.args[0].name
+					b = vmap[ op.args[1] ]; b.name = op.args[1].name
+					var = builder.add( a, b, op.opname )
+					var.name = op.result.name
+					vmap[ op.result ] = var
+
+			emap = {}
+			for link in graph.startblock.exits:
+				for i,arg in enumerate(link.args):
+					var = vmap[ arg ]
+					emap[ link.target.inputargs[i] ] = var
+
+			if graph.returnblock.inputargs:
+				print( graph.returnblock.inputargs )
+				arg = graph.returnblock.inputargs[0]
+				#if arg in vmap:
+				builder.ret( emap[arg] )
+			else: assert 0
 
 			print(func)
+			print('-'*80)
+
+		self.module.verify()
+		self.engine = llvm.ee.ExecutionEngine.new( self.module )
+
+	def call( self, func_name, *args ):
+		llargs = []
+		for arg in args:
+			if type(arg) is int:
+				llarg = llvm.ee.GenericValue.int(
+					self.types['Signed'],
+					arg
+				)
+				llargs.append( llarg )
+		func = self.functions[ func_name ]
+		retval = self.engine.run_function( func, llargs )
+		return retval.as_int()
 
 class Cache(object):
 	def cache_instance_class(self, var, cls):
@@ -435,24 +530,17 @@ if __name__ == '__main__':
 				print(a)
 				print(b)
 
-	import pypy.translator.interactive
-	if '--jit' in sys.argv:
-		def func(arg):
-			a = int(arg[0])
-			b = int(arg[1])
-			c = a + b
-			return c
+	def simple_test(a, b):
+		c = a + b
+		return c
 
-	T = pypy.translator.interactive.Translation( func, standalone=True, inline=False, gc='ref')
-	make_rpython_compatible( T, debug=True )
-	graphs = T.driver.translator.graphs
-
-	## before t.annotate is called the flow-graph can be modified to conform to rpython rules ##
 	if '--jit' in sys.argv:
-		T.annotate()
-		T.rtype()
-		jit = JIT( [graphs[0]] )
-	elif '--test' in sys.argv:
-		T.annotate()
-		T.rtype()
+		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
+		jit = JIT( [T.driver.translator.graphs[1]] )
+		a = jit.call('simple_test', 400, 20 )
+		print('jit-test:', a)
+
+	else:
+		T = translate( func, annotate='--test' in sys.argv, rtype='--test' in sys.argv )
+
 

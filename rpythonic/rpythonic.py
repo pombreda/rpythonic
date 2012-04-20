@@ -4244,51 +4244,12 @@ class RPython(object):
 
 
 ################## Neo Rpython #################
-
 def translate_rpython( func, inline=True, compile=False, gc='ref', functions=[] ):
-	#import neorpython
-
-	#Translation = neorpython.get_pypy_translator()
-
-	assert gc in ('ref', 'framework', 'framework+asmgcroot', 'hybrid')
-	import pypy.translator.interactive
-	t = pypy.translator.interactive.Translation( func, standalone=True, inline=inline, gc=gc)
-	'''
-	the Translation instance __init__ contains:
-		self.driver = driver.TranslationDriver(overrides=DEFAULTS)
-		self.config = self.driver.config
-		self.entry_point = entry_point
-		self.context = TranslationContext(config=self.config)
-		...
-		self.update_options(argtypes, kwds)
-		self.context.buildflowgraph(entry_point)
-
-	'''
-	t.driver.secondary_entrypoints = functions
-	'''
-	setting t.driver.secondary_entrypoints triggers annotator.build_types on t.annotate()
-	annotator.build_types builds a flowgraph, and adds it to graphs
-	'''
-	if functions:
-		for func,argtypes in functions:
-			graph = t.context.buildflowgraph( func )
-			t.context._prebuilt_graphs[ func ] = graph
-
-
-	print( 'secondary entry points', t.driver.secondary_entrypoints )
-	print('-'*80); print('#### PYPY FLOWGRAPH STEP1 COMPLETE ####'); print('-'*80)
 	import neorpython
-	neorpython.make_rpython_compatible( t )
+	t = neorpython.translate( func, inline=inline, gc=gc, functions=functions )
 
-	t.annotate()
-	print('-'*80); print('#### PYPY ANNONTATION STEP2 COMPLETE ####'); print('-'*80)
-	#print( 'ann_argtypes', t.ann_argtypes )
-	args = [int]	# force int makes standalone compatible, main must return int
-	t.rtype( None )	#interactive.py", line 66, in ensure_setup raise Exception("inconsistent argtype supplied")
-	print('-'*80); print('#### PYPY RTYPER STEP3 COMPLETE ####'); print('-'*80)
-
-	predeclare = ''
-	t.source_c(); print('-'*80); print('#### PYPY SOURCE GENERATION STEP4 COMPLETE ####'); print('-'*80)
+	t.source_c()
+	print('-'*80); print('#### PYPY SOURCE GENERATION STEP4 COMPLETE ####'); print('-'*80)
 	headers = []
 	sources = []
 	## copy generated source to our jni directory ##
