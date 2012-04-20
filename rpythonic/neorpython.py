@@ -70,11 +70,29 @@ class JIT(object):
 		else:
 			return self.types[ ctype._name ]
 
-	def __init__(self, graphs):
+	def __init__(self, graphs, optimize=True):
 		#import pypy.rpython.lltypesystem.lltype
+		self.optimize = optimize
 		self.functions = {}
 
 		self.module = llvm.core.Module.new( 'myjit' )
+		self.engine = llvm.ee.ExecutionEngine.new( self.module )
+		self.pman = llvm.passes.FunctionPassManager.new(self.module)
+
+		# Set up the optimizer pipeline. Start with registering info about how the
+		# target lays out data structures.
+		self.pman.add( self.engine.target_data )
+		# Do simple "peephole" optimizations and bit-twiddling optzns.
+		self.pman.add( llvm.passes.PASS_INSTRUCTION_COMBINING)
+		# Reassociate expressions.
+		self.pman.add( llvm.passes.PASS_REASSOCIATE)
+		# Eliminate Common SubExpressions.
+		self.pman.add( llvm.passes.PASS_GVN)
+		# Simplify the control flow graph (deleting unreachable blocks, etc).
+		self.pman.add( llvm.passes.PASS_CFG_SIMPLIFICATION)
+		self.pman.initialize()
+
+
 		for graph in graphs:
 			print('============JIT: %s' %graph)
 
@@ -134,11 +152,17 @@ class JIT(object):
 				builder.ret( emap[arg] )
 			else: assert 0
 
+			print('============= raw llvm asm ==============')
 			print(func)
 			print('-'*80)
+			if self.optimize:
+				self.pman.run( func )
+				print('============= OPT llvm asm ==============')
+				print(func)
+				print('-'*80)
+
 
 		self.module.verify()
-		self.engine = llvm.ee.ExecutionEngine.new( self.module )
 
 	def call( self, func_name, *args ):
 		llargs = []
