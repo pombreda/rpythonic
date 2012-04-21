@@ -3,7 +3,7 @@
 # License: BSD
 import inspect
 
-def translate( func, inline=True, gc='ref', functions=[], annotate=True, rtype=True ):
+def translate( func, inline=True, gc='ref', functions=[], annotate=True, rtype=True, debug=True, make_rpython=True ):
 	assert gc in ('ref', 'framework', 'framework+asmgcroot', 'hybrid')
 	import pypy.translator.interactive
 	t = pypy.translator.interactive.Translation(
@@ -35,7 +35,8 @@ def translate( func, inline=True, gc='ref', functions=[], annotate=True, rtype=T
 
 	print( 'secondary entry points', t.driver.secondary_entrypoints )
 	print('-'*80); print('#### PYPY FLOWGRAPH STEP1 COMPLETE ####'); print('-'*80)
-	make_rpython_compatible( t )
+	if make_rpython:
+		make_rpython_compatible( t, debug=debug )
 
 	if annotate:
 		t.annotate()
@@ -444,7 +445,10 @@ if __name__ == '__main__':
 	if '--jit-unroll' in sys.argv:
 		import rpyllvmjit
 		import pypy.rlib.unroll
-		CONST_VALUES = pypy.rlib.unroll.unrolling_iterable( range(10) )
+		if '--python' in sys.argv:
+			CONST_VALUES = range(10)
+		else:
+			CONST_VALUES = pypy.rlib.unroll.unrolling_iterable( range(10) )
 		def unroll_test(a, b):
 			c = 0
 			for v in CONST_VALUES:
@@ -453,7 +457,15 @@ if __name__ == '__main__':
 				c += v
 			return c
 
-		T = translate( lambda a: 1, functions=[ (unroll_test,(int,int)) ] )
+		if '--python' in sys.argv:
+			import time
+			start = time.time()
+			for i in range(1):
+				a = unroll_test( 400, 20 )
+			print('end of python benchmark:', time.time()-start)
+			assert 0
+
+		T = translate( lambda a: 1, functions=[ (unroll_test,(int,int)) ], debug='--debug' in sys.argv, make_rpython=False )
 		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]] )
 		a = jit.call('unroll_test', 400, 20 )
 		print('jit-test:', a)
@@ -463,12 +475,21 @@ if __name__ == '__main__':
 		#for block in T.driver.translator.graphs[1].iterblocks():
 		#	print('BLOCK',block)
 		#	for op in block.operations: print(op)
+		if '--benchmark' in sys.argv:
+			import time
+			start = time.time()
+			for i in range(1):
+				a = jit.call('unroll_test', 400, 20 )
+			print('end of benchmark:', time.time()-start)
+				
 
 
 	elif '--jit' in sys.argv:
 		import rpyllvmjit
 		def simple_test(a, b):
-			c = a + b
+			c = 0
+			while c < 10:
+				c = a + b
 			return c
 
 		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
