@@ -481,21 +481,31 @@ if __name__ == '__main__':
 			for i in range(1):
 				a = jit.call('unroll_test', 400, 20 )
 			print('end of benchmark:', time.time()-start)
-				
+
 
 
 	elif '--jit' in sys.argv:
 		import rpyllvmjit
 		def simple_test(a, b):
 			c = 0
-			while c < 10:
-				c = a + b
+			while c < 100000*100000:
+				c += a + b
 			return c
 
 		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
-		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]] )
-		a = jit.call('simple_test', 400, 20 )
-		print('jit-test:', a)
+		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]], optimize=2 )
+
+		if '--benchmark' in sys.argv:
+			import time
+			start = time.time()
+			a = jit.call('simple_test', 1, 1 )
+			print('end of benchmark:', time.time()-start)
+			print('test result:', a)
+		else:
+			a = jit.call('simple_test', 1, 1 )
+			print('jit-test:', a)
+
+
 
 	else:
 		T = translate( func, annotate='--test' in sys.argv, rtype='--test' in sys.argv )

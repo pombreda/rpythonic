@@ -14,7 +14,7 @@ class JIT(object):
 	types = {
 		'Bool'	: llvm.core.Type.int(1),
 		'Void'	: llvm.core.Type.void(),
-		'Signed'	: llvm.core.Type.int(32),
+		'Signed'	: llvm.core.Type.int(64),	# should be 32 XXX
 	}
 	def llvm_type( self, var ):
 		import pypy.rpython.lltypesystem.lltype
@@ -39,10 +39,14 @@ class JIT(object):
 		else:			# assume constant
 			return llvm.core.Constant.int( self.types['Signed'], pypyarg.value )
 
-	def find_cached_var(self, var): assert 0
+	def find_cached_var(self, var):
+		print('ERROR:', var)
+		assert 0
 
 
 	def flow( self, graph, block=None, indent=0 ):
+		import pypy.objspace.flow.model
+
 		func = self.functions[ graph.name ]
 		if not block:
 			assert not self.blocks and not self.builder
@@ -50,6 +54,39 @@ class JIT(object):
 			blk = func.append_basic_block( 'entry' )
 			self.builder = llvm.core.Builder.new( blk )
 			self.blocks[ block ] = blk
+			self.allocas = {}
+			for link in graph.iterlinks():
+				assert link.target is not graph.startblock
+
+				for arg in link.args:	# arg is: Variable or Constant
+					#if link.prevblock is graph.startblock:
+					#	if arg in graph.startblock.inputargs: continue
+
+					escapes = []
+					tvar = link.target.inputargs[link.args.index(arg)]
+					for sublink in link.target.exits:
+						if tvar in sublink.args:
+							esc = sublink.target.inputargs[ sublink.args.index(tvar) ]
+							escapes.append( esc )
+							break
+					#if not escapes: continue
+
+					if arg not in self.allocas:
+						if isinstance( arg, pypy.objspace.flow.model.Variable ):
+							stackvar = self.builder.alloca( self.llvm_type(arg), 'stackvar_'+arg.name )
+							self.builder.store( func.args[link.args.index(arg)], stackvar )
+						else:	# Constant
+							stackvar = self.builder.alloca( self.llvm_type(arg), 'stackvar' )
+							const = llvm.core.Constant.int( self.types['Signed'], arg.value )
+							self.builder.store( const, stackvar )
+						self.allocas[ arg ] = stackvar
+
+					stackvar = self.allocas[ arg ]
+					self.allocas[ tvar ] = stackvar
+					for esc in escapes:
+						self.allocas[ esc ] = stackvar
+
+
 		elif block not in self.blocks:	# could be created below
 			if block is graph.returnblock:
 				blk = func.append_basic_block( 'return' )
@@ -69,10 +106,22 @@ class JIT(object):
 		for op in block.operations:
 			print( ('\t'*indent)+str(op) )
 			if op.opname == 'int_add':
-				a = get(op.args[0])
-				b = get(op.args[1])
+				if op.args[0] in block.inputargs and op.args[0] in self.allocas:
+					a = self.builder.load( self.allocas[op.args[0]], op.args[0].name )
+				else:
+					a = get(op.args[0])
+
+				if op.args[1] in block.inputargs:
+					b = self.builder.load( self.allocas[op.args[1]], op.args[1].name )
+				else:
+					b = get(op.args[1])
+
 				var = self.builder.add( a, b, op.opname )
 				var.name = op.result.name
+				if op.result in self.allocas:
+					self.builder.store( var, self.allocas[op.result] )
+					#var = self.allocas[op.result]	# ugly
+
 				self.var_cache[ op.result ] = var
 				for link in block.exits:
 					if op.result in link.args:
@@ -85,11 +134,16 @@ class JIT(object):
 				var = self.builder.icmp( llvm.core.ICMP_ULT, a, b, op.opname )
 				var.name = op.result.name
 				self.var_cache[ op.result ] = var
-			elif op.opname == 'same_as':	# can fold
+			elif op.opname == 'same_as':	# can fold?
 				self.var_cache[ op.result ] = get(op.args[0])
 
 		if block is graph.returnblock:
-			ret = get( block.inputargs[0] )
+			if block.inputargs[0] in self.allocas:
+				stackvar = self.allocas[ block.inputargs[0] ]
+				ret = self.builder.load( stackvar )
+			else:
+				ret = get( block.inputargs[0] )
+
 			self.builder.ret( ret )
 
 
@@ -99,6 +153,10 @@ class JIT(object):
 				print(tabs+'\t<WHILE LOOP> exit-switch: %s' %block.exitswitch)
 				assert link.exitcase
 				blk.name = 'while_loop'
+
+				################################assert block.exitswitch in self.allocas
+
+
 				con_bool = get( block.exitswitch )	# condition bool
 				#print('condition bool',con_bool)
 				assert len(block.exits) == 2
@@ -134,7 +192,7 @@ class JIT(object):
 
 
 
-	def __init__(self, graphs, optimize=True):
+	def __init__(self, graphs, optimize=2):
 		import pypy.objspace.flow.model
 		self.optimize = optimize
 		self.functions = {}
@@ -146,15 +204,18 @@ class JIT(object):
 		# Set up the optimizer pipeline. Start with registering info about how the
 		# target lays out data structures.
 		self.pman.add( self.engine.target_data )
-		self.pman.add( llvm.passes.PASS_PROMOTE_MEMORY_TO_REGISTER )
-		# Do simple "peephole" optimizations and bit-twiddling optzns.
-		self.pman.add( llvm.passes.PASS_INSTRUCTION_COMBINING)
-		# Reassociate expressions.
-		self.pman.add( llvm.passes.PASS_REASSOCIATE)
-		# Eliminate Common SubExpressions.
-		self.pman.add( llvm.passes.PASS_GVN)
-		# Simplify the control flow graph (deleting unreachable blocks, etc).
-		self.pman.add( llvm.passes.PASS_CFG_SIMPLIFICATION)
+		if self.optimize:
+			self.pman.add( llvm.passes.PASS_PROMOTE_MEMORY_TO_REGISTER )
+		if self.optimize >= 2:
+			print('DOING ADVANCED PASS OPTS')
+			# Do simple "peephole" optimizations and bit-twiddling optzns.
+			self.pman.add( llvm.passes.PASS_INSTRUCTION_COMBINING)
+			# Reassociate expressions.
+			self.pman.add( llvm.passes.PASS_REASSOCIATE)
+			# Eliminate Common SubExpressions.
+			self.pman.add( llvm.passes.PASS_GVN)
+			# Simplify the control flow graph (deleting unreachable blocks, etc).
+			self.pman.add( llvm.passes.PASS_CFG_SIMPLIFICATION)
 		self.pman.initialize()
 
 
@@ -192,13 +253,13 @@ class JIT(object):
 			print(func)
 
 			if DEBUG:
-				print('============= raw llvm asm ==============')
+				print('============= llvm asm (RAW) ==============')
 				print(func)
 				print('-'*80)
 			if self.optimize:
 				self.pman.run( func )
 				if DEBUG:
-					print('============= OPT llvm asm ==============')
+					print('============= llvm asm (OPTIMIZE LEVEL:%s)=============='%self.optimize)
 					print(func)
 					print('-'*80)
 
