@@ -493,14 +493,15 @@ if __name__ == '__main__':
 			return c
 
 		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
-		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]], optimize=2 )
+		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]], optimize=3 )
 
 		if '--benchmark' in sys.argv:
 			import time
-			start = time.time()
-			a = jit.call('simple_test', 1, 1 )
-			print('end of benchmark:', time.time()-start)
-			print('test result:', a)
+			for i in range(10):
+				start = time.time()
+				a = jit.call('simple_test', 1, 1 )
+				print('end of benchmark:', time.time()-start)
+				print('test result:', a)
 		else:
 			a = jit.call('simple_test', 1, 1 )
 			print('jit-test:', a)

@@ -73,10 +73,10 @@ class JIT(object):
 
 					if arg not in self.allocas:
 						if isinstance( arg, pypy.objspace.flow.model.Variable ):
-							stackvar = self.builder.alloca( self.llvm_type(arg), 'stackvar_'+arg.name )
+							stackvar = self.builder.alloca( self.llvm_type(arg), 'st_'+arg.name )
 							self.builder.store( func.args[link.args.index(arg)], stackvar )
 						else:	# Constant
-							stackvar = self.builder.alloca( self.llvm_type(arg), 'stackvar' )
+							stackvar = self.builder.alloca( self.llvm_type(arg), 'st' )
 							const = llvm.core.Constant.int( self.types['Signed'], arg.value )
 							self.builder.store( const, stackvar )
 						self.allocas[ arg ] = stackvar
@@ -204,18 +204,40 @@ class JIT(object):
 		# Set up the optimizer pipeline. Start with registering info about how the
 		# target lays out data structures.
 		self.pman.add( self.engine.target_data )
-		if self.optimize:
-			self.pman.add( llvm.passes.PASS_PROMOTE_MEMORY_TO_REGISTER )
-		if self.optimize >= 2:
-			print('DOING ADVANCED PASS OPTS')
-			# Do simple "peephole" optimizations and bit-twiddling optzns.
-			self.pman.add( llvm.passes.PASS_INSTRUCTION_COMBINING)
-			# Reassociate expressions.
-			self.pman.add( llvm.passes.PASS_REASSOCIATE)
-			# Eliminate Common SubExpressions.
-			self.pman.add( llvm.passes.PASS_GVN)
-			# Simplify the control flow graph (deleting unreachable blocks, etc).
-			self.pman.add( llvm.passes.PASS_CFG_SIMPLIFICATION)
+		if self.optimize >=10:
+			print('DOING CRAZY PASS OPTS')
+			for i in range(88):
+				opt = i+1
+				if opt in (4,5,6,12,15,19,20,25,26,27,29,30,31,37,38,54,57,60,61,62,68,71,82,83,84,85): continue
+				self.pman.add( opt )
+		else:
+			if self.optimize:
+				self.pman.add( llvm.passes.PASS_PROMOTE_MEMORY_TO_REGISTER )
+			if self.optimize >= 2:
+				print('DOING ADVANCED PASS OPTS')
+				# Do simple "peephole" optimizations and bit-twiddling optzns.
+				self.pman.add( llvm.passes.PASS_INSTRUCTION_COMBINING)
+				# Reassociate expressions.
+				self.pman.add( llvm.passes.PASS_REASSOCIATE)
+				# Eliminate Common SubExpressions.
+				self.pman.add( llvm.passes.PASS_GVN)
+				# Simplify the control flow graph (deleting unreachable blocks, etc).
+				self.pman.add( llvm.passes.PASS_CFG_SIMPLIFICATION)
+			if self.optimize >= 3:
+				self.pman.add( llvm.passes.PASS_LCSSA)
+				## LICM is smart - moves what ops it can outside of loops to entry
+				self.pman.add( llvm.passes.PASS_LICM)
+				self.pman.add( llvm.passes.PASS_LOOP_DEPENDENCE_ANALYSIS)
+				self.pman.add( llvm.passes.PASS_LOOP_EXTRACTOR)
+				self.pman.add( llvm.passes.PASS_LOOP_SIMPLIFY)
+
+				#self.pman.add( llvm.passes.PASS_LOOP_DELETION)
+				#self.pman.add( llvm.passes.PASS_LOOP_INDEX_SPLIT)
+				#self.pman.add( llvm.passes.PASS_LOOP_ROTATE)
+
+				self.pman.add( llvm.passes.PASS_LOOP_UNROLL)
+				self.pman.add( llvm.passes.PASS_LOOP_UNSWITCH)
+
 		self.pman.initialize()
 
 
@@ -281,4 +303,9 @@ class JIT(object):
 		func = self.functions[ func_name ]
 		retval = self.engine.run_function( func, llargs )
 		return retval.as_int()		# TODO return other types!
+
+	def get_wrapper_function(self, func_name):
+		lamb = eval('lambda *args: self.call(%s, *args)'%func_name)
+		return lamb
+
 

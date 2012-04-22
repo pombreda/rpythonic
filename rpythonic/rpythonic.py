@@ -2,7 +2,7 @@
 # RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.6b'
+VERSION = '0.4.6c'
 
 _doc_ = '''
 NAME
@@ -3907,9 +3907,10 @@ class RPython(object):
 		from pypy.rlib.debug import debug_print
 		return debug_print
 
-	def __init__(self, name, platform='linux', threading=False, gc='ref'):
+	def __init__(self, name, platform='linux', threading=False, gc='ref', backend='pypy'):
 		self.name = name
 		self.platform = platform
+		self.backend = backend
 		if platform in 'android ios'.split():
 			from pypy.rpython.lltypesystem import lltype, rffi
 			self.rffi = rffi
@@ -4110,17 +4111,23 @@ class RPython(object):
 
 
 	def cache(self, refresh=False):		# loads and compiles rpython module for CPython
-		mname = self.name
-		if refresh:
-			self._gen( mname )
-			mod = load( mname, debug=True )
-		else:
-			try: mod = load( mname, debug=True )
-			except:
+		if self.backend == 'pypy':
+			mname = self.name
+			if refresh:
 				self._gen( mname )
 				mod = load( mname, debug=True )
-		self._prepare_rpython_module( mod )
-		return mod
+			else:
+				try: mod = load( mname, debug=True )
+				except:
+					self._gen( mname )
+					mod = load( mname, debug=True )
+			self._prepare_rpython_module( mod )
+			return mod
+		elif self.backend == 'llvm':
+
+		else:
+			print('INVALID BACKEND',self.backend)
+			assert 0
 
 	def load(self):
 		try:
