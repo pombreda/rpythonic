@@ -3690,7 +3690,7 @@ class _rpy_func_bind(object):		# @sub-decorator
 		#func._annspecialcase_ = 'specialize:ll'	# whats this do?
 		#func._always_inline_ = True
 
-		self.function = func
+		self.function = func	# this is the original function
 		self.arguments = args = []
 		if ISPYTHON2: self.name = func.func_name
 		else: self.name = func.__name__
@@ -4124,10 +4124,31 @@ class RPython(object):
 			self._prepare_rpython_module( mod )
 			return mod
 		elif self.backend == 'llvm':
-
+			return self.llvm_backend()
 		else:
 			print('INVALID BACKEND',self.backend)
 			assert 0
+
+	def llvm_backend( self ):
+		print('WARNING: the LLVM backend is HIGHLY experimental!')
+		secondary_entrypoints = []
+		func_names = []
+		for i,w in enumerate(self.wrapped):
+			secondary_entrypoints.append( (w.function, w.arguments) )
+			func_names.append( w.name )
+		entry = lambda x: 1
+		import neorpython
+		T = neorpython.translate( entry, inline=False, functions=secondary_entrypoints )
+		import rpyllvmjit
+
+		graphs = []	# only JIT the user funcs, not the pypy helper funcs
+		for graph in T.driver.translator.graphs:
+			if graph.name in func_names: graphs.append( graph )
+		
+		jit = rpyllvmjit.JIT( graphs, optimize=3 )
+		for w in self.wrapped:
+			w.wrapper.function = jit.get_wrapper_function( w.name )
+		return jit
 
 	def load(self):
 		try:

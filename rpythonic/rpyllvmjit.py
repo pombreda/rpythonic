@@ -305,7 +305,7 @@ class JIT(object):
 		return retval.as_int()		# TODO return other types!
 
 	def get_wrapper_function(self, func_name):
-		lamb = eval('lambda *args: self.call(%s, *args)'%func_name)
+		lamb = eval('lambda *args: self.call("%s", *args)'%func_name, {'self':self})
 		return lamb
 
 
