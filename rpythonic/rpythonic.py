@@ -2,7 +2,7 @@
 # RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.6c'
+VERSION = '0.4.7a'
 
 _doc_ = '''
 NAME
@@ -12,7 +12,8 @@ DESCRIPTION
 	RPythonic is a frontend for using RPython (the translation toolchain of PyPy), it simplifies: wrapper generation, compiling (standalone or modules), and Android integration.  It can also be used as a tool to automatically wrap C/C++ libraries using ctypes.
 
 INSTALLING
-		PLY (apt-get install python-ply)
+		PLY		(apt-get install python-ply)
+		PyLLVM	(apt-get install python-llvm)
 
 RPYTHON API
 	import rpythonic

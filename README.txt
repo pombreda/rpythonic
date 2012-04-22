@@ -1,5 +1,5 @@
-RPythonic: Beta7 - April, 2012
-Copyright: Brett Hartshorn (bhartsho@yahoo.com)
+RPythonic: Beta8 - April, 2012
+Copyright 2012: Brett Hartshorn and The Blender Research Lab.
 License: BSD
 
 INSTALLING:
@@ -13,9 +13,16 @@ INSTALLING:
 
 DEV NOTES:
 	C++ Wrapper Gen - in progress...
+	Rpython > LLVM - in progress...
 	see the "scripts" folder for wrapper generator examples
 
+Known Issues:
+	rffi wrapper gen is broken
+	android demos are broken
+	c++ wrapper gen broken?
 
+
+_____________________________________________________________
 PYPY NOTES:
 	A stripped down PyPy is now included with Rpythonic,
 	it is no longer required you fetch the PyPy source and patch it.

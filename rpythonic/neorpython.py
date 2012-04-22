@@ -493,7 +493,7 @@ if __name__ == '__main__':
 			return c
 
 		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
-		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]], optimize=3 )
+		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]], optimize=1 )
 
 		if '--benchmark' in sys.argv:
 			import time

@@ -12,7 +12,7 @@ def simple_test(a, b):
 		c += a + b
 	return c
 
-rpy.cache( refresh=1)
+rpy.cache( refresh=1 )
 print('CACHED: starting test...')
 ############### testing ##############
 import time
