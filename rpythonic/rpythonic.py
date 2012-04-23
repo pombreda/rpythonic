@@ -3669,8 +3669,14 @@ class AndroidPackage( object ):
 class _rpy_func_wrapper(object):		# NOT RPYTHON
 	def __init__(self,func):
 		self.function = func		# this is replaced upon call to RPython.cache()
+		self._sizeof_hints = {}
 	def __call__( self, *args, **kw ):
 		return self.function( *args, **kw )
+
+	## used by the LLVM backend ##
+	def set_llvm_hints( self, **kw ):
+		if 'sizeof' in kw:
+			self._sizeof_hints.update( kw['sizeof'] )
 
 def get_function_default_kwargs( func ):
 	defaults = []
@@ -3899,8 +3905,14 @@ class LinuxPackage( object ):
 		os.system( 'cp -v %s %s' %(self.path, path) )
 
 
-
 class RPython(object):
+	def llvm_hints(self, **kw):
+		return lambda func: self._llvm_hints(func, kw)
+	def _llvm_hints(self, wrap, hints):
+		assert isinstance(wrap,_rpy_func_wrapper)
+		wrap.set_llvm_hints( **hints )
+		return wrap
+
 	def rcallback( self, signature_pointer, callback ):
 		from pypy.rpython.annlowlevel import llhelper
 		return llhelper(signature_pointer, callback)

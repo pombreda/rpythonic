@@ -5,12 +5,14 @@ import rpythonic
 ################################
 rpy = rpythonic.RPython( 'test8', backend='llvm' )
 
+@rpy.llvm_hints( sizeof={'int':64} )
 @rpy.bind(a=int,b=int)
 def simple_test(a, b):
 	c = 0
 	while c < 100000*100000:
 		c += a + b
 	return c
+#simple_test.set_llvm_hints( sizeof={'int':64} )	# also valid
 
 rpy.cache( refresh=1 )
 print('CACHED: starting test...')

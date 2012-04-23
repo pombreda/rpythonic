@@ -11,6 +11,16 @@ DEBUG = '--debug' in sys.argv
 ######################################################################
 ######################################################################
 class JIT(object):
+	'''
+	With LLVM IR we don't have to worry about things like this:
+		Linux32 and Win32:
+			int=32, long=32, long-long=64, void*=32
+		Linux64:
+			int=32, long=64, long-long=64, void*=64
+		Win64:
+			int=32, long=32, long-long=64, void*=64
+
+	'''
 	types = {
 		'Bool'	: llvm.core.Type.int(1),
 		'Void'	: llvm.core.Type.void(),
