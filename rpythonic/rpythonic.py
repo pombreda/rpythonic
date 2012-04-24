@@ -4158,7 +4158,7 @@ class RPython(object):
 		for graph in T.driver.translator.graphs:
 			if graph.name in func_names: graphs.append( graph )
 		
-		jit = rpyllvmjit.JIT( graphs, optimize=3 )
+		jit = rpyllvmjit.JIT( graphs, optimize=0 )
 		for w in self.wrapped:
 			w.wrapper.function = jit.get_wrapper_function( w.name )
 		return jit

@@ -24,7 +24,7 @@ class JIT(object):
 	types = {
 		'Bool'	: llvm.core.Type.int(1),
 		'Void'	: llvm.core.Type.void(),
-		'Signed'	: llvm.core.Type.int(64),	# should be 32 XXX
+		'Signed'	: llvm.core.Type.int(32),	# should be 32 XXX
 	}
 	def llvm_type( self, var ):
 		import pypy.rpython.lltypesystem.lltype
@@ -52,6 +52,27 @@ class JIT(object):
 	def find_cached_var(self, var):
 		print('ERROR:', var)
 		assert 0
+
+	def make_vector(self, *args):
+		vtype = llvm.core.Type.vector( self.types['Signed'], len(args) )
+		vargs = []
+		for arg in args:
+			vargs.append(
+				llvm.core.Constant.int( self.types['Signed'], arg )
+			)
+		const = llvm.core.Constant.vector( vargs )
+
+		stackvar = self.builder.alloca( vtype, 'stack_vec' )
+		self.builder.store( const, stackvar )
+		var = self.builder.load( stackvar, 'vec' )
+
+		#for index,carg in enumerate(vargs):
+		#	self.builder.insert_element(
+		#		var,
+		#		carg,
+		#		llvm.core.Constant.int( self.types['Signed'], index )
+		#	)
+		return var
 
 
 	def flow( self, graph, block=None, indent=0 ):
@@ -84,7 +105,8 @@ class JIT(object):
 					if arg not in self.allocas:
 						if isinstance( arg, pypy.objspace.flow.model.Variable ):
 							stackvar = self.builder.alloca( self.llvm_type(arg), 'st_'+arg.name )
-							self.builder.store( func.args[link.args.index(arg)], stackvar )
+							if link.prevblock is graph.startblock and len(func.args):	 # TODO FIXME
+								self.builder.store( func.args[link.args.index(arg)], stackvar )
 						else:	# Constant
 							stackvar = self.builder.alloca( self.llvm_type(arg), 'st' )
 							const = llvm.core.Constant.int( self.types['Signed'], arg.value )
@@ -113,9 +135,47 @@ class JIT(object):
 
 		get = self.get_var_or_const
 
+		instance_vars = {}
+
 		for op in block.operations:
 			print( ('\t'*indent)+str(op) )
-			if op.opname == 'int_add':
+			if op.opname == 'malloc':
+				gcstruct = op.args[0].value
+				name = gcstruct._name
+				print('GCSTRUCT', name)
+				var = self.make_vector( 1,202,3 )
+				self.var_cache[ op.result ] = var
+				instance_vars[ op.result  ] = var
+
+			elif op.opname == 'same_as':	# can fold?
+				self.var_cache[ op.result ] = get(op.args[0])
+				if op.args[0] in instance_vars:
+					instance_vars[ op.result ] = get(op.args[0])
+
+
+			elif op.opname == 'direct_call':
+				#assert name in graph._llvm_hints['vectors']
+				fn = op.args[0].value
+				#print(fn, dir(fn))
+				#print(fn._obj, type(fn._obj), dir(fn._obj))
+				#assert isinstance(fn._obj, pypy.rpython.lltypesystem.lltype._func)
+
+				print(fn._obj._callable)
+				_func = fn._obj._callable
+				if _func.func_name == '__init__': pass
+				elif _func.func_name == '__getitem__':
+					a = instance_vars[op.args[1]]
+					b = get(op.args[2])
+					print(a,b)
+					var = self.builder.extract_element( a,b )
+					self.var_cache[ op.result ] = var
+					if op.result in self.allocas:
+						self.builder.store( var, self.allocas[op.result] )
+
+				else:
+					assert 0
+
+			elif op.opname == 'int_add':
 				if op.args[0] in block.inputargs and op.args[0] in self.allocas:
 					a = self.builder.load( self.allocas[op.args[0]], op.args[0].name )
 				else:
@@ -144,8 +204,6 @@ class JIT(object):
 				var = self.builder.icmp( llvm.core.ICMP_ULT, a, b, op.opname )
 				var.name = op.result.name
 				self.var_cache[ op.result ] = var
-			elif op.opname == 'same_as':	# can fold?
-				self.var_cache[ op.result ] = get(op.args[0])
 
 		if block is graph.returnblock:
 			if block.inputargs[0] in self.allocas:
