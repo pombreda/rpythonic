@@ -3666,17 +3666,16 @@ class AndroidPackage( object ):
 
 
 
-class _rpy_func_wrapper(object):		# NOT RPYTHON
+class _rpy_func_wrapper(object):
 	def __init__(self,func):
 		self.function = func		# this is replaced upon call to RPython.cache()
-		self._sizeof_hints = {}
+		func._llvm_hints = {}
 	def __call__( self, *args, **kw ):
 		return self.function( *args, **kw )
 
 	## used by the LLVM backend ##
 	def set_llvm_hints( self, **kw ):
-		if 'sizeof' in kw:
-			self._sizeof_hints.update( kw['sizeof'] )
+		self.function._llvm_hints.update( kw )
 
 def get_function_default_kwargs( func ):
 	defaults = []
@@ -4156,10 +4155,11 @@ class RPython(object):
 	def llvm_backend( self ):
 		print('WARNING: the LLVM backend is HIGHLY experimental!')
 		secondary_entrypoints = []
-		func_names = []
+		func_names = {}
 		for i,w in enumerate(self.wrapped):
 			secondary_entrypoints.append( (w.function, w.arguments) )
-			func_names.append( w.name )
+			func_names[ w.name ] = w.wrapper.function._llvm_hints
+
 		entry = lambda x: 1
 		import neorpython
 		T = neorpython.translate( entry, inline=False, functions=secondary_entrypoints )
@@ -4169,7 +4169,7 @@ class RPython(object):
 		for graph in T.driver.translator.graphs:
 			if graph.name in func_names:
 				graphs.append( graph )
-				graph._llvm_hints = hints = {}
+				graph._llvm_hints = hints = func_names[graph.name]
 				hints['vector-classes'] = { cls.__module__+'.'+cls.__name__:cls for cls in self._vector_classes }
 
 		jit = rpyllvmjit.JIT( graphs, optimize=2 )

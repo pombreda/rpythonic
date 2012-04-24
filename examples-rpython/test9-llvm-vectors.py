@@ -24,15 +24,18 @@ class Vector(object):
 		if index == 1: self.y = value
 		if index == 2: self.z = value
 
-
-@rpy.bind()
-def test():
-	a = Vector(4.20, .99, .420)
+@rpy.llvm_hints( sizeof={'int':64} )
+@rpy.bind(x1=float, y1=float, z1=float)
+def test(x1, y1, z1):
+	a = Vector(x1, y1, z1)
 	a[0] = a[1]
 	return a[1]
 
 rpy.cache( refresh=1 )
 print('CACHED: starting test...')
 ############### testing ##############
-print( 'test result:', test() )
+print( 'test result:', test(0.77, 0.66, 0.33) )
+
+
+
 

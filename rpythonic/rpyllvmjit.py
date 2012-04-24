@@ -94,17 +94,27 @@ class JIT(object):
 					vargs.append( llvm.core.Constant.real( t, arg ) )
 		else:
 			vargs = args		# must be constants?
-		const = llvm.core.Constant.vector( vargs )
 
-		self.builder.store( const, stackvar )
-		var = self.builder.load( stackvar, 'vec' )
+		if all( [isinstance(a,llvm.core.Constant) for a in vargs] ):
+			const = llvm.core.Constant.vector( vargs )
+			self.builder.store( const, stackvar )
+			var = self.builder.load( stackvar, 'vec' )
+		else:
+			if kw['type'].startswith('float'):
+				const_args = [ llvm.core.Constant.real(t,0.0) for i in range(length) ]
+			if kw['type'].startswith('int'):
+				const_args = [ llvm.core.Constant.int(t,0) for i in range(length) ]
 
-		#for index,carg in enumerate(vargs):
-		#	self.builder.insert_element(
-		#		var,
-		#		carg,
-		#		llvm.core.Constant.int( self.types['Signed'], index )
-		#	)
+			const = llvm.core.Constant.vector( const_args )
+			self.builder.store( const, stackvar )
+			var = self.builder.load( stackvar, 'vec' )
+
+			for index,carg in enumerate(vargs):
+				var = self.builder.insert_element(
+					var,
+					carg,
+					llvm.core.Constant.int( self.types['Signed'], index )
+				)
 		return var
 
 
@@ -356,6 +366,16 @@ class JIT(object):
 		for graph in graphs:
 			assert isinstance(graph, pypy.objspace.flow.model.FunctionGraph)
 			if DEBUG: print('============JIT: %s' %graph)
+			print(graph._llvm_hints)
+			hints = graph._llvm_hints
+			self.types['Signed'] = llvm.core.Type.int( 32 )		# restore
+			self.types['Signed']._type = 'int32'
+
+			if 'sizeof' in hints:
+				if 'int' in hints['sizeof']:
+					bits = hints['sizeof']['int']
+					self.types['Signed'] = llvm.core.Type.int( bits )
+					self.types['Signed']._type = 'int%s'%bits
 
 			var = graph.returnblock.inputargs[0]
 			ret = self.llvm_type(var)
@@ -398,7 +418,6 @@ class JIT(object):
 					print(func)
 					print('-'*80)
 
-
 		self.module.verify()
 
 	def call( self, func_name, *args ):
@@ -423,8 +442,8 @@ class JIT(object):
 		func = self.functions[ func_name ]
 		retval = self.engine.run_function( func, llargs )
 		_type = func._return_type._type
-		if _type=='int32':
-			return retval.as_int()
+		if _type in ('int32','int64'):
+			return retval.as_int()	# TODO Signed INT
 		elif _type=='float32':
 			return retval.as_real( self.types['Float'] )
 		elif _type=='float64':
