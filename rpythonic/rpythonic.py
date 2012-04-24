@@ -3906,6 +3906,16 @@ class LinuxPackage( object ):
 
 
 class RPython(object):
+	def vector(self, type=float, length=4):
+		if type==float: assert length == 4
+		elif type==int: assert length == 4
+		return lambda cls: self._vector(cls, {'type':type, 'length':length})
+	def _vector(self, cls, hints):
+		self._vector_classes.append( cls )
+		cls._llvm_hints = hints
+		return cls
+
+
 	def llvm_hints(self, **kw):
 		return lambda func: self._llvm_hints(func, kw)
 	def _llvm_hints(self, wrap, hints):
@@ -3924,6 +3934,7 @@ class RPython(object):
 		self.name = name
 		self.platform = platform
 		self.backend = backend
+		self._vector_classes = []
 		if platform in 'android ios'.split():
 			from pypy.rpython.lltypesystem import lltype, rffi
 			self.rffi = rffi
@@ -4156,9 +4167,12 @@ class RPython(object):
 
 		graphs = []	# only JIT the user funcs, not the pypy helper funcs
 		for graph in T.driver.translator.graphs:
-			if graph.name in func_names: graphs.append( graph )
-		
-		jit = rpyllvmjit.JIT( graphs, optimize=0 )
+			if graph.name in func_names:
+				graphs.append( graph )
+				graph._llvm_hints = hints = {}
+				hints['vector-classes'] = { cls.__module__+'.'+cls.__name__:cls for cls in self._vector_classes }
+
+		jit = rpyllvmjit.JIT( graphs, optimize=2 )
 		for w in self.wrapped:
 			w.wrapper.function = jit.get_wrapper_function( w.name )
 		return jit

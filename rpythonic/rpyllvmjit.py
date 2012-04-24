@@ -24,8 +24,14 @@ class JIT(object):
 	types = {
 		'Bool'	: llvm.core.Type.int(1),
 		'Void'	: llvm.core.Type.void(),
-		'Signed'	: llvm.core.Type.int(32),	# should be 32 XXX
+		'Signed'	: llvm.core.Type.int(32),
+		'Float'	: llvm.core.Type.float(),	# 32bits
+		'Double'	: llvm.core.Type.double(),	# 64bits
 	}
+	types['Signed']._type = 'int32'
+	types['Float']._type = 'float32'
+	types['Double']._type = 'float64'
+
 	def llvm_type( self, var ):
 		import pypy.rpython.lltypesystem.lltype
 		#if isinstance(ret, pypy.rpython.lltypesystem.lltype.Number):
@@ -47,22 +53,49 @@ class JIT(object):
 			else:
 				v = self.find_cached_var( pypyarg )
 		else:			# assume constant
-			return llvm.core.Constant.int( self.types['Signed'], pypyarg.value )
+			if type(pypyarg.value) is float:
+				return llvm.core.Constant.real( self.types['Float'], pypyarg.value )
+			else:
+				return llvm.core.Constant.int( self.types['Signed'], pypyarg.value )
 
 	def find_cached_var(self, var):
 		print('ERROR:', var)
 		assert 0
 
-	def make_vector(self, *args):
-		vtype = llvm.core.Type.vector( self.types['Signed'], len(args) )
-		vargs = []
-		for arg in args:
-			vargs.append(
-				llvm.core.Constant.int( self.types['Signed'], arg )
-			)
+	def make_vector(self, *args, **kw):
+		t = self.types['Signed']
+		length = len(args)
+		if 'length' in kw: length = kw['length']
+		if 'type' in kw:
+			if kw['type'] in (float,'float32'):
+				t = llvm.core.Type.float()
+				assert length==4
+			elif kw['type'] in ('float64', 'double'):
+				t = llvm.core.Type.double()
+				assert length==2
+			elif kw['type'] in (int,'int32'):
+				t = llvm.core.Type.int(32)
+				assert length==4
+			elif kw['type'] == 'int64':
+				t = llvm.core.Type.int(64)
+				assert length==2
+			else:
+				raise NotImplemented
+
+		vtype = llvm.core.Type.vector( t, length )
+		stackvar = self.builder.alloca( vtype, 'stack_vec' )
+
+		if type(args[0]) in (int,float):
+			vargs = []
+			for arg in args:
+				if type(arg) is int:
+					vargs.append( llvm.core.Constant.int( t, arg ) )
+				else:
+					vargs.append( llvm.core.Constant.real( t, arg ) )
+		else:
+			vargs = args		# must be constants?
 		const = llvm.core.Constant.vector( vargs )
 
-		stackvar = self.builder.alloca( vtype, 'stack_vec' )
 		self.builder.store( const, stackvar )
 		var = self.builder.load( stackvar, 'vec' )
 
@@ -136,16 +169,15 @@ class JIT(object):
 		get = self.get_var_or_const
 
 		instance_vars = {}
+		_make_vecs = []
 
 		for op in block.operations:
 			print( ('\t'*indent)+str(op) )
-			if op.opname == 'malloc':
+			if op.opname == 'malloc':		# TODO support structs, for now assume Vector
 				gcstruct = op.args[0].value
 				name = gcstruct._name
-				print('GCSTRUCT', name)
-				var = self.make_vector( 1,202,3 )
-				self.var_cache[ op.result ] = var
-				instance_vars[ op.result  ] = var
+				assert name in graph._llvm_hints['vector-classes']
+				_make_vecs.append( (op, graph._llvm_hints['vector-classes'][name]) )
 
 			elif op.opname == 'same_as':	# can fold?
 				self.var_cache[ op.result ] = get(op.args[0])
@@ -154,23 +186,35 @@ class JIT(object):
 
 
 			elif op.opname == 'direct_call':
-				#assert name in graph._llvm_hints['vectors']
 				fn = op.args[0].value
 				#print(fn, dir(fn))
 				#print(fn._obj, type(fn._obj), dir(fn._obj))
 				#assert isinstance(fn._obj, pypy.rpython.lltypesystem.lltype._func)
 
-				print(fn._obj._callable)
 				_func = fn._obj._callable
-				if _func.func_name == '__init__': pass
-				elif _func.func_name == '__getitem__':
+				fname = _func.func_name
+				if fname == '__init__':	# same_as op will come after this
+					gcop, vclass = _make_vecs.pop()
+					assert not _make_vecs		# GcStruct's are created one by one?
+					args = [ get(op.args[2]), get(op.args[3]), get(op.args[4]) ]
+					var = self.make_vector( *args, **vclass._llvm_hints )
+					self.var_cache[ gcop.result ] = var
+					instance_vars[ gcop.result  ] = var
+
+				elif fname == '__getitem__':
 					a = instance_vars[op.args[1]]
 					b = get(op.args[2])
-					print(a,b)
-					var = self.builder.extract_element( a,b )
+					var = self.builder.extract_element( a,b, 'element' )
 					self.var_cache[ op.result ] = var
 					if op.result in self.allocas:
 						self.builder.store( var, self.allocas[op.result] )
+
+				elif fname == '__setitem__':
+					inst = instance_vars[op.args[1]]
+					idx = get(op.args[2])
+					val = get(op.args[3])
+					var = self.builder.insert_element( inst, val, idx )
+					self.var_cache[ op.result ] = var
 
 				else:
 					assert 0
@@ -326,6 +370,7 @@ class JIT(object):
 			)
 			func.calling_convention = llvm.core.CC_C
 			self.functions[ graph.name ] = func
+			func._return_type = ret
 
 			self.var_cache = vmap = {}
 			for i,pypyarg in enumerate(graph.startblock.inputargs):	# assume Variables
@@ -365,12 +410,28 @@ class JIT(object):
 					arg
 				)
 				llargs.append( llarg )
+			elif type(arg) is float:
+				llarg = llvm.ee.GenericValue.real(
+					self.types['Float'],
+					arg
+				)
+				llargs.append( llarg )
+
 			else:
 				raise NotImplementedError
 
 		func = self.functions[ func_name ]
 		retval = self.engine.run_function( func, llargs )
-		return retval.as_int()		# TODO return other types!
+		_type = func._return_type._type
+		if _type=='int32':
+			return retval.as_int()
+		elif _type=='float32':
+			return retval.as_real( self.types['Float'] )
+		elif _type=='float64':
+			return retval.as_real( self.types['Double'] )
+		else:
+			raise NotImplemented
+
 
 	def get_wrapper_function(self, func_name):
 		lamb = eval('lambda *args: self.call("%s", *args)'%func_name, {'self':self})

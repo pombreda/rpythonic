@@ -5,14 +5,15 @@ import rpythonic
 ################################
 rpy = rpythonic.RPython( 'test9', backend='llvm' )
 
+@rpy.vector( type='float32', length=4 )
 class Vector(object):
-	def __init__(self, x=0, y=0, z=0):
+	def __init__(self, x=.0, y=.0, z=.0):
 		self.x = x
 		self.y = y
 		self.z = z
 
 	def __getitem__(self, index):
-		r = 0
+		r = .0
 		if index == 0: r = self.x
 		elif index == 1: r = self.y
 		elif index == 2: r = self.z
@@ -26,7 +27,8 @@ class Vector(object):
 
 @rpy.bind()
 def test():
-	a = Vector(10,20,30)
+	a = Vector(4.20, .99, .420)
+	a[0] = a[1]
 	return a[1]
 
 rpy.cache( refresh=1 )
