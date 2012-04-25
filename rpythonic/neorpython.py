@@ -41,6 +41,19 @@ def translate( func, inline=True, gc='ref', functions=[], annotate=True, rtype=T
 	if annotate:
 		t.annotate()
 		print('-'*80); print('#### PYPY ANNONTATION STEP2 COMPLETE ####'); print('-'*80)
+		if not rtype:
+			t.driver.rtype_ootype()
+			for graph in t.driver.translator.graphs:
+				for block in graph.iterblocks():
+					print(block)
+					for op in block.operations:
+						print('\t%s' %op)
+						for arg in op.args:
+							print('\t\t%s	%s' %(arg,type(arg)))
+							if hasattr(arg, 'concretetype'):
+								print('\t\t\t%s' %arg.concretetype)
+
+
 	if rtype:
 		t.rtype( None )
 		print('-'*80); print('#### PYPY RTYPER STEP3 COMPLETE ####'); print('-'*80)

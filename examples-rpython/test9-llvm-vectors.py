@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, sys
+import os, sys, time
 sys.path.append('..')
 import rpythonic
 ################################
@@ -24,18 +24,48 @@ class Vector(object):
 		if index == 1: self.y = value
 		if index == 2: self.z = value
 
-@rpy.llvm_hints( sizeof={'int':64} )
-@rpy.bind(x1=float, y1=float, z1=float)
-def test(x1, y1, z1):
+	def __add__( self, other ):
+		x = self.x + other.x
+		y = self.y + other.y
+		z = self.z + other.z
+		return Vector( x,y,z )
+
+#@rpy.llvm_hints( sizeof={'int':64} )
+@rpy.bind(x1=float, y1=float, z1=float, x2=float, y2=float, z2=float)
+def test(x1, y1, z1, x2, y2, z2):
 	a = Vector(x1, y1, z1)
-	a[0] = a[1]
-	return a[1]
+	b = Vector(x2, y2, z2)
+	#h = 11
+	i = 0
+	c = 0.0
+	#while i < 100000*100000:
+	while i < 1410065408:
+		v = a + b
+		#a[ 0 ] += b[0]
+		#a[ 1 ] += b[1]
+		#a[ 2 ] += b[2]
+		#w = a[0] + a[1] + a[2]
+		#c += w
+		#b[2] += w
+		c += v[0]	# + v[1] + v[2]
+		#x = h * 2
+		#i += x
+		i += 1
+	#c = a[0] + a[1] + a[2] + b[0] + b[1] + b[2]
+
+	return c
+
 
 rpy.cache( refresh=1 )
-print('CACHED: starting test...')
+print('CACHED: starting llvm test...')
 ############### testing ##############
-print( 'test result:', test(0.77, 0.66, 0.33) )
+for i in range(10):
+	start = time.time()
+	a = test( 0.56, 0.0000066, 0.000033,  0.04, 0.0000022, 0.00000011)
+	print('end of llvm benchmark:', time.time()-start)
+	print('test result:', a)
 
+#pypy 846 039 265 vs rpyllvm 16 777 216.0
 
 
 

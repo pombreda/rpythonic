@@ -4160,9 +4160,13 @@ class RPython(object):
 			secondary_entrypoints.append( (w.function, w.arguments) )
 			func_names[ w.name ] = w.wrapper.function._llvm_hints
 
-		entry = lambda x: 1
 		import neorpython
-		T = neorpython.translate( entry, inline=False, functions=secondary_entrypoints )
+		T = neorpython.translate(
+			lambda x: 1,
+			inline = False,
+			functions = secondary_entrypoints,
+			#rtype = False,	# this needs to be False, the rtyped graph kills too much high level info (inplace_add becomes just add)
+		)
 		import rpyllvmjit
 
 		graphs = []	# only JIT the user funcs, not the pypy helper funcs
@@ -4172,7 +4176,7 @@ class RPython(object):
 				graph._llvm_hints = hints = func_names[graph.name]
 				hints['vector-classes'] = { cls.__module__+'.'+cls.__name__:cls for cls in self._vector_classes }
 
-		jit = rpyllvmjit.JIT( graphs, optimize=2 )
+		jit = rpyllvmjit.JIT( graphs, optimize=0 )
 		for w in self.wrapped:
 			w.wrapper.function = jit.get_wrapper_function( w.name )
 		return jit
