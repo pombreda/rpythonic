@@ -35,37 +35,24 @@ class Vector(object):
 def test(x1, y1, z1, x2, y2, z2):
 	a = Vector(x1, y1, z1)
 	b = Vector(x2, y2, z2)
-	#h = 11
 	i = 0
 	c = 0.0
-	#while i < 100000*100000:
-	while i < 1410065408:
+	while i < 16000000:
 		v = a + b
-		#a[ 0 ] += b[0]
-		#a[ 1 ] += b[1]
-		#a[ 2 ] += b[2]
-		#w = a[0] + a[1] + a[2]
-		#c += w
-		#b[2] += w
-		c += v[0]	# + v[1] + v[2]
-		#x = h * 2
-		#i += x
+		c += v[0] + v[1] + v[2]
 		i += 1
-	#c = a[0] + a[1] + a[2] + b[0] + b[1] + b[2]
-
+	#assert isinstance(a,Vector)
+	#c = a[0] + a[1] + a[2]
 	return c
 
 
 rpy.cache( refresh=1 )
 print('CACHED: starting llvm test...')
 ############### testing ##############
-for i in range(10):
+for i in range(5):
 	start = time.time()
-	a = test( 0.56, 0.0000066, 0.000033,  0.04, 0.0000022, 0.00000011)
+	a = test( 0.3, 0.3, 0.3,  0.3, 0.3, 0.3)
 	print('end of llvm benchmark:', time.time()-start)
 	print('test result:', a)
-
-#pypy 846 039 265 vs rpyllvm 16 777 216.0
-
 
 

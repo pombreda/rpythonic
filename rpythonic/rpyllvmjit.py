@@ -216,6 +216,12 @@ example:
 			else:
 				st = self.parent.allocate( arg )
 
+			for esc_var in self.escape_vars:		## if the result of some operation requires a store, fast cache it here ##
+				if arg in self.escape_vars[ esc_var ]:
+					self.ALLOCATIONS[ esc_var ] = st
+					for other in self.escape_vars[ esc_var ]:
+						self.ALLOCATIONS[ other ] = st
+
 			self.ALLOCATIONS[ arg ] = st
 			return st
 
@@ -225,8 +231,10 @@ example:
 
 		if arg in self.var_cache:
 			return self.var_cache[ arg ]
+		elif arg in self.ALLOCATIONS:		## TODO this is a problem... the calling end needs to know to load it
+			return self.ALLOCATIONS[ arg ]
 
-		if arg in self.input and allocate:
+		elif arg in self.input and allocate:
 			if arg in self.ALLOCATIONS: a = self.ALLOCATIONS[ arg ]
 			else:
 				a = self.allocate( arg )
@@ -440,12 +448,15 @@ example:
 				if op.result in self.exit_vars:
 					if op.result in self.mutates_to_from:
 						v_from = self.mutates_to_from[ op.result ]
-						st = self.ALLOCATIONS[ v_from ]
+						if v_from in self.INSTANCE_VARS:
+							st = self.INSTANCE_VARS[ v_from ]
+						else:
+							st = self.ALLOCATIONS[ v_from ]
 						builder.store( var, st )
-					else:
+					else:	# should have already been cached #
+						print(self.ALLOCATIONS)
 						st = self.ALLOCATIONS[ op.result ]
 						builder.store( var, st )
-						assert None
 
 
 
@@ -473,7 +484,21 @@ example:
 		elif not self.children:	# return block
 			assert self.block is self.graph.returnblock
 			assert len(self.input)==1
-			ret = self.lload( self.input[0] )
+			#ret = self.lload( self.input[0] )
+			print('RETURN BLOCK', self.input[0] )
+
+			st = None
+			if self.input[0] in self.parent.exit_lookup_traced:
+				a = self.parent.exit_lookup_traced[ self.input[0] ]
+				print('EXIT LOOKUP', a)
+				if a in self.INSTANCE_VARS: ret = self.INSTANCE_VARS[a]
+				else: st = self.allocate( a )
+			else:
+				st = self.allocate( self.input[0] )
+
+			if st:
+				ret = builder.load( st )
+
 			builder.ret( ret )
 		else:
 			assert 0
@@ -907,8 +932,18 @@ class JIT(object):
 			root.setup_llvm_translation( llfunc )
 			Block.types = self.types
 			root.generate_llvm_ir()
-			print( llfunc )
 
+
+			if DEBUG:
+				print('============= llvm asm (RAW) ==============')
+				print(llfunc)
+				print('-'*80)
+			if self.optimize:
+				self.pman.run( llfunc )
+				if DEBUG:
+					print('============= llvm asm (OPTIMIZE LEVEL:%s)=============='%self.optimize)
+					print(llfunc)
+					print('-'*80)
 
 
 	def __init_old__(self, graphs, optimize=2):

@@ -208,7 +208,9 @@ class Cache(object):
 							if inspect.isclass(cls):
 								self.variable_class_cache[ var ] = cls
 								return cls
-						else: assert 0
+						else:
+							print(link, link.args, b,op,v)
+							assert 0
 
 			#print('*'*80)
 			assert var in block.inputargs

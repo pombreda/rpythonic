@@ -4176,7 +4176,7 @@ class RPython(object):
 				graph._llvm_hints = hints = func_names[graph.name]
 				hints['vector-classes'] = { cls.__module__+'.'+cls.__name__:cls for cls in self._vector_classes }
 
-		jit = rpyllvmjit.JIT( graphs, optimize=0 )
+		jit = rpyllvmjit.JIT( graphs, optimize=3 )
 		for w in self.wrapped:
 			w.wrapper.function = jit.get_wrapper_function( w.name )
 		return jit
