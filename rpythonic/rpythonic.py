@@ -4178,7 +4178,7 @@ class RPython(object):
 
 		jit = rpyllvmjit.JIT( graphs, optimize=3 )
 		for w in self.wrapped:
-			w.wrapper.function = jit.get_wrapper_function( w.name )
+			w.wrapper.function = jit.get_wrapper_function( w.name, use_ctypes=True )
 		return jit
 
 	def load(self):

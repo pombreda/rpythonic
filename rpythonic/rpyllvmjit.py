@@ -4,6 +4,7 @@
 import llvm.core
 import llvm.ee
 import llvm.passes
+import ctypes
 import sys
 
 DEBUG = '--debug' in sys.argv
@@ -885,6 +886,7 @@ class JIT(object):
 		func.calling_convention = llvm.core.CC_C
 		self.functions[ graph.name ] = func
 		func._return_type = ret
+		func._pypy_graph = graph
 		return func
 
 	def __init__(self, graphs, optimize=2):
@@ -1086,8 +1088,31 @@ class JIT(object):
 			raise NotImplemented
 
 
-	def get_wrapper_function(self, func_name):
-		lamb = eval('lambda *args: self.call("%s", *args)'%func_name, {'self':self})
-		return lamb
+	def get_wrapper_function(self, func_name, use_ctypes=False):
+		if not use_ctypes:
+			lamb = eval('lambda *args: self.call("%s", *args)'%func_name, {'self':self})
+			return lamb
+		else:
+			llfunc = self.functions[ func_name ]
+			llfunc.does_not_throw = True		# add nounwind attribute to function
+			llfunc_pointer = self.engine.get_pointer_to_function( llfunc )
+			graph = llfunc._pypy_graph
+			FUNC_TYPE = ctypes.CFUNCTYPE(
+				self.ctypes_type( graph.returnblock.inputargs[0] ), 
+				*[ self.ctypes_type(arg) for arg in graph.startblock.inputargs ]
+			)
+			return FUNC_TYPE( llfunc_pointer )
+
+
+	CONCRETE_CTYPES = {
+		'Bool'	: ctypes.c_bool,
+		'Void'	: ctypes.c_void_p,
+		'Signed'	: ctypes.c_int32,
+		'Float'	: ctypes.c_float,		# 32bits
+		'Double'	: ctypes.c_double,	# 64bits
+	}
+
+	def ctypes_type( self, var ):
+		return self.CONCRETE_CTYPES[ var.concretetype._name ]
 
 

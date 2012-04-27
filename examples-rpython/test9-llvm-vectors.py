@@ -48,11 +48,33 @@ def test(x1, y1, z1, x2, y2, z2):
 
 rpy.cache( refresh=1 )
 print('CACHED: starting llvm test...')
-############### testing ##############
-for i in range(5):
-	start = time.time()
-	a = test( 0.3, 0.3, 0.3,  0.3, 0.3, 0.3)
-	print('end of llvm benchmark:', time.time()-start)
-	print('test result:', a)
+
+if '--threads' in sys.argv:
+	import threading
+	def run_test(x1,y1,z1, x2,y2,z2):
+		global G
+		res = test(x1,y1,z1, x2,y2,z2)
+		G.append( res )
+	for i in range(10):
+		G = []
+		start = time.time()
+		threading._start_new_thread( run_test, (0.3, 0.3, 0.3,  0.3, 0.3, 0.3) )
+		threading._start_new_thread( run_test, (0.3, 0.3, 0.3,  0.3, 0.3, 0.3) )
+		threading._start_new_thread( run_test, (0.3, 0.3, 0.3,  0.3, 0.3, 0.3) )
+		threading._start_new_thread( run_test, (0.3, 0.3, 0.3,  0.3, 0.3, 0.3) )
+		while len(G) != 4:
+			time.sleep(0.01)
+		print('end of llvm benchmark:', time.time()-start)
+		print('test result:', G)
+
+
+
+else:
+	############### testing ##############
+	for i in range(5):
+		start = time.time()
+		a = test( 0.3, 0.3, 0.3,  0.3, 0.3, 0.3)
+		print('end of llvm benchmark:', time.time()-start)
+		print('test result:', a)
 
 
