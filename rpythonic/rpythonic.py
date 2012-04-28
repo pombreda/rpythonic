@@ -2,7 +2,7 @@
 # RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.7b'
+VERSION = '0.4.7c'
 
 _doc_ = '''
 NAME
@@ -3909,6 +3909,7 @@ class RPython(object):
 		if type==float: assert length == 4
 		elif type==int: assert length == 4
 		return lambda cls: self._vector(cls, {'type':type, 'length':length})
+	vector.shuffle = lambda *args: lambda func: [setattr(func,'_shuffle_vector_',args),func][1]
 	def _vector(self, cls, hints):
 		self._vector_classes.append( cls )
 		cls._llvm_hints = hints

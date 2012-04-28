@@ -66,9 +66,34 @@ class Cache(object):
 	def cache_instance_class(self, var, cls):
 		self.variable_class_cache[ var ] = cls
 
-	def __init__( self, translator, debug=True ):
+	def build_flow_graph(self, func ):
+		graph = self.translator.context.buildflowgraph( func )
+		return graph
+
+	def get_return_type(self, func):
+		'''
+		Use PyPy to build a temp flow graph and check it to find the return type.
+		'''
 		import pypy.objspace.flow.model
 
+		if func in self._func_return_types: return self._func_return_types[ func ]
+		graph = self.build_flow_graph( func )
+		for link in graph.iterlinks():
+			if link.target is graph.returnblock:
+				block = link.prevblock
+				for op in block.operations:
+					if op.result in link.args:
+						## TODO, more complex cases ##
+						assert op.opname == 'simple_call'
+						assert isinstance( op.args[0], pypy.objspace.flow.model.Constant )
+						cls = op.args[0].value
+						assert inspect.isclass(cls)
+						self._func_return_types[ func ] = cls
+						return cls
+
+	def __init__( self, translator, debug=True ):
+		import pypy.objspace.flow.model
+		self._func_return_types = {}
 		self.translator = translator
 		self.functions = translator.context._prebuilt_graphs	# dict - func:graph
 		self.graphs = translator.driver.translator.graphs		# list - graphs
@@ -355,7 +380,6 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 					cache.change_to_method_call( op, cls, func_name, op.args[1:] )
 
-
 				elif op.opname == 'simple_call':
 					cls = cache.get_class_helper( graph, block, instance_var )
 					if not cls: continue
@@ -382,6 +406,11 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 							assert func_name != prop.fget.func_name
 						elif op.opname == 'getattr':
 							func_name = prop.fget.func_name
+							returns = cache.get_return_type( prop.fget )
+							if inspect.isclass( returns ):
+								cache.variable_class_cache[ op.result ] = returns
+							else:
+								raise NotImplemented
 
 						args = []
 						if op.opname == 'setattr': args.append( op.args[2] )
@@ -454,82 +483,7 @@ if __name__ == '__main__':
 		print(c)
 		return 1
 
-	def other_func(a, b):
-		if b:	# makes a new flow-graph block
-			if a and a[0]:
-				a[0] = a[0] * a[0]
-				print(a)
-				print(b)
 
-
-
-	if '--jit-unroll' in sys.argv:
-		import rpyllvmjit
-		import pypy.rlib.unroll
-		if '--python' in sys.argv:
-			CONST_VALUES = range(10)
-		else:
-			CONST_VALUES = pypy.rlib.unroll.unrolling_iterable( range(10) )
-		def unroll_test(a, b):
-			c = 0
-			for v in CONST_VALUES:
-				c += a
-				c += b
-				c += v
-			return c
-
-		if '--python' in sys.argv:
-			import time
-			start = time.time()
-			for i in range(1):
-				a = unroll_test( 400, 20 )
-			print('end of python benchmark:', time.time()-start)
-			assert 0
-
-		T = translate( lambda a: 1, functions=[ (unroll_test,(int,int)) ], debug='--debug' in sys.argv, make_rpython=False )
-		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]] )
-		a = jit.call('unroll_test', 400, 20 )
-		print('jit-test:', a)
-
-		## the ops remain unoptimized even after calling T.source_c() - LLVM wins!
-		#T.source_c()
-		#for block in T.driver.translator.graphs[1].iterblocks():
-		#	print('BLOCK',block)
-		#	for op in block.operations: print(op)
-		if '--benchmark' in sys.argv:
-			import time
-			start = time.time()
-			for i in range(1):
-				a = jit.call('unroll_test', 400, 20 )
-			print('end of benchmark:', time.time()-start)
-
-
-
-	elif '--jit' in sys.argv:
-		import rpyllvmjit
-		def simple_test(a, b):
-			c = 0
-			while c < 100000*100000:
-				c += a + b
-			return c
-
-		T = translate( lambda a: 1, functions=[ (simple_test,(int,int)) ] )
-		jit = rpyllvmjit.JIT( [T.driver.translator.graphs[1]], optimize=1 )
-
-		if '--benchmark' in sys.argv:
-			import time
-			for i in range(10):
-				start = time.time()
-				a = jit.call('simple_test', 1, 1 )
-				print('end of benchmark:', time.time()-start)
-				print('test result:', a)
-		else:
-			a = jit.call('simple_test', 1, 1 )
-			print('jit-test:', a)
-
-
-
-	else:
-		T = translate( func, annotate='--test' in sys.argv, rtype='--test' in sys.argv )
+	T = translate( func, annotate='--test' in sys.argv, rtype='--test' in sys.argv )
 
 

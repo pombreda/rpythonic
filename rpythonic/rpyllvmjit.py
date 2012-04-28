@@ -95,6 +95,9 @@ class Block(object):
 							if var not in self.escape_vars:
 								self.escape_vars[ var ] = []
 							self.escape_vars[ var ].append( target_var )
+							if target_var not in self.exit_lookup_traced:
+								self.exit_lookup_traced[ target_var ] = var
+							else: assert None
 
 
 		self.children = []
@@ -199,11 +202,12 @@ example:
 				self.llvm_builder.position_at_beginning( self.get_llvm_block() )
 				stackvar = self.llvm_builder.alloca( self.llvm_type(arg), 'st_'+arg.name )
 
-				a = self.lload(
-					self.exit_lookup_var[ arg ],
-					allocate=False,	# do not allow allocation!
-				)
-				self.llvm_builder.store( a, stackvar )
+				if arg in self.exit_lookup_var:
+					a = self.lload(
+						self.exit_lookup_var[ arg ],
+						allocate=False,	# do not allow allocation!
+					)
+					self.llvm_builder.store( a, stackvar )
 
 				self.ALLOCATIONS[ arg ] = stackvar
 				return stackvar
@@ -310,6 +314,11 @@ example:
 				)
 		return var
 
+	def make_vector_mask( self, values ):
+		t = llvm.core.Type.int(32)	# must be i32
+		const = llvm.core.Constant.vector( [llvm.core.Constant.int(t,v) for v in values] )
+		return const
+
 	def flow_cache_helper2( self, var, op, block ):
 		self.var_cache[ op.result ] = var
 		others = []
@@ -386,6 +395,22 @@ example:
 					self.var_cache[ op.result ] = var
 					#if op.result in self.allocas:
 					#	self.builder.store( var, self.allocas[op.result] )
+					if op.result in self.exit_vars:
+						if op.result in self.mutates_to_from:
+							v_from = self.mutates_to_from[ op.result ]
+							if v_from in self.INSTANCE_VARS:
+								st = self.INSTANCE_VARS[ v_from ]
+							else:
+								st = self.ALLOCATIONS[ v_from ]
+							builder.store( var, st )
+						elif op.result in self.ALLOCATIONS:		# should have already been cached???? #
+							print(self.ALLOCATIONS)
+							st = self.ALLOCATIONS[ op.result ]
+							builder.store( var, st )
+						else:
+							st = self.allocate( op.result )
+							builder.position_at_end( self.llvm_block )
+							builder.store( var, st )
 
 
 				elif fname == '__setitem__':
@@ -413,6 +438,18 @@ example:
 						for other in self.escape_vars[ op.result ]:
 							self.INSTANCE_VARS[ other  ] = var
 
+				elif hasattr(_func, '_shuffle_vector_'):
+					print( _func._shuffle_vector_ )
+					a = self.INSTANCE_VARS[ op.args[1] ]
+					vtype = a.type
+					print( vtype )
+					undef = llvm.core.Constant.undef( vtype )
+					mask = self.make_vector_mask( _func._shuffle_vector_ )
+					var = builder.shuffle_vector( a, a, mask )
+					self.INSTANCE_VARS[ op.result  ] = var
+					if op.result in self.escape_vars:
+						for other in self.escape_vars[ op.result ]:
+							self.INSTANCE_VARS[ other  ] = var
 
 				else:
 					assert 0
@@ -497,9 +534,11 @@ example:
 			else:
 				st = self.allocate( self.input[0] )
 
+			builder.position_at_end( self.llvm_block )
 			if st:
+				print('loading',st)
 				ret = builder.load( st )
-
+			print('ret', ret)
 			builder.ret( ret )
 		else:
 			assert 0
@@ -616,6 +655,9 @@ class JIT(object):
 					llvm.core.Constant.int( self.types['int32'], index )
 				)
 		return var
+
+
+
 
 	def flow_cache_helper( self, var, op, block ):
 		self.var_cache[ op.result ] = var
