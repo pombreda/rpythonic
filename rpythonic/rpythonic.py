@@ -2,7 +2,7 @@
 # RPythonic - April, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.7a'
+VERSION = '0.4.7b'
 
 _doc_ = '''
 NAME

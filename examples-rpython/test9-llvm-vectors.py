@@ -55,6 +55,10 @@ if '--threads' in sys.argv:
 		global G
 		res = test(x1,y1,z1, x2,y2,z2)
 		G.append( res )
+		if len( G ) == 4:
+			print('end of llvm benchmark:', time.time()-start)
+			print('test result:', G)
+
 	for i in range(10):
 		G = []
 		start = time.time()
@@ -63,10 +67,8 @@ if '--threads' in sys.argv:
 		threading._start_new_thread( run_test, (0.3, 0.3, 0.3,  0.3, 0.3, 0.3) )
 		threading._start_new_thread( run_test, (0.3, 0.3, 0.3,  0.3, 0.3, 0.3) )
 		while len(G) != 4:
-			time.sleep(0.01)
-		print('end of llvm benchmark:', time.time()-start)
-		print('test result:', G)
-
+			time.sleep(1.0)
+	print('thread test done')
 
 
 else:

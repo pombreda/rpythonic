@@ -379,6 +379,7 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 
 						if op.opname == 'setattr':
 							func_name = prop.fset.func_name
+							assert func_name != prop.fget.func_name
 						elif op.opname == 'getattr':
 							func_name = prop.fget.func_name
 
@@ -395,7 +396,12 @@ def make_rpython_compatible( translator, delete_class_properties=True, debug=Tru
 	if delete_class_properties:
 		## this is required to avoid "degenerate to SomeObject" error by the annotation phase
 		for cls in class_props:
-			for name in class_props[ cls ]: delattr( cls, name )
+			for name in class_props[ cls ]:
+				prop = getattr(cls, name)
+				assert type(prop) is property
+				delattr( cls, name )
+				if prop.fget.func_name == name:
+					setattr( cls, name, prop.fget )
 
 	return class_props		# returns class props to be removed before annotation
 
