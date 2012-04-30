@@ -30,44 +30,6 @@ if '--python3' in sys.argv or ALL:
 	)
 
 
-broot = '../../blender'
-if os.path.isdir( broot ) and ('--blender' in sys.argv or ALL):
-	includes = []
-	dirs = '''
-extern/bullet2/src 
-intern/ghost 
-source/blender/ikplugin 
-source/blender/blenloader 
-source/blender/gpu 
-source/blender/windowmanager 
-source/blender/editors/include 
-source/blender/render/extern/include 
-source/blender/imbuf 
-source/blender/makesrna 
-source/blender/makesdna 
-source/blender/blenkernel 
-source/blender/blenlib 
-source/blender/blenfont 
-source/blender/python 
-intern/guardedalloc 
-source/blender/collada
-'''.split()
-
-	for d in dirs: includes.append( os.path.join( broot, d ) )
-
-	#rpythonic.wrap( 'bpy', 
-	#	header='./custom-sources/RNA_blender.h',
-	#	includes=includes,
-	#	library = 'bpy.so',
-	#)
-
-	rpythonic.wrap( 'libblender', 
-		header='./libblender/libblender.h',	# needs RNA_blender.h
-		defines=['__LITTLE_ENDIAN__', 'DNA_DEPRECATED_ALLOW'],
-		includes=includes,
-		#insert_headers = [ os.path.join( broot, 'source/creator/creator.c' ) ],
-		library = 'libblender.so',
-	)
 
 if '--ogre' in sys.argv:
 	defines = []

@@ -26,8 +26,9 @@ class Block(object):
 
 
 	def __init__(self, block, link=None, parent=None, graph=None):
-		self.llvm_block = None
+		import pypy.objspace.flow.model
 
+		self.llvm_block = None
 		self.block = block
 		self.input = block.inputargs
 		self.link = link
@@ -39,29 +40,49 @@ class Block(object):
 			for arg in link.args:
 				if arg not in exit_vars: exit_vars.append( arg )
 
+		self.is_loop = False
+		self.loop_link = None
+		for link in self.block.exits:
+			if link.target is self.block:
+				assert not self.is_loop
+				self.is_loop = True
+				self.loop_link = link
+
+
 		self.mutates_from_to = mutates_from_to = {}
 		self.mutates_to_from = mutates_to_from = {}
 		self.read_only = read_only = []
 		self.read_pass = read_pass = []
 		print('----------> %s	%s' %(block,block.inputargs))
+		## check all ops, check if op.args is in the block input, if so then these loop vars mutate ##
 		for op in block.operations:
 			print(op)
 			for arg in op.args:
 				if arg in block.inputargs:
 					if arg in exit_vars:
 						if arg not in read_pass: read_pass.append( arg )
-					else:
+					else:	## LOOP ##
 						chain = []
 						self.trace_result_to_escape( op.result, chain )
-						if chain and chain[-1] in exit_vars:
-							mutates_from_to[ arg ] = chain[-1]
-							mutates_to_from[ chain[-1] ] = arg	# TO : FROM
-							## later when building llvm instructions - check if op.result is in mutates_to_from ##
-						else:
-							if arg not in read_only: read_only.append( arg )
+						done = False
+						while chain:
+							c = chain.pop()
+							if c in self.loop_link.args and block.inputargs.index(arg)==self.loop_link.args.index(c):
+								mutates_from_to[ arg ] = chain[-1]
+								mutates_to_from[ chain[-1] ] = arg	# TO : FROM
+								done = True
+								break
+						if arg not in read_only: read_only.append( arg )	# TODO - fix me?
+						else: assert done
+
+						#if chain and chain[-1] in exit_vars:
+						#	mutates_from_to[ arg ] = chain[-1]
+						#	mutates_to_from[ chain[-1] ] = arg	# TO : FROM
+						#	## later when building llvm instructions - check if op.result is in mutates_to_from ##
+						#else:
+						#	if arg not in read_only: read_only.append( arg )
 
 		## for exit blocks to quickly check their input and get the exit var ##
-		import pypy.objspace.flow.model
 		self.exit_lookup_var = {}	## block input arg : link output arg
 		self.exit_lookup_traced = {}
 		self.escape_vars = {}		## escape-result : [ link.target.inputargs[...] ]
@@ -101,11 +122,8 @@ class Block(object):
 
 
 		self.children = []
-		self.is_loop = False
 		for link in self.block.exits:
-			if link.target is self.block:
-				assert not self.is_loop
-				self.is_loop = link
+			if link is self.loop_link: pass
 			else:
 				B = Block( link.target, link=link, parent=self, graph=self.graph )
 				self.children.append( B )
@@ -121,33 +139,6 @@ class Block(object):
 					else: self.trace_result_to_escape( op.result, chain )
 
 
-	def trace_variable_flow( self, block ):
-		'''
-		This is called when the entry block is first created, it flattens the variable flow.
-		PASS_PROMOTE_MEMORY_TO_REGISTER requires all allocations happen in the entry block.
-
-		allocations = []	all entry-allocations	(mutable vars)
-
-		first check all op.args if any arg is in block.inputargs,
-		then trace flow of results to the end of block, and check if it exits the block,
-		if result exits then entry-allocation needs to store that result:
-			(we can be sure it needs to be stored if the block loops and exit var is in inputs)
-
-		results = {}
-			[ op.result ] = entry-allocation
-			flat list of all operation results that change the value of a entry-allocation,
-			this is harder to know.  The op.result must be checked if it exits the block,
-			results that exit must be allocations
-
-example:
-				operation "int_add" - if the 
-
-		opargs = {}
-			[ arg ] = entry-allocation
-			flat list of all operation arguments that trace back to an entry-allocation
-
-		'''
-		pass
 
 	def setup_llvm_translation( self, llvm_func ):
 		'''
@@ -257,7 +248,7 @@ example:
 		else:
 			assert 0
 
-	def make_vector(self, *args, **kw):
+	def make_vector(self, op, *args, **kw):
 		builder = self.llvm_builder
 
 		t = self.types['Signed']
@@ -280,7 +271,10 @@ example:
 				raise NotImplemented
 
 		vtype = llvm.core.Type.vector( t, length )
-		stackvar = builder.alloca( vtype, 'stack_vec' )
+		stackvar = builder.alloca( vtype, 'stack_vec' )		# TODO allocate in entry block
+		self.ALLOCATIONS[ op.result ] = stackvar
+
+		builder.position_at_end( self.llvm_block )
 
 		if type(args[0]) in (int,float):
 			vargs = []
@@ -312,7 +306,8 @@ example:
 					carg,
 					llvm.core.Constant.int( self.types['int32'], index )
 				)
-		return var
+			builder.store( var, stackvar )
+		return stackvar	# TODO return stackvar
 
 	def make_vector_mask( self, values ):
 		t = llvm.core.Type.int(32)	# must be i32
@@ -363,7 +358,9 @@ example:
 					gcop, vclass = _make_vecs.pop()
 					assert not _make_vecs		# GcStruct's are created one by one?
 					args = [ self.lload(op.args[2]), self.lload(op.args[3]), self.lload(op.args[4]) ]
-					var = self.make_vector( *args, **vclass._llvm_hints )
+					stackvar = self.make_vector( gcop, *args, **vclass._llvm_hints )
+					builder.position_at_end( self.llvm_block )
+					var = builder.load( stackvar )
 					self.var_cache[ gcop.result ] = var
 
 					self.INSTANCE_VARS[ gcop.result  ] = var
@@ -428,9 +425,34 @@ example:
 					if op.result in self.escape_vars:
 						for other in self.escape_vars[ op.result ]:
 							self.INSTANCE_VARS[ other  ] = var
+							st = self.allocate( other )
+							builder.store( var, st )
 
-				elif hasattr(_func, '_shuffle_vector_'):
-					print( _func._shuffle_vector_ )
+
+					if 0:
+						if op.result in self.exit_vars:
+							if op.result in self.mutates_to_from:
+								v_from = self.mutates_to_from[ op.result ]
+								if v_from in self.INSTANCE_VARS:
+									st = self.INSTANCE_VARS[ v_from ]
+								else:
+									st = self.ALLOCATIONS[ v_from ]
+								builder.store( var, st )
+							#else:	# should have already been cached #
+							#	st = self.ALLOCATIONS[ op.result ]
+							#	builder.store( var, st )
+
+							elif op.result in self.ALLOCATIONS:		# should have already been cached???? #
+								st = self.ALLOCATIONS[ op.result ]
+								builder.store( var, st )
+							else:
+								print(self.ALLOCATIONS)
+								st = self.allocate( op.result )
+								builder.position_at_end( self.llvm_block )
+								builder.store( var, st )
+
+
+				elif hasattr(_func, '_shuffle_vector_'):	# TODO find vector allocation
 					a = self.INSTANCE_VARS[ op.args[1] ]
 					vtype = a.type
 					undef = llvm.core.Constant.undef( vtype )
@@ -492,7 +514,7 @@ example:
 			assert len(self.children)==1
 			self.llvm_block.name = 'while_loop'
 			con_bool = self.lload( self.block.exitswitch )
-			link = self.is_loop
+			link = self.loop_link
 			elseblock = self.children[0].get_llvm_block()
 			elseblock.name = 'else'
 			thenblock = self.llvm_block
