@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - April, 2012
+# RPythonic - May, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.7c'
+VERSION = '0.4.8a'
 
 _doc_ = '''
 NAME
@@ -659,10 +659,13 @@ class SomeThing(object):
 
 	def num_ast_nodes( self ): return len(self.flatten_ast_nodes( self.ast ) )
 	def flatten_ast_nodes( self, ast, nodes=None ):
+		'''
+		updated for PyCparser 2.06
+		'''
 		if nodes is None: nodes = []
 		nodes.append( ast )
 		children = ast.children()
-		if children: [self.flatten_ast_nodes( child, nodes ) for child in children ]
+		if children: [self.flatten_ast_nodes( child, nodes ) for ext,child in children ]
 		return nodes
 		
 	def resolve_conflict( self, other ):		# the one with more ast nodes is the one we want rule, never breaks?
@@ -841,7 +844,7 @@ class SomeThing(object):
 				#ctype = 'ctypes.c_longdouble' # pointer to longdouble is NOT pypy compatible
 				ctype = 'ctypes.c_double'
 			elif 'int' in _type and 'short' in _type: ctype = 'ctypes.c_%sint16' %unsigned	# correct?
-			elif 'int' in _type and 'long' in _type: ctype = 'ctypes.c_%sint64' %unsigned	# correct?
+			elif 'int' in _type and 'long' in _type: ctype = 'ctypes.c_%sint64' %unsigned	# a Long Int on LInux & OSX is 64bits, on Win64 its 32bits
 			else:
 				if len(_type) != 1:
 					self.ast.show()
@@ -1012,6 +1015,9 @@ class Enum( SomeThing ):		# an enum can be nameless
 			raise NotImplementedError
 
 	def setup(self):
+		'''
+		updated for PyCparser2.06
+		'''
 		self.values = []
 		self.values_by_key = {}
 		if isclass( self.parent, 'FuncDef', 'FuncDecl' ) or not self.ast.values:
@@ -1019,7 +1025,9 @@ class Enum( SomeThing ):		# an enum can be nameless
 			return
 
 		i = 0
-		for val in self.ast.values.children():
+		children = self.ast.values.children()
+		if not children: return
+		for ext,val in children:
 			if val.value:
 				print( val.value )
 				if isclass( val.value, 'Constant' ):
@@ -1110,33 +1118,25 @@ class Function( SomeThing ):
 		self.args = []
 		self.body = None
 		self.static = False
+		self.has_ellipsis = False
 		args = None
 
-		if isclass( self.ast, 'FuncDef' ):
-			decl = self.ast.decl.type
-
-		elif isclass( self.ast, 'FuncDecl' ):
-			decl = self.ast
-			#if ast.args: args = ast.args
+		if isclass( self.ast, 'FuncDef' ): decl = self.ast.decl.type
+		elif isclass( self.ast, 'FuncDecl' ): decl = self.ast
+		else: raise NotImplemented
 
 		if decl.args: args = decl.args
 
-		#elif isclass( self.ast, 'FuncDef' ):
-		#	decl = self.ast.decl
-		#	#print( dir(decl) )
-		#	if decl.storage and 'static' in decl.storage: self.static = True
-		#	self.child = SomeThing( decl, parent=self )	# do not create sub-func type
-		#	if decl.type.args: args = decl.type.args
-		#	## TODO body
-		#	if ast.body.block_items:
-		#		self.body = True
-		#		for node in ast.body.block_items:
-		#			if isclass( node, 'Return' ): pass
-
 		if args:
-			for arg in args.children():
-				if isclass( arg, 'EllipsisParam' ): pass #print 'EllipsisParam'	#TODO 
-				else: self.args.append( SomeThing(arg, parent=self) )
+			children = args.children()
+			if children:
+				for ext,arg in children:
+					if isclass( arg, 'EllipsisParam' ):
+						print( 'WARN: EllipsisParam - TODO' ) 
+						self.has_ellipsis = True
+					else:
+						a = SomeThing(arg, parent=self)
+						self.args.append( a )
 
 		self.returns = SomeThing( decl.type, parent=self )
 
@@ -1532,9 +1532,10 @@ class SourceCode(object):
 			#args += '-nostdinc -nostdinc++'.split()		# cpp prints some warning
 			args.append( '-nostdinc' )
 
-		for path in self.includes: args.append( '-I%s' %path )
+		## macro defs need to come before the includes ##
 		for macro in MACRO_DEFS: args.append( '-D%s' %macro )
 		for macro in MACRO_UNDEFS: args.append( '-U%s' %macro )
+		for path in self.includes: args.append( '-I%s' %path )
 		
 		args.append( '-' )
 		print( '_'*80 )
@@ -1596,11 +1597,10 @@ def make_pycparser_compatible( data ):
 		look like that.
 	'''
 
-	## deprecated ##
 	d = ''
 	TYPEDEF_HACKS = [ 
 		('char *', '__builtin_va_list'),
-		('unsigned char', '_Bool'),	# pypy generated, check for _GNUC_ and uses _Bool
+		#('unsigned char', '_Bool'),	# pypy generated, check for _GNUC_ and uses _Bool (PyCparser 2.06 now supports _Bool)
 	]
 	if '--no-gnu' in sys.argv:
 		TYPEDEF_HACKS.append(('long long int', 'int64_t'))
@@ -1619,6 +1619,8 @@ def make_pycparser_compatible( data ):
 					continue
 			elif line.strip().endswith(';'): line = ';'; skip = False; skipTO = None
 			else: continue
+
+		if '__attribute__((__unused__))' in line: line = line.replace('__attribute__((__unused__))', '')	# blender bmesh
 
 		if '((__noreturn__))' in line.split(): line = line.replace('((__noreturn__))','')	# pthread.h
 
@@ -1818,10 +1820,7 @@ def make_pycparser_compatible( data ):
 			print('WARN: ugly __attribute__ hack')
 			x = line.split('__attribute__((')[0]
 			y = line.strip()[-1]
-			if y == ')':
-				line = x
-				#skip = True
-				#skipTO = '}'
+			if y == ')': line = x
 			else: line = x + y
 
 		###################64bit hacks ###############
@@ -1870,8 +1869,8 @@ def make_pycparser_compatible( data ):
 			line = ''
 
 		### blender ###
+		if '__attribute((always_inline))' in line: line = line.replace('__attribute((always_inline))', '')
 		if '__attribute__((__unused__))' in line: line = line.replace( '__attribute__((__unused__))', '')
-
 		if line.endswith('((__sentinel__(0)));'): line = line.replace( '((__sentinel__(0)));', ';' )
 
 		#######################
@@ -3314,7 +3313,7 @@ print( CTYPES_DLL._name )
 		a += '## wrapper functions ##\n'
 		## write wrapper functions
 		for o in SomeThing.get_funcs():
-			if not o.name().startswith('__') and not o.static:
+			if not o.name().startswith('__') and not o.static and not o.has_ellipsis:
 				a += '%s\n' %o.gen_ctypes()
 
 		_tail = [
@@ -3340,15 +3339,9 @@ print( CTYPES_DLL._name )
 		for line in self.python: print( line )
 
 	def walk( self, node ):
-		#if isclass( node, 'Struct' ):
-		#	self.structs.append( Struct(node) ); print 'this happens? struct without declare'; raise SyntaxError
-		#elif isclass( node, 'Union' ):
-		#	self.unions.append( Union(node) ); print 'this happens? union without declare'; raise SyntaxError
-		#if isclass( node, 'FuncDef', 'FuncDecl' ):
-
-		#if isclass( node, 'FuncDef' ):		# IS THIS CORRECT? funcDefs are not normally found in .h files
-		#	print( 'skipping FuncDef', node )
-		#	pass
+		'''
+		updated for PyCparser 2.06
+		'''
 		if isclass( node, 'FuncDecl', 'FuncDef' ):
 			o = Function(node)
 			self.funcs.append( o )
@@ -3361,7 +3354,7 @@ print( CTYPES_DLL._name )
 			print( 'skipping', node )
 			children = node.children()
 			if children:
-				for child in children:
+				for ext, child in children:
 					self.walk( child )
 
 

@@ -1,11 +1,11 @@
-#-----------------------------------------------------------------
+#------------------------------------------------------------------------------
 # pycparser: c_parser.py
 #
 # CParser class: Parser and AST builder for the C language
 #
-# Copyright (C) 2008-2011, Eli Bendersky
+# Copyright (C) 2008-2012, Eli Bendersky
 # License: BSD
-#-----------------------------------------------------------------
+#------------------------------------------------------------------------------
 import re
 
 import ply.yacc
@@ -13,6 +13,7 @@ import ply.yacc
 from . import c_ast
 from .c_lexer import CLexer
 from .plyparser import PLYParser, Coord, ParseError
+from .ast_transforms import fix_switch_cases
 
 
 class CParser(PLYParser):    
@@ -120,7 +121,10 @@ class CParser(PLYParser):
         self.clex.filename = filename
         self.clex.reset_lineno()
         self._scope_stack = [set()]
-        return self.cparser.parse(text, lexer=self.clex, debug=debuglevel)
+        if not text or text.isspace():
+            return c_ast.FileAST([])
+        else:
+            return self.cparser.parse(text, lexer=self.clex, debug=debuglevel)
     
     ######################--   PRIVATE   --######################
     
@@ -161,7 +165,7 @@ class CParser(PLYParser):
     #
     # int *c[5];
     #
-    # The basic declaration here is 'int x', and the pointer and
+    # The basic declaration here is 'int c', and the pointer and
     # the array are the modifiers.
     #
     # Basic declarations are represented by TypeDecl (from module
@@ -289,7 +293,7 @@ class CParser(PLYParser):
             specifier incorporated.
         """
         spec = declspec or dict(qual=[], storage=[], type=[], function=[])
-        spec[kind].append(newspec)
+        spec[kind].insert(0, newspec)
         return spec
     
     def _build_function_definition(self, decl, spec, param_decls, body):
@@ -352,7 +356,9 @@ class CParser(PLYParser):
     def p_translation_unit_2(self, p):
         """ translation_unit    : translation_unit external_declaration
         """
-        if p[2] is not None:
+        if p[1].ext is None:
+            p[1].ext = p[2]
+        elif p[2] is not None:
             p[1].ext.extend(p[2])
         p[0] = p[1]
     
@@ -565,12 +571,14 @@ class CParser(PLYParser):
     
     def p_type_specifier_1(self, p):
         """ type_specifier  : VOID
+                            | _BOOL
                             | CHAR
                             | SHORT
                             | INT
                             | LONG
                             | FLOAT
                             | DOUBLE
+                            | _COMPLEX
                             | SIGNED
                             | UNSIGNED
                             | typedef_name
@@ -682,23 +690,29 @@ class CParser(PLYParser):
             
                 typename = spec['type']
                 decls.append(self._fix_decl_name_type(decl, typename))
-
-        else:  # anonymous struct/union, gcc extension, C1x feature
+        else:
+            # Anonymous struct/union, gcc extension, C1x feature.
+            # Although the standard only allows structs/unions here, I see no 
+            # reason to disallow other types since some compilers have typedefs
+            # here, and pycparser isn't about rejecting all invalid code.
+            #             
             node = spec['type'][0]
-            if isinstance(node, c_ast.Union) or isinstance(node, c_ast.Struct):
-                decl = c_ast.Decl(
-                    name=None,
-                    quals=spec['qual'],
-                    funcspec=spec['function'],
-                    storage=spec['storage'],
-                    type=node,
-                    init=None,
-                    bitsize=None,
-                    coord=self._coord(p.lineno(3)))
-                decls.append(decl)
+
+            if isinstance(node, c_ast.Node):
+                decl_type = node
             else:
-                self._parse_error("Anonymous field of invalid type", 
-                    self._coord(p.lineno(3)))
+                decl_type = c_ast.IdentifierType(node)
+            
+            decl = c_ast.Decl(
+                name=None,
+                quals=spec['qual'],
+                funcspec=spec['function'],
+                storage=spec['storage'],
+                type=decl_type,
+                init=None,
+                bitsize=None,
+                coord=self._coord(p.lineno(3)))
+            decls.append(decl)
         
         p[0] = decls
     
@@ -1072,11 +1086,11 @@ class CParser(PLYParser):
     
     def p_labeled_statement_2(self, p):
         """ labeled_statement : CASE constant_expression COLON statement """
-        p[0] = c_ast.Case(p[2], p[4], self._coord(p.lineno(1)))
+        p[0] = c_ast.Case(p[2], [p[4]], self._coord(p.lineno(1)))
         
     def p_labeled_statement_3(self, p):
         """ labeled_statement : DEFAULT COLON statement """
-        p[0] = c_ast.Default(p[3], self._coord(p.lineno(1)))
+        p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
         
     def p_selection_statement_1(self, p):
         """ selection_statement : IF LPAREN expression RPAREN statement """
@@ -1088,7 +1102,8 @@ class CParser(PLYParser):
     
     def p_selection_statement_3(self, p):
         """ selection_statement : SWITCH LPAREN expression RPAREN statement """
-        p[0] = c_ast.Switch(p[3], p[5], self._coord(p.lineno(1)))
+        p[0] = fix_switch_cases(
+                c_ast.Switch(p[3], p[5], self._coord(p.lineno(1))))
     
     def p_iteration_statement_1(self, p):
         """ iteration_statement : WHILE LPAREN expression RPAREN statement """
@@ -1126,7 +1141,10 @@ class CParser(PLYParser):
     
     def p_expression_statement(self, p):
         """ expression_statement : expression_opt SEMI """
-        p[0] = p[1]
+        if p[1] is None:
+            p[0] = c_ast.EmptyStatement(self._coord(p.lineno(1)))
+        else:
+            p[0] = p[1]
     
     def p_expression(self, p):
         """ expression  : assignment_expression 
@@ -1387,18 +1405,20 @@ class CParser(PLYParser):
             self._parse_error('At end of input', '')
 
 
+#------------------------------------------------------------------------------
 if __name__ == "__main__":
     import pprint
     import time, sys
     
-    t1 = time.time()
-    parser = CParser(lex_optimize=True, yacc_debug=True, yacc_optimize=False)
-    sys.write(time.time() - t1)
+    #t1 = time.time()
+    #parser = CParser(lex_optimize=True, yacc_debug=True, yacc_optimize=False)
+    #sys.write(time.time() - t1)
     
-    buf = ''' 
-        int (*k)(int);
-    '''
+    #buf = ''' 
+        #int (*k)(int);
+    #'''
     
-    # set debuglevel to 2 for debugging
-    t = parser.parse(buf, 'x.c', debuglevel=0)
-    t.show(showcoord=True)
+    ## set debuglevel to 2 for debugging
+    #t = parser.parse(buf, 'x.c', debuglevel=0)
+    #t.show(showcoord=True)
+

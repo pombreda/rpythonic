@@ -50,7 +50,7 @@ def test(x1, y1, z1, x2, y2, z2):
 		v2 = a.xzy
 		c += v2[2]
 		c += b[0]
-		b += a	# TODO
+		#b += a	# TODO
 		i += 1
 	return c
 

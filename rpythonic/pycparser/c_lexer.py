@@ -91,17 +91,22 @@ class CLexer(object):
     ## Reserved keywords
     ##
     keywords = (
-        'AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST', 'CONTINUE', 
-        'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN', 
+        '_BOOL', '_COMPLEX', 'AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST',
+        'CONTINUE', 'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN',
         'FLOAT', 'FOR', 'GOTO', 'IF', 'INLINE', 'INT', 'LONG', 'REGISTER',
         'RESTRICT', 'RETURN', 'SHORT', 'SIGNED', 'SIZEOF', 'STATIC', 'STRUCT',
-        'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID', 
+        'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID',
         'VOLATILE', 'WHILE',
     )
 
     keyword_map = {}
-    for r in keywords:
-        keyword_map[r.lower()] = r
+    for keyword in keywords:
+        if keyword == '_BOOL':
+            keyword_map['_Bool'] = keyword
+        elif keyword == '_COMPLEX':
+            keyword_map['_Complex'] = keyword
+        else:
+            keyword_map[keyword.lower()] = keyword
 
     ##
     ## All the tokens recognized by the lexer
@@ -176,13 +181,13 @@ class CLexer(object):
     bad_octal_constant = '0[0-7]*[89]'
 
     # character constants (K&R2: A.2.5.2)
-    # Note: a-zA-Z are allowed as escape chars to support #line
-    # directives with Windows paths as filenames (\dir\file...)
+    # Note: a-zA-Z and '.-~^_!=&;,' are allowed as escape chars to support #line
+    # directives with Windows paths as filenames (..\..\dir\file)
     #
-    simple_escape = r"""([a-zA-Z\\?'"])"""
+    simple_escape = r"""([a-zA-Z._~!=&\^\-\\?'"])"""
     octal_escape = r"""([0-7]{1,3})"""
     hex_escape = r"""(x[0-9a-fA-F]+)"""
-    bad_escape = r"""([\\][^a-zA-Z\\?'"x0-7])"""
+    bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-7])"""
 
     escape_sequence = r"""(\\("""+simple_escape+'|'+octal_escape+'|'+hex_escape+'))'
     cconst_char = r"""([^'\\\n]|"""+escape_sequence+')'    
