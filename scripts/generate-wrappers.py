@@ -429,12 +429,22 @@ if '--verse' in sys.argv or ALL:
 
 if '--mono' in sys.argv or ALL:
 	#yum install mono-devel
+	# jit.h only includes: mono/metadata/appdomain.h
+	# appdomain.h includes: utils/mono-publib.h, metadata/object.h, metadata/reflection.h
+	pynet = [
+		'/usr/include/mono-2.0/mono/metadata/environment.h',
+		'/usr/include/mono-2.0/mono/metadata/mono-config.h',
+		'/usr/include/mono-2.0/mono/metadata/debug-helpers.h',
+		'/usr/include/mono-2.0/mono/metadata/assembly.h',
+	]
+
 	rpythonic.wrap( 'libmono', 
 		header='/usr/include/mono-2.0/mono/jit/jit.h',
 		library = '/usr/lib/libmono-2.0.so',
 		includes=['/usr/include/mono-2.0'],
-		defines=['_GLIBCPP_USE_WCHAR_T'],
+		#defines=['_GLIBCPP_USE_WCHAR_T'],
 		strip_prefixes = ['mono_'],
+		insert_headers = pynet,
 	)
 
 
