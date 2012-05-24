@@ -2,7 +2,7 @@
 # RPythonic - May, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8a'
+VERSION = '0.4.8b'
 
 _doc_ = '''
 NAME
@@ -1370,7 +1370,19 @@ class SourceCode(object):
 
 		self.source_data = self.source_processed = open(url,'rb').read()
 		self.headers = []
+
 		self.includes = list( INCLUDE_DIRS )
+		if sys.platform.startswith('linux'):
+			#self.includes.append( '/usr/include/linux/' )# empty stddef.h on Fedora
+			## Fedora cpp can not find stddef.h ##
+			if os.path.isdir( '/usr/lib/gcc' ):
+				## this is not super portable !! ##
+				## should include our own stddef.h that is 32 or 64bits ##
+				a = os.path.join('/usr/lib/gcc', os.listdir('/usr/lib/gcc')[0])
+				b = os.path.join( a, os.listdir(a)[0] )
+				self.includes.append( b )
+
+
 		self.if_defs = []
 		self.macro_globals = []
 		self.macro_globals_values = {}

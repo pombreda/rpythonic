@@ -427,6 +427,17 @@ if '--verse' in sys.argv or ALL:
 		strip_prefixes = ['ve_'],
 	)
 
+if '--mono' in sys.argv or ALL:
+	#yum install mono-devel
+	rpythonic.wrap( 'libmono', 
+		header='/usr/include/mono-2.0/mono/jit/jit.h',
+		library = '/usr/lib/libmono-2.0.so',
+		includes=['/usr/include/mono-2.0'],
+		defines=['_GLIBCPP_USE_WCHAR_T'],
+		strip_prefixes = ['mono_'],
+	)
+
+
 if '--test' in sys.argv:
 	rpythonic.wrap( 'testing', 
 		header='./test.h',

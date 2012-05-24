@@ -1,14 +1,25 @@
-RPythonic: Beta8 - April, 2012
+RPythonic: Beta9 - May, 2012
 Copyright 2012: Brett Hartshorn and The Blender Research Lab.
 License: BSD
 
 INSTALLING:
-	apt-get install python-ply libreadline-dev python-llvm
+	Ubuntu:
+		apt-get install
+			python-ply
+			libreadline-dev
+			python-llvm
+	Fedora:
+		yum install
+			python-ply
+			cpp
+			gcc
+			glibc-devel
+			mono-devel
 
 	Optional: 
 		java
 		android SDK/NDK
-		llvm and llvm-gcc
+		llvm
 
 
 DEV NOTES:
