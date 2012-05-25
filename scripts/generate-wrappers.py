@@ -243,10 +243,10 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 
 '''
 	rpythonic.wrap( 
-		'cv', 
+		'opencv_core', 
 		defines = ['_MMINTRIN_H_INCLUDED', '_XMMINTRIN_H_INCLUDED', '_EMMINTRIN_H_INCLUDED'],
-		header='/usr/include/opencv/cv.h', 
-		insert_headers = ['/usr/include/opencv/cvtypes.h'],
+		header='/usr/include/opencv2/core/core_c.h', 
+		insert_headers = ['/usr/include/opencv2/core/types_c.h'],
 		ctypes_footer = footer,
 		strip_prefixes = ['cv'],
 	)
@@ -254,18 +254,18 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 
 	defines = []
 	rpythonic.wrap(
-		'highgui',
+		'opencv_highgui',
 		defines = ['_MMINTRIN_H_INCLUDED', '_XMMINTRIN_H_INCLUDED', '_EMMINTRIN_H_INCLUDED'],
-		header='/usr/include/opencv/highgui.h',
+		header='/usr/include/opencv2/highgui/highgui_c.h',
 		strip_prefixes = ['cv'],
 	)
 
-if '--opencvaux' in sys.argv or ALL:
-	rpythonic.wrap( 
-		'cvaux', 
-		header='/usr/include/opencv/cvaux.h', 
-		strip_prefixes = ['cv'],
-	)
+#if '--opencvaux' in sys.argv or ALL:
+#	rpythonic.wrap( 
+#		'cvaux', 
+#		header='/usr/include/opencv/cvaux.h', 
+#		strip_prefixes = ['cv'],
+#	)
 
 
 if '--openal' in sys.argv or ALL:
