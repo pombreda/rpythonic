@@ -40,7 +40,14 @@ def _load_ctypes_lib( name ):
 			elif __os.path.isfile( '/usr/local/lib64/%s'%name ) and not IS32BIT: return ctypes.CDLL('/usr/local/lib64/%s'%name)
 			elif __os.path.isfile( '/usr/lib/%s'%name ): return ctypes.CDLL('/usr/lib/%s'%name)
 			elif __os.path.isfile( './%s'%name ): return ctypes.CDLL('./%s'%name)
+			
+			elif __os.path.isfile( '/usr/lib/%s.0'%name ):	# Fedora style
+				return ctypes.CDLL('/usr/lib/%s.0'%name )
+			elif __os.path.isfile( '/usr/lib64/%s.0'%name ):	# Fedora style
+				return ctypes.CDLL('/usr/lib64/%s.0'%name )
+
 			else:	# fallback
+				print('[ falling back to loading from current process ]')
 				try: return ctypes.CDLL(name)
 				except: return ctypes.CDLL('')
 
