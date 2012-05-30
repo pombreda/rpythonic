@@ -36,6 +36,25 @@ if '--gtk3' in sys.argv:
 	)
 
 
+if '--clutter' in sys.argv:
+	# yum install clutter-gtk-devel		# this also gets gtk-devel
+	rpythonic.wrap(
+		'libclutter-gtk',
+		header='/usr/include/clutter-gtk-1.0/clutter-gtk/clutter-gtk.h', 
+		library='/usr/lib/libclutter-gtk.so',	# "so.0" on fedora
+		includes=[
+			'/usr/include/gtk-3.0/',
+			 '/usr/include/clutter-1.0/',
+			 '/usr/include/cogl/',	# required
+			'/usr/include/json-glib-1.0/',	
+			] + GINCLUDE,
+		#defines=['__G_THREAD_H__', '__G_ASYNCQUEUE_H__'],
+		ctypes_footer=footer,
+		strip_prefixes = ['GTK_', 'gtk_'],
+		#insert_headers = ['/usr/include/gtk-3.0/gtk/gtkx.h'],	# required with gtk3 
+	)
+
+
 ###############################
 
 GTK2INCLUDE = [
@@ -82,4 +101,6 @@ if '--gstreamer' in sys.argv:
 		includes = ['/usr/include/gstreamer-0.10/', '/usr/include/libxml2'] + GINCLUDE,
 		strip_prefixes = ['gst_'],
 	)
+
+
 
