@@ -711,7 +711,7 @@ def _rpythonic_strip_prefixes_( prefixes ):
 
 
 
-_clib_name_ = 'libclutter-gtk'
+_clib_name_ = 'libclutter-gtk-1.0'
 print('loading lib', _clib_name_)
 print( os.path.abspath( os.path.curdir ) )
 CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
@@ -78197,7 +78197,7 @@ GTK_WIDGET_CLASSES = {
 
 	GtkComboBox : gtk_combo_box_new,
 	GtkComboBoxText : gtk_combo_box_text_new,
-	GtkSocket : gtk_socket_new,
+	#GtkSocket : gtk_socket_new,
 
 	GtkSpinButton : gtk_spin_button_new,
 
