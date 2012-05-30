@@ -235,7 +235,6 @@ GTK_WIDGET_CLASSES = {
 
 	GtkComboBox : gtk_combo_box_new,
 	GtkComboBoxText : gtk_combo_box_text_new,
-	GtkSocket : gtk_socket_new,
 
 	GtkSpinButton : gtk_spin_button_new,
 
@@ -300,6 +299,11 @@ GTK_CONTAINER_CLASSES = {
 	GtkMenuBar : gtk_menu_bar_new,
 
 }
+if 'GtkSocket' in globals():	# this is missing with Clutter
+	GTK_WIDGET_CLASSES[ GtkSocket ] = gtk_socket_new
+
+
+
 for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 	for o in d:
 		o._rpythonic_parent_classes_.append( GtkWidget )

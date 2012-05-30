@@ -333,6 +333,7 @@ CTYPES_FOOTER = ''
 def wrap(
 	name, 
 	header=None, 
+	library_name=None,
 	insert_headers=[], 
 	library=None, 
 	dynamic_libs=[], 
@@ -397,7 +398,7 @@ def wrap(
 		for n in ignore_functions: a.add_ignore_function( n )
 
 	else:	# pycparser C
-		a = C( header )
+		a = C( header, library_name=library_name )
 
 	return a.save( name )
 
@@ -1356,30 +1357,14 @@ class Struct( Union ):
 
 
 class SourceCode(object):
-	def __init__(self, url, debug=False, platform=None):
+	def __init__(self, url, library_name=None, debug=False, platform=None):
 		path,name = os.path.split(url)
 		if path not in INCLUDE_DIRS: INCLUDE_DIRS.append( path )
 		self.source_url = url
 		self.source_path, self.source_file = os.path.split( url )
 		self.platform = platform
-
-		## try to find compiled shared lib
 		self.shared_library = None
-
-		if LIBS: self.shared_library_name = os.path.splitext( os.path.split(LIBS[-1])[-1] )[0]
-		else:
-			if sys.platform.startswith('linux'):	# this only works in basic cases
-				libname = os.path.splitext( self.source_file )[0] + '.so'
-				if not libname.startswith('lib'): libname = 'lib' + libname
-				guess1 = os.path.join( self.source_path, libname )
-				guess2 = os.path.join( '/usr/local/lib', libname )
-				guess3 = os.path.join( '/usr/lib', libname )
-				if os.path.isfile( guess1 ): self.shared_library = guess1		# rare case
-				elif os.path.isfile( guess2 ): self.shared_library = guess2	# user installed
-				elif os.path.isfile( guess3 ): self.shared_library = guess3	# system
-			if self.shared_library and self.shared_library not in LIBS: LIBS.append( self.shared_library )
-			else: self.shared_library_name = '<undefined>'
-
+		self.shared_library_name = library_name or os.path.splitext(name)[0]
 		self.source_data = self.source_processed = open(url,'rb').read()
 		self.headers = []
 

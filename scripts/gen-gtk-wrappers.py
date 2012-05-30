@@ -41,17 +41,15 @@ if '--clutter' in sys.argv:
 	rpythonic.wrap(
 		'libclutter-gtk',
 		header='/usr/include/clutter-gtk-1.0/clutter-gtk/clutter-gtk.h', 
-		library='/usr/lib/libclutter-gtk.so',	# "so.0" on fedora
+		library_name='libclutter-gtk-1.0',
 		includes=[
 			'/usr/include/gtk-3.0/',
 			 '/usr/include/clutter-1.0/',
 			 '/usr/include/cogl/',	# required
 			'/usr/include/json-glib-1.0/',	
 			] + GINCLUDE,
-		#defines=['__G_THREAD_H__', '__G_ASYNCQUEUE_H__'],
 		ctypes_footer=footer,
-		strip_prefixes = ['GTK_', 'gtk_'],
-		#insert_headers = ['/usr/include/gtk-3.0/gtk/gtkx.h'],	# required with gtk3 
+		strip_prefixes = ['GTK_', 'gtk_', 'clutter_'],
 	)
 
 

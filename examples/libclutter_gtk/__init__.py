@@ -6619,7 +6619,7 @@ __freeze_rpythonic_struct( _fpstate, [
 	( "_fxsr_st", ( _fpxreg * 8 ) ),
 	( "_xmm", ( _xmmreg * 8 ) ),
 	( "padding1", ( ctypes.c_ulong * 44 ) ),
-	#opaque-warning# <rpythonic.rpythonic.SomeThing object at 0xed81c6c>
+	#opaque-warning# <rpythonic.rpythonic.SomeThing object at 0xf9e2c0c>
 ])
 
 __freeze_rpythonic_struct( sigcontext, [
@@ -6728,7 +6728,7 @@ __freeze_rpythonic_struct( __pthread_mutex_s, [
 	( "__owner", ctypes.c_int ),
 	( "__kind", ctypes.c_int ),
 	( "__nusers", ctypes.c_uint ),
-	#opaque-warning# <rpythonic.rpythonic.SomeThing object at 0xed91c8c>
+	#opaque-warning# <rpythonic.rpythonic.SomeThing object at 0xf9f2c2c>
 ])
 
 __freeze_rpythonic_struct( pthread_mutex_t, [
@@ -16651,15 +16651,15 @@ gmtime = _rpythonic_function_(		"gmtime", ctypes.POINTER(tm), [
 localtime = _rpythonic_function_(		"localtime", ctypes.POINTER(tm), [
 	("__timer",		ctypes.POINTER(ctypes.c_int64)),] )
 
+asctime = _rpythonic_function_(		"asctime", ctypes.POINTER(ctypes.c_char), [
+	("__tp",		ctypes.POINTER(tm)),] )
+
 localtime_r = _rpythonic_function_(		"localtime_r", ctypes.POINTER(tm), [
 	("__timer",		ctypes.POINTER(ctypes.c_int64)),
 	("__tp",		ctypes.POINTER(tm)),] )
 
 gmtime_r = _rpythonic_function_(		"gmtime_r", ctypes.POINTER(tm), [
 	("__timer",		ctypes.POINTER(ctypes.c_int64)),
-	("__tp",		ctypes.POINTER(tm)),] )
-
-asctime = _rpythonic_function_(		"asctime", ctypes.POINTER(ctypes.c_char), [
 	("__tp",		ctypes.POINTER(tm)),] )
 
 asctime_r = _rpythonic_function_(		"asctime_r", ctypes.POINTER(ctypes.c_char), [
@@ -18269,19 +18269,19 @@ g_convert_with_iconv = _rpythonic_function_(		"g_convert_with_iconv", ctypes.POI
 	("bytes_written",		ctypes.POINTER(ctypes.c_uint)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
+g_locale_to_utf8 = _rpythonic_function_(		"g_locale_to_utf8", ctypes.POINTER(ctypes.c_char), [
+	("opsysstring",		ctypes.POINTER(ctypes.c_char)),
+	("C_len",		ctypes.c_int),
+	("bytes_read",		ctypes.POINTER(ctypes.c_uint)),
+	("bytes_written",		ctypes.POINTER(ctypes.c_uint)),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
 g_convert_with_fallback = _rpythonic_function_(		"g_convert_with_fallback", ctypes.POINTER(ctypes.c_char), [
 	("C_str",		ctypes.POINTER(ctypes.c_char)),
 	("C_len",		ctypes.c_int),
 	("to_codeset",		ctypes.POINTER(ctypes.c_char)),
 	("from_codeset",		ctypes.POINTER(ctypes.c_char)),
 	("fallback",		ctypes.POINTER(ctypes.c_char)),
-	("bytes_read",		ctypes.POINTER(ctypes.c_uint)),
-	("bytes_written",		ctypes.POINTER(ctypes.c_uint)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
-g_locale_to_utf8 = _rpythonic_function_(		"g_locale_to_utf8", ctypes.POINTER(ctypes.c_char), [
-	("opsysstring",		ctypes.POINTER(ctypes.c_char)),
-	("C_len",		ctypes.c_int),
 	("bytes_read",		ctypes.POINTER(ctypes.c_uint)),
 	("bytes_written",		ctypes.POINTER(ctypes.c_uint)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
@@ -19321,8 +19321,6 @@ GChildWatchFunc = _rpythonic_function_(		"GChildWatchFunc", ctypes.c_void_p, [
 	("status",		ctypes.c_int),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-GSourceDummyMarshal = _rpythonic_function_(		"GSourceDummyMarshal", ctypes.c_void_p, [] )
-
 ref = _rpythonic_function_(		"ref", ctypes.c_void_p, [("cb_data",		ctypes.c_void_p)] )
 
 unref = _rpythonic_function_(		"unref", ctypes.c_void_p, [("cb_data",		ctypes.c_void_p)] )
@@ -19332,6 +19330,8 @@ get = _rpythonic_function_(		"get", ctypes.c_void_p, [
 	("source",		ctypes.POINTER(_GSource)),
 	("func",		ctypes.POINTER(ctypes.CFUNCTYPE(ctypes.c_int, ))),
 	("data",		ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))),] )
+
+GSourceDummyMarshal = _rpythonic_function_(		"GSourceDummyMarshal", ctypes.c_void_p, [] )
 
 prepare = _rpythonic_function_(		"prepare", ctypes.c_int, [
 	("source",		ctypes.POINTER(_GSource)),
@@ -21303,12 +21303,6 @@ g_regex_match_full = _rpythonic_function_(		"g_regex_match_full", ctypes.c_int, 
 	("match_info",		ctypes.POINTER(ctypes.POINTER(_GMatchInfo))),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
-g_regex_match_all = _rpythonic_function_(		"g_regex_match_all", ctypes.c_int, [
-	("regex",		ctypes.POINTER(_GRegex)),
-	("string",		ctypes.POINTER(ctypes.c_char)),
-	("match_options",		ctypes.c_int),
-	("match_info",		ctypes.POINTER(ctypes.POINTER(_GMatchInfo))),] )
-
 g_regex_match_all_full = _rpythonic_function_(		"g_regex_match_all_full", ctypes.c_int, [
 	("regex",		ctypes.POINTER(_GRegex)),
 	("string",		ctypes.POINTER(ctypes.c_char)),
@@ -21317,6 +21311,12 @@ g_regex_match_all_full = _rpythonic_function_(		"g_regex_match_all_full", ctypes
 	("match_options",		ctypes.c_int),
 	("match_info",		ctypes.POINTER(ctypes.POINTER(_GMatchInfo))),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
+g_regex_match_all = _rpythonic_function_(		"g_regex_match_all", ctypes.c_int, [
+	("regex",		ctypes.POINTER(_GRegex)),
+	("string",		ctypes.POINTER(ctypes.c_char)),
+	("match_options",		ctypes.c_int),
+	("match_info",		ctypes.POINTER(ctypes.POINTER(_GMatchInfo))),] )
 
 g_regex_split_simple = _rpythonic_function_(		"g_regex_split_simple", ctypes.POINTER(ctypes.POINTER(ctypes.c_char)), [
 	("pattern",		ctypes.POINTER(ctypes.c_char)),
@@ -23431,7 +23431,7 @@ g_cclosure_marshal_VOID__VARIANT = _rpythonic_function_(		"g_cclosure_marshal_VO
 	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-g_cclosure_marshal_VOID__UINT_POINTER = _rpythonic_function_(		"g_cclosure_marshal_VOID__UINT_POINTER", ctypes.c_void_p, [
+g_cclosure_marshal_BOOLEAN__FLAGS = _rpythonic_function_(		"g_cclosure_marshal_BOOLEAN__FLAGS", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
 	("n_param_values",		ctypes.c_uint),
@@ -23439,7 +23439,7 @@ g_cclosure_marshal_VOID__UINT_POINTER = _rpythonic_function_(		"g_cclosure_marsh
 	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-g_cclosure_marshal_BOOLEAN__FLAGS = _rpythonic_function_(		"g_cclosure_marshal_BOOLEAN__FLAGS", ctypes.c_void_p, [
+g_cclosure_marshal_VOID__UINT_POINTER = _rpythonic_function_(		"g_cclosure_marshal_VOID__UINT_POINTER", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
 	("n_param_values",		ctypes.c_uint),
@@ -24698,8 +24698,6 @@ set_as_last_used_for_type = _rpythonic_function_(		"set_as_last_used_for_type", 
 	("content_type",		ctypes.POINTER(ctypes.c_char)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
-g_app_info_get_type = _rpythonic_function_(		"g_app_info_get_type", ctypes.c_uint, [] )
-
 g_app_info_create_from_commandline = _rpythonic_function_(		"g_app_info_create_from_commandline", ctypes.POINTER(_GAppInfo), [
 	("commandline",		ctypes.POINTER(ctypes.c_char)),
 	("application_name",		ctypes.POINTER(ctypes.c_char)),
@@ -24708,6 +24706,8 @@ g_app_info_create_from_commandline = _rpythonic_function_(		"g_app_info_create_f
 
 g_app_info_dup = _rpythonic_function_(		"g_app_info_dup", ctypes.POINTER(_GAppInfo), [
 	("appinfo",		ctypes.POINTER(_GAppInfo)),] )
+
+g_app_info_get_type = _rpythonic_function_(		"g_app_info_get_type", ctypes.c_uint, [] )
 
 g_app_info_equal = _rpythonic_function_(		"g_app_info_equal", ctypes.c_int, [
 	("appinfo1",		ctypes.POINTER(_GAppInfo)),
@@ -25985,10 +25985,6 @@ nice = _rpythonic_function_(		"nice", ctypes.c_int, [
 _exit = _rpythonic_function_(		"_exit", ctypes.c_void_p, [
 	("__status",		ctypes.c_int),] )
 
-pathconf = _rpythonic_function_(		"pathconf", ctypes.c_int64, [
-	("__path",		ctypes.POINTER(ctypes.c_char)),
-	("__name",		ctypes.c_int),] )
-
 fpathconf = _rpythonic_function_(		"fpathconf", ctypes.c_int64, [
 	("__fd",		ctypes.c_int),
 	("__name",		ctypes.c_int),] )
@@ -26015,6 +26011,10 @@ setpgid = _rpythonic_function_(		"setpgid", ctypes.c_int, [
 	("__pgid",		ctypes.c_int),] )
 
 setpgrp = _rpythonic_function_(		"setpgrp", ctypes.c_int, [] )
+
+pathconf = _rpythonic_function_(		"pathconf", ctypes.c_int64, [
+	("__path",		ctypes.POINTER(ctypes.c_char)),
+	("__name",		ctypes.c_int),] )
 
 setsid = _rpythonic_function_(		"setsid", ctypes.c_int, [] )
 
@@ -27467,12 +27467,6 @@ g_dbus_proxy_call_with_unix_fd_list = _rpythonic_function_(		"g_dbus_proxy_call_
 	("callback",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(_GObject),ctypes.POINTER(_GAsyncResult),ctypes.POINTER(ctypes.c_void_p),)),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-g_dbus_proxy_call_with_unix_fd_list_finish = _rpythonic_function_(		"g_dbus_proxy_call_with_unix_fd_list_finish", ctypes.POINTER(_GVariant), [
-	("proxy",		ctypes.POINTER(_GDBusProxy)),
-	("out_fd_list",		ctypes.POINTER(ctypes.POINTER(_GUnixFDList))),
-	("res",		ctypes.POINTER(_GAsyncResult)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
 g_dbus_proxy_call_with_unix_fd_list_sync = _rpythonic_function_(		"g_dbus_proxy_call_with_unix_fd_list_sync", ctypes.POINTER(_GVariant), [
 	("proxy",		ctypes.POINTER(_GDBusProxy)),
 	("method_name",		ctypes.POINTER(ctypes.c_char)),
@@ -27482,6 +27476,12 @@ g_dbus_proxy_call_with_unix_fd_list_sync = _rpythonic_function_(		"g_dbus_proxy_
 	("fd_list",		ctypes.POINTER(_GUnixFDList)),
 	("out_fd_list",		ctypes.POINTER(ctypes.POINTER(_GUnixFDList))),
 	("cancellable",		ctypes.POINTER(_GCancellable)),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
+g_dbus_proxy_call_with_unix_fd_list_finish = _rpythonic_function_(		"g_dbus_proxy_call_with_unix_fd_list_finish", ctypes.POINTER(_GVariant), [
+	("proxy",		ctypes.POINTER(_GDBusProxy)),
+	("out_fd_list",		ctypes.POINTER(ctypes.POINTER(_GUnixFDList))),
+	("res",		ctypes.POINTER(_GAsyncResult)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
 g_dbus_server_get_type = _rpythonic_function_(		"g_dbus_server_get_type", ctypes.c_uint, [] )
@@ -28442,12 +28442,12 @@ g_file_dup = _rpythonic_function_(		"g_file_dup", ctypes.POINTER(_GFile), [
 
 g_file_hash = _rpythonic_function_(		"g_file_hash", ctypes.c_uint, [("file",		ctypes.c_void_p)] )
 
-g_file_get_basename = _rpythonic_function_(		"g_file_get_basename", ctypes.POINTER(ctypes.c_char), [
-	("file",		ctypes.POINTER(_GFile)),] )
-
 g_file_equal = _rpythonic_function_(		"g_file_equal", ctypes.c_int, [
 	("file1",		ctypes.POINTER(_GFile)),
 	("file2",		ctypes.POINTER(_GFile)),] )
+
+g_file_get_basename = _rpythonic_function_(		"g_file_get_basename", ctypes.POINTER(ctypes.c_char), [
+	("file",		ctypes.POINTER(_GFile)),] )
 
 g_file_get_path = _rpythonic_function_(		"g_file_get_path", ctypes.POINTER(ctypes.c_char), [
 	("file",		ctypes.POINTER(_GFile)),] )
@@ -29554,8 +29554,6 @@ g_file_output_stream_query_info = _rpythonic_function_(		"g_file_output_stream_q
 	("cancellable",		ctypes.POINTER(_GCancellable)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
-g_file_output_stream_get_type = _rpythonic_function_(		"g_file_output_stream_get_type", ctypes.c_uint, [] )
-
 g_file_output_stream_query_info_async = _rpythonic_function_(		"g_file_output_stream_query_info_async", ctypes.c_void_p, [
 	("stream",		ctypes.POINTER(_GFileOutputStream)),
 	("attributes",		ctypes.POINTER(ctypes.c_char)),
@@ -29563,6 +29561,8 @@ g_file_output_stream_query_info_async = _rpythonic_function_(		"g_file_output_st
 	("cancellable",		ctypes.POINTER(_GCancellable)),
 	("callback",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(_GObject),ctypes.POINTER(_GAsyncResult),ctypes.POINTER(ctypes.c_void_p),)),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+g_file_output_stream_get_type = _rpythonic_function_(		"g_file_output_stream_get_type", ctypes.c_uint, [] )
 
 g_file_output_stream_query_info_finish = _rpythonic_function_(		"g_file_output_stream_query_info_finish", ctypes.POINTER(_GFileInfo), [
 	("stream",		ctypes.POINTER(_GFileOutputStream)),
@@ -30550,8 +30550,6 @@ g_pollable_input_stream_read_nonblocking = _rpythonic_function_(		"g_pollable_in
 g_pollable_source_new = _rpythonic_function_(		"g_pollable_source_new", ctypes.POINTER(_GSource), [
 	("pollable_stream",		ctypes.POINTER(_GObject)),] )
 
-g_pollable_output_stream_get_type = _rpythonic_function_(		"g_pollable_output_stream_get_type", ctypes.c_uint, [] )
-
 is_writable = _rpythonic_function_(		"is_writable", ctypes.c_int, [
 	("stream",		ctypes.POINTER(_GPollableOutputStream)),] )
 
@@ -30560,6 +30558,8 @@ write_nonblocking = _rpythonic_function_(		"write_nonblocking", ctypes.c_int, [
 	("buffer",		ctypes.POINTER(ctypes.c_void_p)),
 	("size",		ctypes.c_uint),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
+g_pollable_output_stream_get_type = _rpythonic_function_(		"g_pollable_output_stream_get_type", ctypes.c_uint, [] )
 
 g_pollable_output_stream_can_poll = _rpythonic_function_(		"g_pollable_output_stream_can_poll", ctypes.c_int, [
 	("stream",		ctypes.POINTER(_GPollableOutputStream)),] )
@@ -31503,14 +31503,14 @@ g_socket_send_message = _rpythonic_function_(		"g_socket_send_message", ctypes.c
 	("cancellable",		ctypes.POINTER(_GCancellable)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
-g_socket_close = _rpythonic_function_(		"g_socket_close", ctypes.c_int, [
-	("socket",		ctypes.POINTER(_GSocket)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
 g_socket_shutdown = _rpythonic_function_(		"g_socket_shutdown", ctypes.c_int, [
 	("socket",		ctypes.POINTER(_GSocket)),
 	("shutdown_read",		ctypes.c_int),
 	("shutdown_write",		ctypes.c_int),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
+g_socket_close = _rpythonic_function_(		"g_socket_close", ctypes.c_int, [
+	("socket",		ctypes.POINTER(_GSocket)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
 g_socket_is_closed = _rpythonic_function_(		"g_socket_is_closed", ctypes.c_int, [
@@ -31782,8 +31782,6 @@ g_threaded_socket_service_get_type = _rpythonic_function_(		"g_threaded_socket_s
 g_threaded_socket_service_new = _rpythonic_function_(		"g_threaded_socket_service_new", ctypes.POINTER(_GSocketService), [
 	("max_threads",		ctypes.c_int),] )
 
-g_tls_backend_get_type = _rpythonic_function_(		"g_tls_backend_get_type", ctypes.c_uint, [] )
-
 supports_tls = _rpythonic_function_(		"supports_tls", ctypes.c_int, [
 	("backend",		ctypes.POINTER(_GTlsBackend)),] )
 
@@ -31797,6 +31795,8 @@ get_file_database_type = _rpythonic_function_(		"get_file_database_type", ctypes
 
 get_default_database = _rpythonic_function_(		"get_default_database", ctypes.POINTER(_GTlsDatabase), [
 	("backend",		ctypes.POINTER(_GTlsBackend)),] )
+
+g_tls_backend_get_type = _rpythonic_function_(		"g_tls_backend_get_type", ctypes.c_uint, [] )
 
 g_tls_backend_get_default = _rpythonic_function_(		"g_tls_backend_get_default", ctypes.POINTER(_GTlsBackend), [] )
 
@@ -34816,15 +34816,15 @@ cairo_rel_curve_to = _rpythonic_function_(		"cairo_rel_curve_to", ctypes.c_void_
 	("dx3",		ctypes.c_double),
 	("dy3",		ctypes.c_double),] )
 
-cairo_close_path = _rpythonic_function_(		"cairo_close_path", ctypes.c_void_p, [
-	("cr",		ctypes.POINTER(_cairo)),] )
-
 cairo_rectangle = _rpythonic_function_(		"cairo_rectangle", ctypes.c_void_p, [
 	("cr",		ctypes.POINTER(_cairo)),
 	("x",		ctypes.c_double),
 	("y",		ctypes.c_double),
 	("width",		ctypes.c_double),
 	("height",		ctypes.c_double),] )
+
+cairo_close_path = _rpythonic_function_(		"cairo_close_path", ctypes.c_void_p, [
+	("cr",		ctypes.POINTER(_cairo)),] )
 
 cairo_path_extents = _rpythonic_function_(		"cairo_path_extents", ctypes.c_void_p, [
 	("cr",		ctypes.POINTER(_cairo)),
@@ -36573,11 +36573,6 @@ gdk_pixbuf_save_to_callbackv = _rpythonic_function_(		"gdk_pixbuf_save_to_callba
 	("option_values",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
-gdk_pixbuf_new_from_stream = _rpythonic_function_(		"gdk_pixbuf_new_from_stream", ctypes.POINTER(_GdkPixbuf), [
-	("stream",		ctypes.POINTER(_GInputStream)),
-	("cancellable",		ctypes.POINTER(_GCancellable)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
 gdk_pixbuf_save_to_bufferv = _rpythonic_function_(		"gdk_pixbuf_save_to_bufferv", ctypes.c_int, [
 	("pixbuf",		ctypes.POINTER(_GdkPixbuf)),
 	("buffer",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
@@ -36585,6 +36580,11 @@ gdk_pixbuf_save_to_bufferv = _rpythonic_function_(		"gdk_pixbuf_save_to_bufferv"
 	("C_type",		ctypes.POINTER(ctypes.c_char)),
 	("option_keys",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
 	("option_values",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
+gdk_pixbuf_new_from_stream = _rpythonic_function_(		"gdk_pixbuf_new_from_stream", ctypes.POINTER(_GdkPixbuf), [
+	("stream",		ctypes.POINTER(_GInputStream)),
+	("cancellable",		ctypes.POINTER(_GCancellable)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
 gdk_pixbuf_new_from_stream_async = _rpythonic_function_(		"gdk_pixbuf_new_from_stream_async", ctypes.c_void_p, [
@@ -37501,12 +37501,12 @@ _gdk_reserved7 = _rpythonic_function_(		"_gdk_reserved7", ctypes.c_void_p, [] )
 
 _gdk_reserved8 = _rpythonic_function_(		"_gdk_reserved8", ctypes.c_void_p, [] )
 
-gdk_window_get_type = _rpythonic_function_(		"gdk_window_get_type", ctypes.c_uint, [] )
-
 gdk_window_new = _rpythonic_function_(		"gdk_window_new", ctypes.POINTER(_GdkWindow), [
 	("parent",		ctypes.POINTER(_GdkWindow)),
 	("attributes",		ctypes.POINTER(_GdkWindowAttr)),
 	("attributes_mask",		ctypes.c_int),] )
+
+gdk_window_get_type = _rpythonic_function_(		"gdk_window_get_type", ctypes.c_uint, [] )
 
 gdk_window_destroy = _rpythonic_function_(		"gdk_window_destroy", ctypes.c_void_p, [
 	("window",		ctypes.POINTER(_GdkWindow)),] )
@@ -40941,11 +40941,11 @@ atk_table_get_index_at = _rpythonic_function_(		"atk_table_get_index_at", ctypes
 	("row",		ctypes.c_int),
 	("column",		ctypes.c_int),] )
 
-atk_table_get_column_at_index = _rpythonic_function_(		"atk_table_get_column_at_index", ctypes.c_int, [
+atk_table_get_row_at_index = _rpythonic_function_(		"atk_table_get_row_at_index", ctypes.c_int, [
 	("table",		ctypes.POINTER(_AtkTable)),
 	("index_",		ctypes.c_int),] )
 
-atk_table_get_row_at_index = _rpythonic_function_(		"atk_table_get_row_at_index", ctypes.c_int, [
+atk_table_get_column_at_index = _rpythonic_function_(		"atk_table_get_column_at_index", ctypes.c_int, [
 	("table",		ctypes.POINTER(_AtkTable)),
 	("index_",		ctypes.c_int),] )
 
@@ -45077,11 +45077,11 @@ gtk_cell_area_add = _rpythonic_function_(		"gtk_cell_area_add", ctypes.c_void_p,
 	("area",		ctypes.POINTER(_GtkCellArea)),
 	("renderer",		ctypes.POINTER(_GtkCellRenderer)),] )
 
-gtk_cell_area_remove = _rpythonic_function_(		"gtk_cell_area_remove", ctypes.c_void_p, [
+gtk_cell_area_has_renderer = _rpythonic_function_(		"gtk_cell_area_has_renderer", ctypes.c_int, [
 	("area",		ctypes.POINTER(_GtkCellArea)),
 	("renderer",		ctypes.POINTER(_GtkCellRenderer)),] )
 
-gtk_cell_area_has_renderer = _rpythonic_function_(		"gtk_cell_area_has_renderer", ctypes.c_int, [
+gtk_cell_area_remove = _rpythonic_function_(		"gtk_cell_area_remove", ctypes.c_void_p, [
 	("area",		ctypes.POINTER(_GtkCellArea)),
 	("renderer",		ctypes.POINTER(_GtkCellRenderer)),] )
 
@@ -46701,8 +46701,6 @@ GtkEntryCompletionMatchFunc = _rpythonic_function_(		"GtkEntryCompletionMatchFun
 	("iter",		ctypes.POINTER(_GtkTreeIter)),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-gtk_entry_completion_get_type = _rpythonic_function_(		"gtk_entry_completion_get_type", ctypes.c_uint, [] )
-
 match_selected = _rpythonic_function_(		"match_selected", ctypes.c_int, [
 	("completion",		ctypes.POINTER(_GtkEntryCompletion)),
 	("model",		ctypes.POINTER(_GtkTreeModel)),
@@ -46722,6 +46720,8 @@ cursor_on_match = _rpythonic_function_(		"cursor_on_match", ctypes.c_int, [
 	("iter",		ctypes.POINTER(_GtkTreeIter)),] )
 
 _gtk_reserved0 = _rpythonic_function_(		"_gtk_reserved0", ctypes.c_void_p, [] )
+
+gtk_entry_completion_get_type = _rpythonic_function_(		"gtk_entry_completion_get_type", ctypes.c_uint, [] )
 
 gtk_entry_completion_new = _rpythonic_function_(		"gtk_entry_completion_new", ctypes.POINTER(_GtkEntryCompletion), [] )
 
@@ -48183,9 +48183,9 @@ GtkBuilderConnectFunc = _rpythonic_function_(		"GtkBuilderConnectFunc", ctypes.c
 	("flags",		ctypes.c_int),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-gtk_builder_new = _rpythonic_function_(		"gtk_builder_new", ctypes.POINTER(_GtkBuilder), [] )
-
 gtk_builder_get_type = _rpythonic_function_(		"gtk_builder_get_type", ctypes.c_uint, [] )
+
+gtk_builder_new = _rpythonic_function_(		"gtk_builder_new", ctypes.POINTER(_GtkBuilder), [] )
 
 gtk_builder_add_from_file = _rpythonic_function_(		"gtk_builder_add_from_file", ctypes.c_uint, [
 	("builder",		ctypes.POINTER(_GtkBuilder)),
@@ -48300,11 +48300,11 @@ get_internal_child = _rpythonic_function_(		"get_internal_child", ctypes.POINTER
 	("builder",		ctypes.POINTER(_GtkBuilder)),
 	("childname",		ctypes.POINTER(ctypes.c_char)),] )
 
+gtk_buildable_get_type = _rpythonic_function_(		"gtk_buildable_get_type", ctypes.c_uint, [] )
+
 gtk_buildable_set_name = _rpythonic_function_(		"gtk_buildable_set_name", ctypes.c_void_p, [
 	("buildable",		ctypes.POINTER(_GtkBuildable)),
 	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
-gtk_buildable_get_type = _rpythonic_function_(		"gtk_buildable_get_type", ctypes.c_uint, [] )
 
 gtk_buildable_get_name = _rpythonic_function_(		"gtk_buildable_get_name", ctypes.POINTER(ctypes.c_char), [
 	("buildable",		ctypes.POINTER(_GtkBuildable)),] )
@@ -48582,10 +48582,10 @@ allocate = _rpythonic_function_(		"allocate", ctypes.c_void_p, [
 	("width",		ctypes.c_int),
 	("height",		ctypes.c_int),] )
 
-gtk_cell_area_context_get_type = _rpythonic_function_(		"gtk_cell_area_context_get_type", ctypes.c_uint, [] )
-
 gtk_cell_area_context_get_area = _rpythonic_function_(		"gtk_cell_area_context_get_area", ctypes.POINTER(_GtkCellArea), [
 	("context",		ctypes.POINTER(_GtkCellAreaContext)),] )
+
+gtk_cell_area_context_get_type = _rpythonic_function_(		"gtk_cell_area_context_get_type", ctypes.c_uint, [] )
 
 gtk_cell_area_context_allocate = _rpythonic_function_(		"gtk_cell_area_context_allocate", ctypes.c_void_p, [
 	("context",		ctypes.POINTER(_GtkCellAreaContext)),
@@ -49127,9 +49127,6 @@ gtk_clipboard_set_with_data = _rpythonic_function_(		"gtk_clipboard_set_with_dat
 	("clear_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(_GtkClipboard),ctypes.POINTER(ctypes.c_void_p),)),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-gtk_clipboard_get_owner = _rpythonic_function_(		"gtk_clipboard_get_owner", ctypes.POINTER(_GObject), [
-	("clipboard",		ctypes.POINTER(_GtkClipboard)),] )
-
 gtk_clipboard_set_with_owner = _rpythonic_function_(		"gtk_clipboard_set_with_owner", ctypes.c_int, [
 	("clipboard",		ctypes.POINTER(_GtkClipboard)),
 	("targets",		ctypes.POINTER(_GtkTargetEntry)),
@@ -49137,6 +49134,9 @@ gtk_clipboard_set_with_owner = _rpythonic_function_(		"gtk_clipboard_set_with_ow
 	("get_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(_GtkClipboard),ctypes.POINTER(_GtkSelectionData),ctypes.c_uint,ctypes.POINTER(ctypes.c_void_p),)),
 	("clear_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(_GtkClipboard),ctypes.POINTER(ctypes.c_void_p),)),
 	("owner",		ctypes.POINTER(_GObject)),] )
+
+gtk_clipboard_get_owner = _rpythonic_function_(		"gtk_clipboard_get_owner", ctypes.POINTER(_GObject), [
+	("clipboard",		ctypes.POINTER(_GtkClipboard)),] )
 
 gtk_clipboard_clear = _rpythonic_function_(		"gtk_clipboard_clear", ctypes.c_void_p, [
 	("clipboard",		ctypes.POINTER(_GtkClipboard)),] )
@@ -54070,10 +54070,10 @@ paste_done = _rpythonic_function_(		"paste_done", ctypes.c_void_p, [
 gtk_text_buffer_new = _rpythonic_function_(		"gtk_text_buffer_new", ctypes.POINTER(_GtkTextBuffer), [
 	("table",		ctypes.POINTER(_GtkTextTagTable)),] )
 
-gtk_text_buffer_get_type = _rpythonic_function_(		"gtk_text_buffer_get_type", ctypes.c_uint, [] )
-
 gtk_text_buffer_get_line_count = _rpythonic_function_(		"gtk_text_buffer_get_line_count", ctypes.c_int, [
 	("buffer",		ctypes.POINTER(_GtkTextBuffer)),] )
+
+gtk_text_buffer_get_type = _rpythonic_function_(		"gtk_text_buffer_get_type", ctypes.c_uint, [] )
 
 gtk_text_buffer_get_char_count = _rpythonic_function_(		"gtk_text_buffer_get_char_count", ctypes.c_int, [
 	("buffer",		ctypes.POINTER(_GtkTextBuffer)),] )
@@ -55952,6 +55952,8 @@ clutter_vertex_equal = _rpythonic_function_(		"clutter_vertex_equal", ctypes.c_i
 	("vertex_a",		ctypes.POINTER(_ClutterVertex)),
 	("vertex_b",		ctypes.POINTER(_ClutterVertex)),] )
 
+clutter_geometry_get_type = _rpythonic_function_(		"clutter_geometry_get_type", ctypes.c_uint, [] )
+
 clutter_actor_box_get_type = _rpythonic_function_(		"clutter_actor_box_get_type", ctypes.c_uint, [] )
 
 clutter_actor_box_new = _rpythonic_function_(		"clutter_actor_box_new", ctypes.POINTER(_ClutterActorBox), [
@@ -56027,8 +56029,6 @@ clutter_actor_box_set_size = _rpythonic_function_(		"clutter_actor_box_set_size"
 	("box",		ctypes.POINTER(_ClutterActorBox)),
 	("width",		ctypes.c_float),
 	("height",		ctypes.c_float),] )
-
-clutter_geometry_get_type = _rpythonic_function_(		"clutter_geometry_get_type", ctypes.c_uint, [] )
 
 clutter_geometry_union = _rpythonic_function_(		"clutter_geometry_union", ctypes.c_void_p, [
 	("geometry_a",		ctypes.POINTER(_ClutterGeometry)),
@@ -57443,14 +57443,6 @@ glCopyTexImage1D = _rpythonic_function_(		"glCopyTexImage1D", ctypes.c_void_p, [
 	("width",		ctypes.c_int),
 	("border",		ctypes.c_int),] )
 
-glCopyTexSubImage1D = _rpythonic_function_(		"glCopyTexSubImage1D", ctypes.c_void_p, [
-	("target",		ctypes.c_uint),
-	("level",		ctypes.c_int),
-	("xoffset",		ctypes.c_int),
-	("x",		ctypes.c_int),
-	("y",		ctypes.c_int),
-	("width",		ctypes.c_int),] )
-
 glCopyTexImage2D = _rpythonic_function_(		"glCopyTexImage2D", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
 	("level",		ctypes.c_int),
@@ -57460,6 +57452,14 @@ glCopyTexImage2D = _rpythonic_function_(		"glCopyTexImage2D", ctypes.c_void_p, [
 	("width",		ctypes.c_int),
 	("height",		ctypes.c_int),
 	("border",		ctypes.c_int),] )
+
+glCopyTexSubImage1D = _rpythonic_function_(		"glCopyTexSubImage1D", ctypes.c_void_p, [
+	("target",		ctypes.c_uint),
+	("level",		ctypes.c_int),
+	("xoffset",		ctypes.c_int),
+	("x",		ctypes.c_int),
+	("y",		ctypes.c_int),
+	("width",		ctypes.c_int),] )
 
 glCopyTexSubImage2D = _rpythonic_function_(		"glCopyTexSubImage2D", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
@@ -57679,6 +57679,14 @@ glCopyTexSubImage3D = _rpythonic_function_(		"glCopyTexSubImage3D", ctypes.c_voi
 	("width",		ctypes.c_int),
 	("height",		ctypes.c_int),] )
 
+PFNGLDRAWRANGEELEMENTSPROC = _rpythonic_function_(		"PFNGLDRAWRANGEELEMENTSPROC", ctypes.c_void_p, [
+	("mode",		ctypes.c_uint),
+	("start",		ctypes.c_uint),
+	("end",		ctypes.c_uint),
+	("count",		ctypes.c_int),
+	("C_type",		ctypes.c_uint),
+	("indices",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 PFNGLTEXIMAGE3DPROC = _rpythonic_function_(		"PFNGLTEXIMAGE3DPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
 	("level",		ctypes.c_int),
@@ -57690,14 +57698,6 @@ PFNGLTEXIMAGE3DPROC = _rpythonic_function_(		"PFNGLTEXIMAGE3DPROC", ctypes.c_voi
 	("format",		ctypes.c_uint),
 	("C_type",		ctypes.c_uint),
 	("pixels",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-PFNGLDRAWRANGEELEMENTSPROC = _rpythonic_function_(		"PFNGLDRAWRANGEELEMENTSPROC", ctypes.c_void_p, [
-	("mode",		ctypes.c_uint),
-	("start",		ctypes.c_uint),
-	("end",		ctypes.c_uint),
-	("count",		ctypes.c_int),
-	("C_type",		ctypes.c_uint),
-	("indices",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 PFNGLTEXSUBIMAGE3DPROC = _rpythonic_function_(		"PFNGLTEXSUBIMAGE3DPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
@@ -58642,15 +58642,15 @@ PFNGLGETCOLORTABLEPROC = _rpythonic_function_(		"PFNGLGETCOLORTABLEPROC", ctypes
 	("C_type",		ctypes.c_uint),
 	("table",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-PFNGLGETCOLORTABLEPARAMETERIVPROC = _rpythonic_function_(		"PFNGLGETCOLORTABLEPARAMETERIVPROC", ctypes.c_void_p, [
-	("target",		ctypes.c_uint),
-	("pname",		ctypes.c_uint),
-	("params",		ctypes.POINTER(ctypes.c_int)),] )
-
 PFNGLGETCOLORTABLEPARAMETERFVPROC = _rpythonic_function_(		"PFNGLGETCOLORTABLEPARAMETERFVPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
 	("pname",		ctypes.c_uint),
 	("params",		ctypes.POINTER(ctypes.c_float)),] )
+
+PFNGLGETCOLORTABLEPARAMETERIVPROC = _rpythonic_function_(		"PFNGLGETCOLORTABLEPARAMETERIVPROC", ctypes.c_void_p, [
+	("target",		ctypes.c_uint),
+	("pname",		ctypes.c_uint),
+	("params",		ctypes.POINTER(ctypes.c_int)),] )
 
 PFNGLCOLORSUBTABLEPROC = _rpythonic_function_(		"PFNGLCOLORSUBTABLEPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
@@ -59213,15 +59213,15 @@ PFNGLBUFFERSUBDATAPROC = _rpythonic_function_(		"PFNGLBUFFERSUBDATAPROC", ctypes
 	("size",		ctypes.c_int),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+PFNGLMAPBUFFERPROC = _rpythonic_function_(		"PFNGLMAPBUFFERPROC", ctypes.POINTER(ctypes.c_void_p), [
+	("target",		ctypes.c_uint),
+	("access",		ctypes.c_uint),] )
+
 PFNGLGETBUFFERSUBDATAPROC = _rpythonic_function_(		"PFNGLGETBUFFERSUBDATAPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
 	("offset",		ctypes.c_int),
 	("size",		ctypes.c_int),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-PFNGLMAPBUFFERPROC = _rpythonic_function_(		"PFNGLMAPBUFFERPROC", ctypes.POINTER(ctypes.c_void_p), [
-	("target",		ctypes.c_uint),
-	("access",		ctypes.c_uint),] )
 
 PFNGLUNMAPBUFFERPROC = _rpythonic_function_(		"PFNGLUNMAPBUFFERPROC", ctypes.c_ubyte, [
 	("target",		ctypes.c_uint),] )
@@ -59709,18 +59709,18 @@ PFNGLUNIFORMMATRIX3X4FVPROC = _rpythonic_function_(		"PFNGLUNIFORMMATRIX3X4FVPRO
 	("transpose",		ctypes.c_ubyte),
 	("value",		ctypes.POINTER(ctypes.c_float)),] )
 
+PFNGLUNIFORMMATRIX4X3FVPROC = _rpythonic_function_(		"PFNGLUNIFORMMATRIX4X3FVPROC", ctypes.c_void_p, [
+	("location",		ctypes.c_int),
+	("count",		ctypes.c_int),
+	("transpose",		ctypes.c_ubyte),
+	("value",		ctypes.POINTER(ctypes.c_float)),] )
+
 PFNGLCOLORMASKIPROC = _rpythonic_function_(		"PFNGLCOLORMASKIPROC", ctypes.c_void_p, [
 	("index",		ctypes.c_uint),
 	("r",		ctypes.c_ubyte),
 	("g",		ctypes.c_ubyte),
 	("b",		ctypes.c_ubyte),
 	("a",		ctypes.c_ubyte),] )
-
-PFNGLUNIFORMMATRIX4X3FVPROC = _rpythonic_function_(		"PFNGLUNIFORMMATRIX4X3FVPROC", ctypes.c_void_p, [
-	("location",		ctypes.c_int),
-	("count",		ctypes.c_int),
-	("transpose",		ctypes.c_ubyte),
-	("value",		ctypes.POINTER(ctypes.c_float)),] )
 
 PFNGLGETBOOLEANI_VPROC = _rpythonic_function_(		"PFNGLGETBOOLEANI_VPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
@@ -60815,15 +60815,15 @@ PFNGLGETINFOLOGARBPROC = _rpythonic_function_(		"PFNGLGETINFOLOGARBPROC", ctypes
 	("length",		ctypes.POINTER(ctypes.c_int)),
 	("infoLog",		ctypes.POINTER(ctypes.c_char)),] )
 
+PFNGLGETUNIFORMLOCATIONARBPROC = _rpythonic_function_(		"PFNGLGETUNIFORMLOCATIONARBPROC", ctypes.c_int, [
+	("programObj",		ctypes.c_uint),
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
 PFNGLGETATTACHEDOBJECTSARBPROC = _rpythonic_function_(		"PFNGLGETATTACHEDOBJECTSARBPROC", ctypes.c_void_p, [
 	("containerObj",		ctypes.c_uint),
 	("maxCount",		ctypes.c_int),
 	("count",		ctypes.POINTER(ctypes.c_int)),
 	("obj",		ctypes.POINTER(ctypes.c_uint)),] )
-
-PFNGLGETUNIFORMLOCATIONARBPROC = _rpythonic_function_(		"PFNGLGETUNIFORMLOCATIONARBPROC", ctypes.c_int, [
-	("programObj",		ctypes.c_uint),
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
 
 PFNGLGETACTIVEUNIFORMARBPROC = _rpythonic_function_(		"PFNGLGETACTIVEUNIFORMARBPROC", ctypes.c_void_p, [
 	("programObj",		ctypes.c_uint),
@@ -60850,11 +60850,6 @@ PFNGLGETSHADERSOURCEARBPROC = _rpythonic_function_(		"PFNGLGETSHADERSOURCEARBPRO
 	("length",		ctypes.POINTER(ctypes.c_int)),
 	("source",		ctypes.POINTER(ctypes.c_char)),] )
 
-PFNGLBINDATTRIBLOCATIONARBPROC = _rpythonic_function_(		"PFNGLBINDATTRIBLOCATIONARBPROC", ctypes.c_void_p, [
-	("programObj",		ctypes.c_uint),
-	("index",		ctypes.c_uint),
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
 PFNGLGETACTIVEATTRIBARBPROC = _rpythonic_function_(		"PFNGLGETACTIVEATTRIBARBPROC", ctypes.c_void_p, [
 	("programObj",		ctypes.c_uint),
 	("index",		ctypes.c_uint),
@@ -60862,6 +60857,11 @@ PFNGLGETACTIVEATTRIBARBPROC = _rpythonic_function_(		"PFNGLGETACTIVEATTRIBARBPRO
 	("length",		ctypes.POINTER(ctypes.c_int)),
 	("size",		ctypes.POINTER(ctypes.c_int)),
 	("C_type",		ctypes.POINTER(ctypes.c_uint)),
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
+PFNGLBINDATTRIBLOCATIONARBPROC = _rpythonic_function_(		"PFNGLBINDATTRIBLOCATIONARBPROC", ctypes.c_void_p, [
+	("programObj",		ctypes.c_uint),
+	("index",		ctypes.c_uint),
 	("name",		ctypes.POINTER(ctypes.c_char)),] )
 
 PFNGLGETATTRIBLOCATIONARBPROC = _rpythonic_function_(		"PFNGLGETATTRIBLOCATIONARBPROC", ctypes.c_int, [
@@ -62044,14 +62044,14 @@ PFNGLPROGRAMUNIFORMMATRIX4DVPROC = _rpythonic_function_(		"PFNGLPROGRAMUNIFORMMA
 	("transpose",		ctypes.c_ubyte),
 	("value",		ctypes.POINTER(ctypes.c_double)),] )
 
-PFNGLPROGRAMUNIFORMMATRIX2X3FVPROC = _rpythonic_function_(		"PFNGLPROGRAMUNIFORMMATRIX2X3FVPROC", ctypes.c_void_p, [
+PFNGLPROGRAMUNIFORMMATRIX4X3FVPROC = _rpythonic_function_(		"PFNGLPROGRAMUNIFORMMATRIX4X3FVPROC", ctypes.c_void_p, [
 	("program",		ctypes.c_uint),
 	("location",		ctypes.c_int),
 	("count",		ctypes.c_int),
 	("transpose",		ctypes.c_ubyte),
 	("value",		ctypes.POINTER(ctypes.c_float)),] )
 
-PFNGLPROGRAMUNIFORMMATRIX4X3FVPROC = _rpythonic_function_(		"PFNGLPROGRAMUNIFORMMATRIX4X3FVPROC", ctypes.c_void_p, [
+PFNGLPROGRAMUNIFORMMATRIX2X3FVPROC = _rpythonic_function_(		"PFNGLPROGRAMUNIFORMMATRIX2X3FVPROC", ctypes.c_void_p, [
 	("program",		ctypes.c_uint),
 	("location",		ctypes.c_int),
 	("count",		ctypes.c_int),
@@ -62294,15 +62294,15 @@ PFNGLGETNMAPIVARBPROC = _rpythonic_function_(		"PFNGLGETNMAPIVARBPROC", ctypes.c
 	("bufSize",		ctypes.c_int),
 	("v",		ctypes.POINTER(ctypes.c_int)),] )
 
-PFNGLGETNPIXELMAPUIVARBPROC = _rpythonic_function_(		"PFNGLGETNPIXELMAPUIVARBPROC", ctypes.c_void_p, [
-	("map",		ctypes.c_uint),
-	("bufSize",		ctypes.c_int),
-	("values",		ctypes.POINTER(ctypes.c_uint)),] )
-
 PFNGLGETNPIXELMAPFVARBPROC = _rpythonic_function_(		"PFNGLGETNPIXELMAPFVARBPROC", ctypes.c_void_p, [
 	("map",		ctypes.c_uint),
 	("bufSize",		ctypes.c_int),
 	("values",		ctypes.POINTER(ctypes.c_float)),] )
+
+PFNGLGETNPIXELMAPUIVARBPROC = _rpythonic_function_(		"PFNGLGETNPIXELMAPUIVARBPROC", ctypes.c_void_p, [
+	("map",		ctypes.c_uint),
+	("bufSize",		ctypes.c_int),
+	("values",		ctypes.POINTER(ctypes.c_uint)),] )
 
 PFNGLGETNPIXELMAPUSVARBPROC = _rpythonic_function_(		"PFNGLGETNPIXELMAPUSVARBPROC", ctypes.c_void_p, [
 	("map",		ctypes.c_uint),
@@ -62371,12 +62371,6 @@ PFNGLREADNPIXELSARBPROC = _rpythonic_function_(		"PFNGLREADNPIXELSARBPROC", ctyp
 	("bufSize",		ctypes.c_int),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-PFNGLGETNUNIFORMFVARBPROC = _rpythonic_function_(		"PFNGLGETNUNIFORMFVARBPROC", ctypes.c_void_p, [
-	("program",		ctypes.c_uint),
-	("location",		ctypes.c_int),
-	("bufSize",		ctypes.c_int),
-	("params",		ctypes.POINTER(ctypes.c_float)),] )
-
 PFNGLGETNCOMPRESSEDTEXIMAGEARBPROC = _rpythonic_function_(		"PFNGLGETNCOMPRESSEDTEXIMAGEARBPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
 	("lod",		ctypes.c_int),
@@ -62388,6 +62382,12 @@ PFNGLGETNUNIFORMIVARBPROC = _rpythonic_function_(		"PFNGLGETNUNIFORMIVARBPROC", 
 	("location",		ctypes.c_int),
 	("bufSize",		ctypes.c_int),
 	("params",		ctypes.POINTER(ctypes.c_int)),] )
+
+PFNGLGETNUNIFORMFVARBPROC = _rpythonic_function_(		"PFNGLGETNUNIFORMFVARBPROC", ctypes.c_void_p, [
+	("program",		ctypes.c_uint),
+	("location",		ctypes.c_int),
+	("bufSize",		ctypes.c_int),
+	("params",		ctypes.POINTER(ctypes.c_float)),] )
 
 PFNGLGETNUNIFORMUIVARBPROC = _rpythonic_function_(		"PFNGLGETNUNIFORMUIVARBPROC", ctypes.c_void_p, [
 	("program",		ctypes.c_uint),
@@ -62937,10 +62937,10 @@ PFNGLDEFORMATIONMAP3FSGIXPROC = _rpythonic_function_(		"PFNGLDEFORMATIONMAP3FSGI
 	("worder",		ctypes.c_int),
 	("points",		ctypes.POINTER(ctypes.c_float)),] )
 
-PFNGLLOADIDENTITYDEFORMATIONMAPSGIXPROC = _rpythonic_function_(		"PFNGLLOADIDENTITYDEFORMATIONMAPSGIXPROC", ctypes.c_void_p, [
+PFNGLDEFORMSGIXPROC = _rpythonic_function_(		"PFNGLDEFORMSGIXPROC", ctypes.c_void_p, [
 	("mask",		ctypes.c_uint),] )
 
-PFNGLDEFORMSGIXPROC = _rpythonic_function_(		"PFNGLDEFORMSGIXPROC", ctypes.c_void_p, [
+PFNGLLOADIDENTITYDEFORMATIONMAPSGIXPROC = _rpythonic_function_(		"PFNGLLOADIDENTITYDEFORMATIONMAPSGIXPROC", ctypes.c_void_p, [
 	("mask",		ctypes.c_uint),] )
 
 PFNGLREFERENCEPLANESGIXPROC = _rpythonic_function_(		"PFNGLREFERENCEPLANESGIXPROC", ctypes.c_void_p, [
@@ -64701,6 +64701,13 @@ PFNGLSHADEROP2EXTPROC = _rpythonic_function_(		"PFNGLSHADEROP2EXTPROC", ctypes.c
 	("arg1",		ctypes.c_uint),
 	("arg2",		ctypes.c_uint),] )
 
+PFNGLSHADEROP3EXTPROC = _rpythonic_function_(		"PFNGLSHADEROP3EXTPROC", ctypes.c_void_p, [
+	("op",		ctypes.c_uint),
+	("res",		ctypes.c_uint),
+	("arg1",		ctypes.c_uint),
+	("arg2",		ctypes.c_uint),
+	("arg3",		ctypes.c_uint),] )
+
 PFNGLSWIZZLEEXTPROC = _rpythonic_function_(		"PFNGLSWIZZLEEXTPROC", ctypes.c_void_p, [
 	("res",		ctypes.c_uint),
 	("C_in",		ctypes.c_uint),
@@ -64708,13 +64715,6 @@ PFNGLSWIZZLEEXTPROC = _rpythonic_function_(		"PFNGLSWIZZLEEXTPROC", ctypes.c_voi
 	("outY",		ctypes.c_uint),
 	("outZ",		ctypes.c_uint),
 	("outW",		ctypes.c_uint),] )
-
-PFNGLSHADEROP3EXTPROC = _rpythonic_function_(		"PFNGLSHADEROP3EXTPROC", ctypes.c_void_p, [
-	("op",		ctypes.c_uint),
-	("res",		ctypes.c_uint),
-	("arg1",		ctypes.c_uint),
-	("arg2",		ctypes.c_uint),
-	("arg3",		ctypes.c_uint),] )
 
 PFNGLWRITEMASKEXTPROC = _rpythonic_function_(		"PFNGLWRITEMASKEXTPROC", ctypes.c_void_p, [
 	("res",		ctypes.c_uint),
@@ -64740,12 +64740,12 @@ PFNGLGENSYMBOLSEXTPROC = _rpythonic_function_(		"PFNGLGENSYMBOLSEXTPROC", ctypes
 	("C_range",		ctypes.c_uint),
 	("components",		ctypes.c_uint),] )
 
-PFNGLSETLOCALCONSTANTEXTPROC = _rpythonic_function_(		"PFNGLSETLOCALCONSTANTEXTPROC", ctypes.c_void_p, [
+PFNGLSETINVARIANTEXTPROC = _rpythonic_function_(		"PFNGLSETINVARIANTEXTPROC", ctypes.c_void_p, [
 	("C_id",		ctypes.c_uint),
 	("C_type",		ctypes.c_uint),
 	("addr",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-PFNGLSETINVARIANTEXTPROC = _rpythonic_function_(		"PFNGLSETINVARIANTEXTPROC", ctypes.c_void_p, [
+PFNGLSETLOCALCONSTANTEXTPROC = _rpythonic_function_(		"PFNGLSETLOCALCONSTANTEXTPROC", ctypes.c_void_p, [
 	("C_id",		ctypes.c_uint),
 	("C_type",		ctypes.c_uint),
 	("addr",		ctypes.POINTER(ctypes.c_void_p)),] )
@@ -65593,14 +65593,14 @@ PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC = _rpythonic_function_(		"PFNGLFRAMEBUFFERRE
 	("renderbuffertarget",		ctypes.c_uint),
 	("renderbuffer",		ctypes.c_uint),] )
 
-PFNGLGENERATEMIPMAPEXTPROC = _rpythonic_function_(		"PFNGLGENERATEMIPMAPEXTPROC", ctypes.c_void_p, [
-	("target",		ctypes.c_uint),] )
-
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC = _rpythonic_function_(		"PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC", ctypes.c_void_p, [
 	("target",		ctypes.c_uint),
 	("attachment",		ctypes.c_uint),
 	("pname",		ctypes.c_uint),
 	("params",		ctypes.POINTER(ctypes.c_int)),] )
+
+PFNGLGENERATEMIPMAPEXTPROC = _rpythonic_function_(		"PFNGLGENERATEMIPMAPEXTPROC", ctypes.c_void_p, [
+	("target",		ctypes.c_uint),] )
 
 PFNGLSTRINGMARKERGREMEDYPROC = _rpythonic_function_(		"PFNGLSTRINGMARKERGREMEDYPROC", ctypes.c_void_p, [
 	("C_len",		ctypes.c_int),
@@ -65957,17 +65957,17 @@ PFNGLDRAWARRAYSINSTANCEDEXTPROC = _rpythonic_function_(		"PFNGLDRAWARRAYSINSTANC
 	("count",		ctypes.c_int),
 	("primcount",		ctypes.c_int),] )
 
-PFNGLTEXBUFFEREXTPROC = _rpythonic_function_(		"PFNGLTEXBUFFEREXTPROC", ctypes.c_void_p, [
-	("target",		ctypes.c_uint),
-	("internalformat",		ctypes.c_uint),
-	("buffer",		ctypes.c_uint),] )
-
 PFNGLDRAWELEMENTSINSTANCEDEXTPROC = _rpythonic_function_(		"PFNGLDRAWELEMENTSINSTANCEDEXTPROC", ctypes.c_void_p, [
 	("mode",		ctypes.c_uint),
 	("count",		ctypes.c_int),
 	("C_type",		ctypes.c_uint),
 	("indices",		ctypes.POINTER(ctypes.c_void_p)),
 	("primcount",		ctypes.c_int),] )
+
+PFNGLTEXBUFFEREXTPROC = _rpythonic_function_(		"PFNGLTEXBUFFEREXTPROC", ctypes.c_void_p, [
+	("target",		ctypes.c_uint),
+	("internalformat",		ctypes.c_uint),
+	("buffer",		ctypes.c_uint),] )
 
 PFNGLDEPTHRANGEDNVPROC = _rpythonic_function_(		"PFNGLDEPTHRANGEDNVPROC", ctypes.c_void_p, [
 	("zNear",		ctypes.c_double),
@@ -66857,6 +66857,16 @@ PFNGLCOMPRESSEDTEXTUREIMAGE2DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDTE
 	("imageSize",		ctypes.c_int),
 	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+PFNGLCOMPRESSEDTEXTUREIMAGE1DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDTEXTUREIMAGE1DEXTPROC", ctypes.c_void_p, [
+	("texture",		ctypes.c_uint),
+	("target",		ctypes.c_uint),
+	("level",		ctypes.c_int),
+	("internalformat",		ctypes.c_uint),
+	("width",		ctypes.c_int),
+	("border",		ctypes.c_int),
+	("imageSize",		ctypes.c_int),
+	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 PFNGLCOMPRESSEDTEXTURESUBIMAGE3DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDTEXTURESUBIMAGE3DEXTPROC", ctypes.c_void_p, [
 	("texture",		ctypes.c_uint),
 	("target",		ctypes.c_uint),
@@ -66880,16 +66890,6 @@ PFNGLCOMPRESSEDTEXTURESUBIMAGE2DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSE
 	("width",		ctypes.c_int),
 	("height",		ctypes.c_int),
 	("format",		ctypes.c_uint),
-	("imageSize",		ctypes.c_int),
-	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-PFNGLCOMPRESSEDTEXTUREIMAGE1DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDTEXTUREIMAGE1DEXTPROC", ctypes.c_void_p, [
-	("texture",		ctypes.c_uint),
-	("target",		ctypes.c_uint),
-	("level",		ctypes.c_int),
-	("internalformat",		ctypes.c_uint),
-	("width",		ctypes.c_int),
-	("border",		ctypes.c_int),
 	("imageSize",		ctypes.c_int),
 	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
 
@@ -66942,6 +66942,18 @@ PFNGLCOMPRESSEDMULTITEXIMAGE1DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDM
 	("imageSize",		ctypes.c_int),
 	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+PFNGLCOMPRESSEDMULTITEXSUBIMAGE2DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDMULTITEXSUBIMAGE2DEXTPROC", ctypes.c_void_p, [
+	("texunit",		ctypes.c_uint),
+	("target",		ctypes.c_uint),
+	("level",		ctypes.c_int),
+	("xoffset",		ctypes.c_int),
+	("yoffset",		ctypes.c_int),
+	("width",		ctypes.c_int),
+	("height",		ctypes.c_int),
+	("format",		ctypes.c_uint),
+	("imageSize",		ctypes.c_int),
+	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 PFNGLCOMPRESSEDMULTITEXSUBIMAGE3DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDMULTITEXSUBIMAGE3DEXTPROC", ctypes.c_void_p, [
 	("texunit",		ctypes.c_uint),
 	("target",		ctypes.c_uint),
@@ -66952,18 +66964,6 @@ PFNGLCOMPRESSEDMULTITEXSUBIMAGE3DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESS
 	("width",		ctypes.c_int),
 	("height",		ctypes.c_int),
 	("depth",		ctypes.c_int),
-	("format",		ctypes.c_uint),
-	("imageSize",		ctypes.c_int),
-	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-PFNGLCOMPRESSEDMULTITEXSUBIMAGE2DEXTPROC = _rpythonic_function_(		"PFNGLCOMPRESSEDMULTITEXSUBIMAGE2DEXTPROC", ctypes.c_void_p, [
-	("texunit",		ctypes.c_uint),
-	("target",		ctypes.c_uint),
-	("level",		ctypes.c_int),
-	("xoffset",		ctypes.c_int),
-	("yoffset",		ctypes.c_int),
-	("width",		ctypes.c_int),
-	("height",		ctypes.c_int),
 	("format",		ctypes.c_uint),
 	("imageSize",		ctypes.c_int),
 	("bits",		ctypes.POINTER(ctypes.c_void_p)),] )
@@ -67006,6 +67006,12 @@ PFNGLNAMEDPROGRAMLOCALPARAMETER4DVEXTPROC = _rpythonic_function_(		"PFNGLNAMEDPR
 	("index",		ctypes.c_uint),
 	("params",		ctypes.POINTER(ctypes.c_double)),] )
 
+PFNGLNAMEDPROGRAMLOCALPARAMETER4FVEXTPROC = _rpythonic_function_(		"PFNGLNAMEDPROGRAMLOCALPARAMETER4FVEXTPROC", ctypes.c_void_p, [
+	("program",		ctypes.c_uint),
+	("target",		ctypes.c_uint),
+	("index",		ctypes.c_uint),
+	("params",		ctypes.POINTER(ctypes.c_float)),] )
+
 PFNGLNAMEDPROGRAMLOCALPARAMETER4FEXTPROC = _rpythonic_function_(		"PFNGLNAMEDPROGRAMLOCALPARAMETER4FEXTPROC", ctypes.c_void_p, [
 	("program",		ctypes.c_uint),
 	("target",		ctypes.c_uint),
@@ -67014,12 +67020,6 @@ PFNGLNAMEDPROGRAMLOCALPARAMETER4FEXTPROC = _rpythonic_function_(		"PFNGLNAMEDPRO
 	("y",		ctypes.c_float),
 	("z",		ctypes.c_float),
 	("w",		ctypes.c_float),] )
-
-PFNGLNAMEDPROGRAMLOCALPARAMETER4FVEXTPROC = _rpythonic_function_(		"PFNGLNAMEDPROGRAMLOCALPARAMETER4FVEXTPROC", ctypes.c_void_p, [
-	("program",		ctypes.c_uint),
-	("target",		ctypes.c_uint),
-	("index",		ctypes.c_uint),
-	("params",		ctypes.POINTER(ctypes.c_float)),] )
 
 PFNGLGETNAMEDPROGRAMLOCALPARAMETERDVEXTPROC = _rpythonic_function_(		"PFNGLGETNAMEDPROGRAMLOCALPARAMETERDVEXTPROC", ctypes.c_void_p, [
 	("program",		ctypes.c_uint),
@@ -75064,14 +75064,14 @@ clutter_texture_set_area_from_rgb_data = _rpythonic_function_(		"clutter_texture
 	("flags",		ctypes.c_int),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
+clutter_texture_set_filter_quality = _rpythonic_function_(		"clutter_texture_set_filter_quality", ctypes.c_void_p, [
+	("texture",		ctypes.POINTER(_ClutterTexture)),
+	("filter_quality",		ctypes.c_int),] )
+
 clutter_texture_get_base_size = _rpythonic_function_(		"clutter_texture_get_base_size", ctypes.c_void_p, [
 	("texture",		ctypes.POINTER(_ClutterTexture)),
 	("width",		ctypes.POINTER(ctypes.c_int)),
 	("height",		ctypes.POINTER(ctypes.c_int)),] )
-
-clutter_texture_set_filter_quality = _rpythonic_function_(		"clutter_texture_set_filter_quality", ctypes.c_void_p, [
-	("texture",		ctypes.POINTER(_ClutterTexture)),
-	("filter_quality",		ctypes.c_int),] )
 
 clutter_texture_get_filter_quality = _rpythonic_function_(		"clutter_texture_get_filter_quality", ctypes.c_int, [
 	("texture",		ctypes.POINTER(_ClutterTexture)),] )
@@ -75645,8 +75645,6 @@ _clutter_model_7 = _rpythonic_function_(		"_clutter_model_7", ctypes.c_void_p, [
 
 _clutter_model_8 = _rpythonic_function_(		"_clutter_model_8", ctypes.c_void_p, [] )
 
-clutter_model_get_type = _rpythonic_function_(		"clutter_model_get_type", ctypes.c_uint, [] )
-
 clutter_model_set_types = _rpythonic_function_(		"clutter_model_set_types", ctypes.c_void_p, [
 	("model",		ctypes.POINTER(_ClutterModel)),
 	("n_columns",		ctypes.c_uint),
@@ -75656,6 +75654,8 @@ clutter_model_set_names = _rpythonic_function_(		"clutter_model_set_names", ctyp
 	("model",		ctypes.POINTER(_ClutterModel)),
 	("n_columns",		ctypes.c_uint),
 	("names",		ctypes.POINTER(ctypes.c_char)),] )
+
+clutter_model_get_type = _rpythonic_function_(		"clutter_model_get_type", ctypes.c_uint, [] )
 
 clutter_model_appendv = _rpythonic_function_(		"clutter_model_appendv", ctypes.c_void_p, [
 	("model",		ctypes.POINTER(_ClutterModel)),
@@ -77448,9 +77448,9 @@ cursor_event = _rpythonic_function_(		"cursor_event", ctypes.c_void_p, [
 	("C_self",		ctypes.POINTER(_ClutterText)),
 	("geometry",		ctypes.POINTER(_ClutterGeometry)),] )
 
-clutter_text_get_type = _rpythonic_function_(		"clutter_text_get_type", ctypes.c_uint, [] )
-
 clutter_text_new = _rpythonic_function_(		"clutter_text_new", ctypes.POINTER(_ClutterActor), [] )
+
+clutter_text_get_type = _rpythonic_function_(		"clutter_text_get_type", ctypes.c_uint, [] )
 
 clutter_text_new_full = _rpythonic_function_(		"clutter_text_new_full", ctypes.POINTER(_ClutterActor), [
 	("font_name",		ctypes.POINTER(ctypes.c_char)),
@@ -78197,7 +78197,6 @@ GTK_WIDGET_CLASSES = {
 
 	GtkComboBox : gtk_combo_box_new,
 	GtkComboBoxText : gtk_combo_box_text_new,
-	#GtkSocket : gtk_socket_new,
 
 	GtkSpinButton : gtk_spin_button_new,
 
@@ -78262,6 +78261,11 @@ GTK_CONTAINER_CLASSES = {
 	GtkMenuBar : gtk_menu_bar_new,
 
 }
+if 'GtkSocket' in globals():	# this is missing with Clutter
+	GTK_WIDGET_CLASSES[ GtkSocket ] = gtk_socket_new
+
+
+
 for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 	for o in d:
 		o._rpythonic_parent_classes_.append( GtkWidget )
@@ -78292,4 +78296,4 @@ def gdk2rgb( c ): return (c.red/65536.0, c.green/65536.0, c.blue/65536.0)
 _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()
 _rpythonic_clean_up_missing_functions_()
-_rpythonic_strip_prefixes_(['GTK_', 'gtk_'])
+_rpythonic_strip_prefixes_(['GTK_', 'gtk_', 'clutter_'])
