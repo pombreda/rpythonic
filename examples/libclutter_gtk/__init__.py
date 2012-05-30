@@ -78264,6 +78264,35 @@ GTK_CONTAINER_CLASSES = {
 if 'GtkSocket' in globals():	# this is missing with Clutter
 	GTK_WIDGET_CLASSES[ GtkSocket ] = gtk_socket_new
 
+if 'ClutterActor' in globals():
+	def _clutter_actor_animate_helper(self, atype, ms, **kw):
+		anims = {}
+		for prop in kw:
+			val = GValue()
+			gtype = g_type_from_name('gdouble')
+			assert gtype
+			val = g_value_init( val, gtype )
+			val.set_double( kw[prop] )
+			anims[prop] = self.animatev(
+				atype, ms,
+				1, #num properties
+				ctypes.pointer(ctypes.c_char_p(prop)), val,
+			)
+		return anims
+	ClutterActor.animate = _clutter_actor_animate_helper
+
+	def _get_(self):
+		x = ctypes.pointer( ctypes.c_double() )
+		y = ctypes.pointer( ctypes.c_double() )
+		self.clutter_actor_get_scale( x, y )
+		return x.contents.value, y.contents.value
+	ClutterActor.get_scale = _get_
+	def _get_(self):
+		x = ctypes.pointer( ctypes.c_double() )
+		y = ctypes.pointer( ctypes.c_double() )
+		self.clutter_actor_get_size( x, y )
+		return x.contents.value, y.contents.value
+	ClutterActor.get_size = _get_
 
 
 for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):

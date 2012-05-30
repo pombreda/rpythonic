@@ -34,32 +34,18 @@ gact.set_scale( 0.75, 1.0 )
 
 def sayhi(b, actor):
 	print('hello world', actor)
-	if 1:
-		val = gtk.GValue()
-		gtype = gtk.g_type_from_name('gdouble')
-		assert gtype
-		print('GTYPE',gtype)
-		val = gtk.g_value_init( val, gtype )
-		val.set_double( 2.0 )
-		print('VAL',val)
-		anim = actor.animatev(
-			clutter.CLUTTER_LINEAR, 4000,
-			1, #num properties
-			ctypes.pointer(ctypes.c_char_p('scale-x')), val,
-		)
-		print(anim)
-	#actor.set_scale( 2.0, 1.0 )
+	if actor.get_scale()[0] < 1.0: scale = 2.0
+	else: scale = 0.75
+	actor.animate(
+		clutter.CLUTTER_LINEAR, 4000,
+		scale_x=scale,
+	)
 
 for i in range(10):
 	button = gtk.Button('Click me')
 	button.connect('clicked', sayhi, gact)
-	#vbox.pack_end(button, False, False, 0)
-	#gact.set_size(100, 100)
-	#gact.set_anchor_point(50, 50)
-	#gact.set_position(150, 150)
-	#gact.set_rotation(clutter.CLUTTER_Z_AXIS, 80.0, 0, 0, 0)
 	box.pack_start( button )
-box.show_all()
+box.show_all()	# required
 
 button = gtk.Button('gtk-ok')
 button.set_use_stock(True)
@@ -72,7 +58,4 @@ while True:
 		gtk.gtk_main_iteration()
 
 print('exit')
-
-#if __name__ == '__main__': main()
-
 
