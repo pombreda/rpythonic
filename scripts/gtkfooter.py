@@ -307,14 +307,18 @@ if 'ClutterActor' in globals():
 		anims = {}
 		for prop in kw:
 			val = GValue()
-			gtype = g_type_from_name('gdouble')
+			gtype = g_type_from_name('gdouble')	# TODO other types
 			assert gtype
 			val = g_value_init( val, gtype )
 			val.set_double( kw[prop] )
+
+			if _ISPYTHON2: gprop = ctypes.pointer(ctypes.c_char_p(prop))
+			else: gprop = ctypes.pointer(ctypes.c_char_p(prop.encode('utf-8')))
+
 			anims[prop] = self.animatev(
 				atype, ms,
 				1, #num properties
-				ctypes.pointer(ctypes.c_char_p(prop)), val,
+				prop, val,
 			)
 		return anims
 	ClutterActor.animate = _clutter_actor_animate_helper

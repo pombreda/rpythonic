@@ -2,6 +2,8 @@ import os, sys, ctypes, inspect
 __os = os
 __sys = sys
 __inspect = inspect
+_CTYPES_CDLLS = []	# support loading functions from multiple libraries
+
 
 PYTHON_RESERVED_KEYWORDS = 'for while in as global with try except lambda return raise if else elif eval exec and not or break continue finally print yield del def class assert from is pass'.split()
 
@@ -268,15 +270,17 @@ def _rpythonic_setup_return_wrappers():
 				if not f.return_wrapper:	# just in case the ctypes footer had already defined it, do not overwrite
 					f.return_wrapper = klass._rpythonic_wrapper_class_
 
+
+###############################################################
+##						OLD META FUNC						##
+###############################################################
 def _rpythonic_function_( name, result=ctypes.c_void_p, args=[]):
 	mname = '_metafunc_%s' %name
 	exec( 'class %s( _rpythonic_metafunc_ ): pass' %mname )
 	k = locals()[mname]
 	return k( name, result, args )
-
 _OOAPI_ = {}
 _OOAPI_RETURNS_OBJECT_ = {}
-
 class _rpythonic_metafunc_(object):
 	def __init__(self, name, result=ctypes.c_void_p, args=[]):
 		self.name = name
@@ -298,11 +302,14 @@ class _rpythonic_metafunc_(object):
 		self.return_wrapper = None
 		self.object_oriented = False
 		self.function = None
-		try:
-			func = self.function = getattr(CTYPES_DLL, self.name )
-			RPYTHONIC_WRAPPER_FUNCTIONS[ name ] = self
-		except:
+		for cdll in _CTYPES_CDLLS:	# functions could be multiple libraries
+			if hasattr(cdll, self.name):
+				func = self.function = getattr(cdll, self.name )
+				RPYTHONIC_WRAPPER_FUNCTIONS[ name ] = self
+				break
+		if not self.function:
 			RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES.append( name )
+
 		if self.function: self.reset()
 
 	def change_argument_type( self, name, t ):
@@ -507,9 +514,9 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 	'''
 	METAS = []
 	def __init__(self, constructors=[], methods={}, properties={}):
-		global CTYPES_DLL
-		if not CTYPES_DLL:
-			CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
+		#global CTYPES_DLL	# TODO update me to using _CTYPES_CDLLS
+		#if not CTYPES_DLL:
+		#	CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
 
 		self.constructors = constructors
 		self.methods = methods
@@ -669,9 +676,9 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 	@classmethod
 	def function( self, info ):
 		print('@meta.function', info['name'] )
-		global CTYPES_DLL
-		if not CTYPES_DLL:
-			CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
+		#global CTYPES_DLL
+		#if not CTYPES_DLL:
+		#	CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
 
 		cfunc = self._build_cfunc( info, method=False, static=True )
 		setattr( meta, '_%s'%info['name'], cfunc )
@@ -705,5 +712,15 @@ def _rpythonic_strip_prefixes_( prefixes ):
 					G[ newname ] = G[ name ]
 
 
-
+########################################################
+##				Load Dynamic Libaries					##
+def _rpythonic_load_dynamic_libraries(names):
+	global _CTYPES_CDLLS
+	for name in names:
+		cdll = _load_ctypes_lib( name )
+		if cdll:
+			print('[[dynamic library loaded: %s]]' %name)
+			_CTYPES_CDLLS.append( cdll )
+#----------------------------------------------------------#
+print( os.path.abspath( os.path.curdir ) )
 

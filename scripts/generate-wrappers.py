@@ -243,10 +243,15 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 
 '''
 	rpythonic.wrap( 
-		'opencv_core', 
+		name='opencv_core', 
+		library_names=['opencv_core', 'opencv_imgproc'],
 		defines = ['_MMINTRIN_H_INCLUDED', '_XMMINTRIN_H_INCLUDED', '_EMMINTRIN_H_INCLUDED'],
 		header='/usr/include/opencv2/core/core_c.h', 
-		insert_headers = ['/usr/include/opencv2/core/types_c.h'],
+		insert_headers = [
+			'/usr/include/opencv2/core/types_c.h', 
+			'/usr/include/opencv2/imgproc/imgproc_c.h',
+			'/usr/include/opencv2/imgproc/types_c.h'
+		],
 		ctypes_footer = footer,
 		strip_prefixes = ['cv'],
 	)

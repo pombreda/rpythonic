@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - May, 2012
+# RPythonic - June, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8c'
+VERSION = '0.4.8d'
 
 _doc_ = '''
 NAME
@@ -331,9 +331,9 @@ STRIP_PREFIXES = []
 CTYPES_FOOTER = ''
 
 def wrap(
-	name, 
+	name='', 
 	header=None, 
-	library_name=None,
+	library_names=None,
 	insert_headers=[], 
 	library=None, 
 	dynamic_libs=[], 
@@ -350,9 +350,11 @@ def wrap(
 	strip_prefixes = [],
 	ctypes_footer='' ):
 
-	global LIBS, CTYPES_OUTPUT, RFFI_OUTPUT, INCLUDE_DIRS, SYS_INCLUDE_DIRS, MACRO_DEFS, MACRO_UNDEFS, INSERT_HEADERS, CTYPES_FOOTER, STRIP_PREFIXES
+	assert name
 
+	global LIBS, CTYPES_OUTPUT, RFFI_OUTPUT, INCLUDE_DIRS, SYS_INCLUDE_DIRS, MACRO_DEFS, MACRO_UNDEFS, INSERT_HEADERS, CTYPES_FOOTER, STRIP_PREFIXES
 	_reset_wrapper_state()
+
 	LIBS = []
 	INCLUDE_DIRS = list(includes)		# copy since we modify it
 	INSERT_HEADERS = list( insert_headers )
@@ -368,16 +370,16 @@ def wrap(
 				sub = os.path.join( system_include, n )
 				if sub not in INCLUDE_DIRS: INCLUDE_DIRS.append( sub )
 
-	if not library:
+	if not library:	# DEPRECATE?
 		libname = '%s.so' %name
 		if not libname.startswith('lib'): libname = 'lib'+libname
 		guess1 = os.path.join( '/usr/local/lib', libname )
 		guess2 = os.path.join( '/usr/lib', libname )
 		if os.path.isfile( guess1 ): library = guess1
 		elif os.path.isfile( guess2 ): library = guess2
-
-
 	if library: LIBS.append( library )
+
+
 	MACRO_DEFS = list( defines )
 	MACRO_UNDEFS = list( undefines )
 
@@ -398,7 +400,7 @@ def wrap(
 		for n in ignore_functions: a.add_ignore_function( n )
 
 	else:	# pycparser C
-		a = C( header, library_name=library_name )
+		a = C( header, library_names=library_names )
 
 	return a.save( name )
 
@@ -1357,14 +1359,14 @@ class Struct( Union ):
 
 
 class SourceCode(object):
-	def __init__(self, url, library_name=None, debug=False, platform=None):
+	def __init__(self, url, library_names=[], debug=False, platform=None):
 		path,name = os.path.split(url)
 		if path not in INCLUDE_DIRS: INCLUDE_DIRS.append( path )
 		self.source_url = url
 		self.source_path, self.source_file = os.path.split( url )
 		self.platform = platform
 		self.shared_library = None
-		self.shared_library_name = library_name or os.path.splitext(name)[0]
+		self.shared_library_names = library_names or [ os.path.splitext(name)[0] ]
 		self.source_data = self.source_processed = open(url,'rb').read()
 		self.headers = []
 
@@ -3215,13 +3217,8 @@ class C( SourceCode ):		# using pycparser
 
 	def set_ctypes_header(self):
 		self.CTYPES_HEADER =  CTYPES_HEADER + '\n' + '''
-_clib_name_ = '%s'
-print('loading lib', _clib_name_)
-print( os.path.abspath( os.path.curdir ) )
-CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
-assert CTYPES_DLL
-print( CTYPES_DLL._name )
-''' %self.shared_library_name
+_rpythonic_load_dynamic_libraries( %s )
+''' %self.shared_library_names
 
 
 	def set_rffi_header( self ):
