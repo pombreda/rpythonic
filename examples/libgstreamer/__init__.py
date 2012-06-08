@@ -42,7 +42,14 @@ def _load_ctypes_lib( name ):
 			elif __os.path.isfile( '/usr/local/lib64/%s'%name ) and not IS32BIT: return ctypes.CDLL('/usr/local/lib64/%s'%name)
 			elif __os.path.isfile( '/usr/lib/%s'%name ): return ctypes.CDLL('/usr/lib/%s'%name)
 			elif __os.path.isfile( './%s'%name ): return ctypes.CDLL('./%s'%name)
+			
+			elif __os.path.isfile( '/usr/lib/%s.0'%name ):	# Fedora style
+				return ctypes.CDLL('/usr/lib/%s.0'%name )
+			elif __os.path.isfile( '/usr/lib64/%s.0'%name ):	# Fedora style
+				return ctypes.CDLL('/usr/lib64/%s.0'%name )
+
 			else:	# fallback
+				print('[ falling back to loading from current process ]')
 				try: return ctypes.CDLL(name)
 				except: return ctypes.CDLL('')
 
@@ -61,6 +68,7 @@ def _load_ctypes_lib( name ):
 		url = os.path.join( path, name )
 		if os.path.isfile( url ): return ctypes.CDLL(url)
 		else: return ctypes.CDLL(name) #fallback
+
 
 RPYTHONIC_WRAPPER_FUNCTIONS = {}
 RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES = []
@@ -703,15 +711,12 @@ def _rpythonic_strip_prefixes_( prefixes ):
 
 
 
-
-
-
-_clib_name_ = 'libgstreamer-0.10'
+_clib_name_ = 'gstreamer-0.10'
 print('loading lib', _clib_name_)
 print( os.path.abspath( os.path.curdir ) )
 CTYPES_DLL = _load_ctypes_lib( _clib_name_ )
 assert CTYPES_DLL
-print( CTYPES_DLL._name )
+print( 'loaded:', CTYPES_DLL._name )
 
 ## macro globals ##
 ## enums ##
@@ -23591,3 +23596,63 @@ _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()
 _rpythonic_clean_up_missing_functions_()
 _rpythonic_strip_prefixes_(['gst_'])
+
+
+_RETURNS_CHARP_ = (
+	gst_version_string,
+	gst_structure_get_name,
+	gst_format_get_name,
+	gst_message_type_get_name,
+	gst_element_state_get_name,
+)
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
+
+class _nice_callback_args_container_(object):
+	'''	(required for pypy)
+	wraps args in an object because pypy ctypes creates a weakref to wrap pyobject
+	'''
+	def __init__(self,args): self.args = args
+
+class _nice_callback_(object):
+	def __del__(self): pass		# for some reason this holds a reference to self
+	def __init__(self, widget, func, args):
+		import inspect
+		self.widget = widget
+		self.function = func
+		self.args = args
+		argspec = inspect.getargspec( func )
+		self.num_c_args = len(argspec.args)
+		self.num_user_args = len(args)
+
+		n = len(argspec.args) - len(args)
+		if not inspect.ismethod( func ): n += 1		# if not a bound-method
+		self.cfunc_prototype = ctypes.CFUNCTYPE( ctypes.c_void_p, *([ctypes.c_void_p]*n) )
+		g_signal_connect_data.change_argument_type( 'c_handler', self.cfunc_prototype )	# ugly workaround
+
+		self.cfunc = self.cfunc_prototype( self.call )
+
+		self.wrapped_args = _nice_callback_args_container_( args )
+		userdata = ctypes.pointer( ctypes.py_object(self.wrapped_args) )
+		self.userdata = userdata
+
+
+	def call(self, *args):
+		a = [ self.widget ]	# the first argument is always the widget the signal is attached to
+		for i,arg in enumerate(args):
+			if i == len(args)-1:
+				ptr = ctypes.cast( arg, ctypes.POINTER(ctypes.py_object) )
+				w = ptr.contents.value
+				a += list(w.args)
+			elif i:
+				a.append( arg )
+		self.function( *a )
+		return 0	# pypy complains if None is returned
+
+
+def connect( ptr, name, func, *args ):
+	wrapper = _nice_callback_( ptr.pyobject, func, args )
+	return g_signal_connect_data( ptr, name, wrapper.cfunc, wrapper.userdata )
+

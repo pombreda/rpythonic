@@ -20,8 +20,8 @@ GINCLUDE = [
 	'/usr/lib/x86_64-linux-gnu/glib-2.0/include/',	# 64bits
 ]
 
-
-footer = open( 'gtkfooter.py', 'rb' ).read()
+glibfooter = open( 'glibfooter.py', 'rb' ).read()
+gtkfooter = open( 'gtkfooter.py', 'rb' ).read()
 
 if '--gtk3' in sys.argv:
 	rpythonic.wrap(
@@ -30,7 +30,7 @@ if '--gtk3' in sys.argv:
 		library='/usr/lib/libgtk-3.so',
 		includes=['/usr/include/gtk-3.0/'] + GINCLUDE,
 		#defines=['__G_THREAD_H__', '__G_ASYNCQUEUE_H__'],
-		ctypes_footer=footer,
+		ctypes_footer= glibfooter + gtkfooter,
 		strip_prefixes = ['GTK_', 'gtk_'],
 		insert_headers = ['/usr/include/gtk-3.0/gtk/gtkx.h'],	# required with gtk3 
 	)
@@ -48,7 +48,7 @@ if '--clutter' in sys.argv:
 			 '/usr/include/cogl/',	# required
 			'/usr/include/json-glib-1.0/',	
 			] + GINCLUDE,
-		ctypes_footer=footer,
+		ctypes_footer= glibfooter + gtkfooter,
 		strip_prefixes = ['GTK_', 'gtk_', 'clutter_'],
 	)
 
@@ -64,7 +64,7 @@ if '--gtk2' in sys.argv:
 	rpythonic.wrap( 
 		'gtk2', 
 		header='/usr/include/gtk-2.0/gtk/gtk.h', 
-		includes=GTK2INCLUDE + GINCLUDE, ctypes_footer=footer,
+		includes=GTK2INCLUDE + GINCLUDE, ctypes_footer=glibfooter + gtkfooter,
 		library= '/usr/lib/libgtk-x11-2.0.so',
 		strip_prefixes = ['GTK_', 'gtk_'],
 	)
@@ -93,10 +93,26 @@ if '--gimp' in sys.argv:
 
 if '--gstreamer' in sys.argv:
 	# apt-get install libgstreamer0.10-dev
+
+	## TODO glib connect in footer - get from magicheader.py
+	footer = '''
+_RETURNS_CHARP_ = (
+	gst_version_string,
+	gst_structure_get_name,
+	gst_format_get_name,
+	gst_message_type_get_name,
+	gst_element_state_get_name,
+)
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+'''
+
 	rpythonic.wrap( 'libgstreamer', 
 		header='/usr/include/gstreamer-0.10/gst/gst.h',
 		library = 'libgstreamer-0.10.so',
 		includes = ['/usr/include/gstreamer-0.10/', '/usr/include/libxml2'] + GINCLUDE,
+		ctypes_footer = glibfooter + footer,
 		strip_prefixes = ['gst_'],
 	)
 
