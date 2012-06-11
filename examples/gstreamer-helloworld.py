@@ -30,13 +30,14 @@ def on_sync_message( bus, msg ):
 	print( name )
 	#print( 'has name', gst.structure_has_field( msg.structure, 'name' ) )
 	if name in ('void', 'GInterface', 'prepare-xwindow-id'):
-		print( 'preparing window...' )
 		src = msg.src	#ctypes.POINTER(_GstObject)
-		print( src )
-		#gst.child_proxy_set_property( src, 'force-aspect-ratio', True )	# segfaults
-		#gst.g_object_set_property( src, 'force-aspect-ratio', True )	# segfaults
+		if src:
+			print( 'preparing window...' )
+			print( src )
+			#gst.child_proxy_set_property( src, 'force-aspect-ratio', True )	# segfaults
+			#gst.g_object_set_property( src, 'force-aspect-ratio', True )	# segfaults
 
-player = gst.parse_launch ("v4l2src ! autovideosink")
+player = gst.parse_launch("v4l2src ! autovideosink")
 print(player)
 bus = player.get_bus()
 print(bus)
@@ -50,7 +51,7 @@ player.set_state(gst.GST_STATE_PLAYING)
 #loop = gst.g_main_loop_new( gcontext )
 #print('running', loop)
 #ctx = loop.
-#loop.run()	# this works bug can not quit
+#loop.run()	# this works but can not quit
 
 while True:	#gst.g_main_context_pending( gcontext ):
 	gst.g_main_context_iteration(

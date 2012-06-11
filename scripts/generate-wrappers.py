@@ -194,6 +194,7 @@ for func in ( dBodyGetQuaternion,  ):
 	rpythonic.wrap(
 		'ode', 
 		header='/usr/include/ode/ode.h', 
+		library_names=['ode-double', 'ode'],
 		ctypes_footer=footer,
 		strip_prefixes = ['d'],
 		defines = ['dDOUBLE'],
