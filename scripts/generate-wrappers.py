@@ -289,15 +289,14 @@ if '--alut' in sys.argv or ALL:
 
 if '--freenect' in sys.argv or ALL:
 	#git clone https://github.com/OpenKinect/libfreenect.git
-
 	rpythonic.wrap( 
 		'libfreenect', 
-		header='/usr/include/libfreenect.h',
+		header='/usr/local/include/libfreenect/libfreenect.h',
 		strip_prefixes = ['freenect_', '_freenect_', 'FREENECT_'],
 	)
 
 if '--freenect-sync' in sys.argv or ALL:
-
+	# note: freenect_sync broken on Fedora?
 	rpythonic.wrap(
 		'libfreenect_sync', 
 		header='/usr/include/libfreenect_sync.h',

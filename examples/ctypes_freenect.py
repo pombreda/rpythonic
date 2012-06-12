@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# updated may26th 2011
+# updated june 2012
+
 import os, sys, time, ctypes
 import libfreenect as freenect
 
@@ -7,14 +8,14 @@ import libfreenect as freenect
 print( 'creating kinect context' )
 context = freenect.context()
 conptr = ctypes.pointer( context.POINTER )
-usbcon = freenect.libusb_context()
-usbconptr = ctypes.pointer( usbcon.POINTER )
-freenect.libusb_init( usbconptr )
+#usbcon = freenect.libusb_context()
+#usbconptr = ctypes.pointer( usbcon.POINTER )
+#freenect.libusb_init( usbconptr )
 
 #freenect.shutdown( context )
 
-status = freenect.init(conptr, usbcon)
-#status = freenect.init(conptr, None)
+#status = freenect.init(conptr, usbcon)
+status = freenect.init(conptr, None)
 print('init status', status )
 
 #freenect.set_log_level( context, 1 )
@@ -54,13 +55,20 @@ freenect.set_depth_callback(dev, depth_cb );
 #freenect_set_video_callback(devptr, video_cb);
 
 #freenect.set_video_format(dev, freenect.VIDEO_RGB);
-freenect.set_depth_format(dev, freenect.DEPTH_11BIT);
+#freenect.set_depth_format(dev, freenect.DEPTH_11BIT);
 
-buff = (ctypes.c_ubyte * freenect.FRAME_PIX)()
+#freenect.set_video_mode(dev, freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM, current_format));
+freenect.set_depth_mode(
+	dev, 
+	freenect.find_depth_mode(freenect.RESOLUTION_MEDIUM, freenect.DEPTH_11BIT),
+)
+
+numpixels = 640*480*3
+buff = (ctypes.c_ubyte * numpixels)()
 rgb_back = ctypes.pointer( buff )
 #freenect_set_video_buffer(devptr, ctypes.cast(rgb_back,ctypes.c_void_p));
 
-buff = (ctypes.c_ubyte * freenect.IR_FRAME_PIX)()
+buff = (ctypes.c_ubyte * numpixels)()
 buffptr = ctypes.pointer( buff )
 #freenect.set_depth_buffer( dev, ctypes.cast(buffptr,ctypes.c_void_p) )
 freenect.set_depth_buffer( dev, buffptr )
@@ -75,27 +83,23 @@ import thread
 def loop():
 	print('starting...')
 	time.sleep(1)
-	for i in range( 100 ):
+	for i in range( 1000 ):
 		status = freenect.process_events( context )
 		if status < 0: print( 'error' ); break
-		print(i)
 	print('shutdown')
 #thread.start_new_thread( loop, () )
 loop()
 #time.sleep(10)
 
 freenect.set_led( dev, freenect.LED_RED)
-print('stopped')
-
+print('stopping depth...')
 freenect.stop_depth(dev)
 #freenect.stop_video(devptr)
+print('closing device...')
+freenect.close_device(dev)
+print('shutdown context...')
+freenect.shutdown(context)
 
-
-
-freenect_close_device(devptr);
-freenect_shutdown(contextptr);
-
-
-print('test done')
+print('freenect test done')
 
 
