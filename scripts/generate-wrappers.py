@@ -300,13 +300,36 @@ if '--freenect-sync' in sys.argv or ALL:
 
 
 if '--opengl' in sys.argv or ALL:
-	rpythonic.wrap( 'openGL', header='/usr/include/GL/gl.h', library='/usr/lib/libGL.so' )
+	rpythonic.wrap(
+		'openGL',
+		header='/usr/include/GL/gl.h',
+		library_names=['libGL'],
+		insert_headers = ['/usr/include/GL/glx.h'],
+		strip_prefixes = ['gl'],
+	)
 
 if '--openglu' in sys.argv or ALL:
-	rpythonic.wrap( 'openGLU', header='/usr/include/GL/glu.h', library='/usr/lib/libGLU.so' )
+	rpythonic.wrap(
+		'openGLU',
+		header='/usr/include/GL/glu.h',
+		library_names=['libGLU'],
+	)
 
 if '--openglut' in sys.argv or ALL:
-	rpythonic.wrap( 'openGLUT', header='/usr/include/GL/glut.h', library='/usr/lib/libglut.so' )
+	rpythonic.wrap(
+		'openGLUT',
+		header='/usr/include/GL/glut.h',
+		library_names=['libglut'],
+	)
+
+if '--xlib' in sys.argv:
+	rpythonic.wrap(
+		'xlib', 
+		header='/usr/include/X11/Xlib.h',
+		library_names=['libX11'],
+		strip_prefixes = ['X'],
+	)
+
 
 if '--openjpeg' in sys.argv or ALL:
 	rpythonic.wrap( 'openjpeg', header='/usr/include/openjpeg.h' )
@@ -382,11 +405,6 @@ if '--fluid' in sys.argv or ALL:
 		strip_prefixes = ['fluid_'],
 	)
 
-
-if '--xlib' in sys.argv:		# this was just for testing
-	rpythonic.wrap( 'xlib', 
-		header='/usr/include/X11/Xlib.h',
-	)
 
 if '--fftw' in sys.argv or ALL:
 	rpythonic.wrap( 'fftw', 
