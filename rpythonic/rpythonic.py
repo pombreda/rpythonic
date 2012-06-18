@@ -2,7 +2,7 @@
 # RPythonic - June, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8d'
+VERSION = '0.4.8e'
 
 _doc_ = '''
 NAME
@@ -24,6 +24,10 @@ RPYTHON API
 	sub(10,100)		# compiled
 
 '''
+
+PYTHON_RESERVED_KEYWORDS = 'for while in as global with try except lambda return raise if else elif eval exec and not or break continue finally print yield del def class assert'.split()
+
+PYTHON_RESERVED_NAMES = 'self id object type enumerate isinstance len globals locals tuple dict list int float str bool getattr setattr hasattr range None True False'.split() + PYTHON_RESERVED_KEYWORDS
 
 
 import os, sys, ctypes, inspect
@@ -546,9 +550,10 @@ class SomeThing(object):
 			return self.parent.get_ancestors( ancest )
 		else: return ancest
 
-	PYTHON_RESERVED_KEYWORDS = 'for while in as global with try except lambda return raise if else elif eval exec and not or break continue finally print yield del def class assert'.split()
+	PYTHON_RESERVED_KEYWORDS = PYTHON_RESERVED_KEYWORDS
+	ReservedNames = PYTHON_RESERVED_NAMES
 
-	ReservedNames = 'id object type enumerate isinstance len globals locals tuple dict list int float str bool getattr setattr hasattr range None self'.split() + PYTHON_RESERVED_KEYWORDS
+
 	def name(self):	# note: Decl can have a .name but it can be None, decl.type.name should then have the real name
 		if hasattr(self.ast, 'name' ) and self.ast.name:
 			if self.ast.name in SomeThing.ReservedNames: return 'C_%s' %self.ast.name
@@ -3273,6 +3278,7 @@ _rpythonic_load_dynamic_libraries( %s )
 		a = '## macro globals ##\n'
 		for name in self.macro_globals:
 			value = self.macro_globals_values[ name ]
+			if name in PYTHON_RESERVED_NAMES: name = 'C_%s'%name
 			if type(value) is str: a += '%s = "%s"\n' %(name,value)
 			else: a += '%s = %s\n' %(name,value)
 

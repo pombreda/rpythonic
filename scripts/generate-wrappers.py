@@ -328,6 +328,7 @@ if '--xlib' in sys.argv:
 		header='/usr/include/X11/Xlib.h',
 		library_names=['libX11'],
 		strip_prefixes = ['X'],
+		insert_headers = ['/usr/include/X11/X.h'],	# for XXXMask macros
 	)
 
 
