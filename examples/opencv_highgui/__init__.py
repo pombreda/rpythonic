@@ -728,7 +728,7 @@ print( os.path.abspath( os.path.curdir ) )
 
 
 
-_rpythonic_load_dynamic_libraries( ['highgui_c'] )
+_rpythonic_load_dynamic_libraries( ['opencv_highgui'] )
 
 ## macro globals ##
 CV_FOURCC_PROMPT = -1
@@ -785,11 +785,6 @@ CV_GpuNotSupported = -216
 CV_GpuApiCallError = -217 
 CV_GpuNppCallError = -218 
 CV_GpuCufftCallError = -219 
-
-CV_PARAM_TYPE_INT = 0 
-CV_PARAM_TYPE_REAL = 1 
-CV_PARAM_TYPE_STRING = 2 
-CV_PARAM_TYPE_MAT = 3 
 
 CV_FONT_LIGHT = 25 
 CV_FONT_NORMAL = 50 
@@ -961,10 +956,14 @@ CV_CAP_ANDROID_COLOR_FRAME_RGB = 2
 CV_CAP_ANDROID_COLOR_FRAME_BGRA = 3 
 CV_CAP_ANDROID_COLOR_FRAME_RGBA = 4 
 
+CV_PARAM_TYPE_INT = 0 
+CV_PARAM_TYPE_REAL = 1 
+CV_PARAM_TYPE_STRING = 2 
+CV_PARAM_TYPE_MAT = 3 
+
 ## simple enums ##
 RPYTHONIC_GLOBAL_ENUMS = { 
  "CV_StsOk" : 0,  "CV_StsBackTrace" : -1,  "CV_StsError" : -2,  "CV_StsInternal" : -3,  "CV_StsNoMem" : -4,  "CV_StsBadArg" : -5,  "CV_StsBadFunc" : -6,  "CV_StsNoConv" : -7,  "CV_StsAutoTrace" : -8,  "CV_HeaderIsNull" : -9,  "CV_BadImageSize" : -10,  "CV_BadOffset" : -11,  "CV_BadDataPtr" : -12,  "CV_BadStep" : -13,  "CV_BadModelOrChSeq" : -14,  "CV_BadNumChannels" : -15,  "CV_BadNumChannel1U" : -16,  "CV_BadDepth" : -17,  "CV_BadAlphaChannel" : -18,  "CV_BadOrder" : -19,  "CV_BadOrigin" : -20,  "CV_BadAlign" : -21,  "CV_BadCallBack" : -22,  "CV_BadTileSize" : -23,  "CV_BadCOI" : -24,  "CV_BadROISize" : -25,  "CV_MaskIsTiled" : -26,  "CV_StsNullPtr" : -27,  "CV_StsVecLengthErr" : -28,  "CV_StsFilterStructContentErr" : -29,  "CV_StsKernelStructContentErr" : -30,  "CV_StsFilterOffsetErr" : -31,  "CV_StsBadSize" : -201,  "CV_StsDivByZero" : -202,  "CV_StsInplaceNotSupported" : -203,  "CV_StsObjectNotFound" : -204,  "CV_StsUnmatchedFormats" : -205,  "CV_StsBadFlag" : -206,  "CV_StsBadPoint" : -207,  "CV_StsBadMask" : -208,  "CV_StsUnmatchedSizes" : -209,  "CV_StsUnsupportedFormat" : -210,  "CV_StsOutOfRange" : -211,  "CV_StsParseError" : -212,  "CV_StsNotImplemented" : -213,  "CV_StsBadMemBlock" : -214,  "CV_StsAssert" : -215,  "CV_GpuNotSupported" : -216,  "CV_GpuApiCallError" : -217,  "CV_GpuNppCallError" : -218,  "CV_GpuCufftCallError" : -219, 
- "CV_PARAM_TYPE_INT" : 0,  "CV_PARAM_TYPE_REAL" : 1,  "CV_PARAM_TYPE_STRING" : 2,  "CV_PARAM_TYPE_MAT" : 3, 
  "CV_FONT_LIGHT" : 25,  "CV_FONT_NORMAL" : 50,  "CV_FONT_DEMIBOLD" : 63,  "CV_FONT_BOLD" : 75,  "CV_FONT_BLACK" : 87, 
  "CV_STYLE_NORMAL" : 0,  "CV_STYLE_ITALIC" : 1,  "CV_STYLE_OBLIQUE" : 2, 
  "CV_PUSH_BUTTON" : 0,  "CV_CHECKBOX" : 1,  "CV_RADIOBOX" : 2, 
@@ -979,6 +978,7 @@ RPYTHONIC_GLOBAL_ENUMS = {
  "CV_CAP_OPENNI_DEPTH_MAP" : 0,  "CV_CAP_OPENNI_POINT_CLOUD_MAP" : 1,  "CV_CAP_OPENNI_DISPARITY_MAP" : 2,  "CV_CAP_OPENNI_DISPARITY_MAP_32F" : 3,  "CV_CAP_OPENNI_VALID_DEPTH_MASK" : 4,  "CV_CAP_OPENNI_BGR_IMAGE" : 5,  "CV_CAP_OPENNI_GRAY_IMAGE" : 6, 
  "CV_CAP_OPENNI_VGA_30HZ" : 0,  "CV_CAP_OPENNI_SXGA_15HZ" : 1, 
  "CV_CAP_ANDROID_COLOR_FRAME_BGR" : 0,  "CV_CAP_ANDROID_COLOR_FRAME" : 0,  "CV_CAP_ANDROID_GREY_FRAME" : 1,  "CV_CAP_ANDROID_COLOR_FRAME_RGB" : 2,  "CV_CAP_ANDROID_COLOR_FRAME_BGRA" : 3,  "CV_CAP_ANDROID_COLOR_FRAME_RGBA" : 4, 
+ "CV_PARAM_TYPE_INT" : 0,  "CV_PARAM_TYPE_REAL" : 1,  "CV_PARAM_TYPE_STRING" : 2,  "CV_PARAM_TYPE_MAT" : 3, 
 
 }
 class Cv32suf(ctypes.Union): pass
@@ -1510,73 +1510,6 @@ __freeze_rpythonic_struct( CvVideoWriter, [
 ])
 
 ## wrapper functions ##
-cvAddWeighted = _rpythonic_function_(		"cvAddWeighted", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("alpha",		ctypes.c_double),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("beta",		ctypes.c_double),
-	("gamma",		ctypes.c_double),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvDotProduct = _rpythonic_function_(		"cvDotProduct", ctypes.c_double, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvAnd = _rpythonic_function_(		"cvAnd", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvAndS = _rpythonic_function_(		"cvAndS", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("value",		CvScalar),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvOr = _rpythonic_function_(		"cvOr", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvCmp = _rpythonic_function_(		"cvCmp", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("cmp_op",		ctypes.c_int),] )
-
-cvCmpS = _rpythonic_function_(		"cvCmpS", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("value",		ctypes.c_double),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("cmp_op",		ctypes.c_int),] )
-
-cvMin = _rpythonic_function_(		"cvMin", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvMax = _rpythonic_function_(		"cvMax", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvMinS = _rpythonic_function_(		"cvMinS", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("value",		ctypes.c_double),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvMaxS = _rpythonic_function_(		"cvMaxS", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("value",		ctypes.c_double),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvAbsDiff = _rpythonic_function_(		"cvAbsDiff", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
 cvOrS = _rpythonic_function_(		"cvOrS", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
 	("value",		CvScalar),
@@ -1653,39 +1586,102 @@ cvSetND = _rpythonic_function_(		"cvSetND", ctypes.c_void_p, [
 	("idx",		ctypes.POINTER(ctypes.c_int)),
 	("value",		CvScalar),] )
 
-cvGetRawData = _rpythonic_function_(		"cvGetRawData", ctypes.c_void_p, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("data",		ctypes.POINTER(ctypes.POINTER(ctypes.c_ubyte))),
-	("step",		ctypes.POINTER(ctypes.c_int)),
-	("roi_size",		ctypes.POINTER(CvSize)),] )
+cvCmp = _rpythonic_function_(		"cvCmp", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("cmp_op",		ctypes.c_int),] )
 
-cvGetSize = _rpythonic_function_(		"cvGetSize", CvSize, [("arr",		ctypes.c_void_p)] )
-
-cvCopy = _rpythonic_function_(		"cvCopy", ctypes.c_void_p, [
+cvCmpS = _rpythonic_function_(		"cvCmpS", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("value",		ctypes.c_double),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("cmp_op",		ctypes.c_int),] )
+
+cvMin = _rpythonic_function_(		"cvMin", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvMax = _rpythonic_function_(		"cvMax", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvMinS = _rpythonic_function_(		"cvMinS", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("value",		ctypes.c_double),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvMaxS = _rpythonic_function_(		"cvMaxS", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("value",		ctypes.c_double),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvAbsDiff = _rpythonic_function_(		"cvAbsDiff", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvSub = _rpythonic_function_(		"cvSub", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),
 	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-cvSet = _rpythonic_function_(		"cvSet", ctypes.c_void_p, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+cvSubRS = _rpythonic_function_(		"cvSubRS", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
 	("value",		CvScalar),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
 	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-cvSetZero = _rpythonic_function_(		"cvSetZero", ctypes.c_void_p, [("arr",		ctypes.c_void_p)] )
-
-cvSplit = _rpythonic_function_(		"cvSplit", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst0",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst1",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst3",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvMerge = _rpythonic_function_(		"cvMerge", ctypes.c_void_p, [
-	("src0",		ctypes.POINTER(ctypes.c_void_p)),
+cvMul = _rpythonic_function_(		"cvMul", ctypes.c_void_p, [
 	("src1",		ctypes.POINTER(ctypes.c_void_p)),
 	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("src3",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("scale",		ctypes.c_double),] )
+
+cvDiv = _rpythonic_function_(		"cvDiv", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("scale",		ctypes.c_double),] )
+
+cvScaleAdd = _rpythonic_function_(		"cvScaleAdd", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("scale",		CvScalar),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvAddWeighted = _rpythonic_function_(		"cvAddWeighted", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("alpha",		ctypes.c_double),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("beta",		ctypes.c_double),
+	("gamma",		ctypes.c_double),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvDotProduct = _rpythonic_function_(		"cvDotProduct", ctypes.c_double, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvAnd = _rpythonic_function_(		"cvAnd", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvAndS = _rpythonic_function_(		"cvAndS", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("value",		CvScalar),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvOr = _rpythonic_function_(		"cvOr", ctypes.c_void_p, [
+	("src1",		ctypes.POINTER(ctypes.c_void_p)),
+	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 cvSetReal1D = _rpythonic_function_(		"cvSetReal1D", ctypes.c_void_p, [
 	("arr",		ctypes.POINTER(ctypes.c_void_p)),
@@ -1724,65 +1720,11 @@ cvGetImage = _rpythonic_function_(		"cvGetImage", ctypes.POINTER(_IplImage), [
 	("arr",		ctypes.POINTER(ctypes.c_void_p)),
 	("image_header",		ctypes.POINTER(_IplImage)),] )
 
-cvReshapeMatND = _rpythonic_function_(		"cvReshapeMatND", ctypes.POINTER(ctypes.c_void_p), [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("sizeof_header",		ctypes.c_int),
-	("header",		ctypes.POINTER(ctypes.c_void_p)),
-	("new_cn",		ctypes.c_int),
-	("new_dims",		ctypes.c_int),
-	("new_sizes",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvReshape = _rpythonic_function_(		"cvReshape", ctypes.POINTER(CvMat), [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("header",		ctypes.POINTER(CvMat)),
-	("new_cn",		ctypes.c_int),
-	("new_rows",		ctypes.c_int),] )
-
-cvRepeat = _rpythonic_function_(		"cvRepeat", ctypes.c_void_p, [
+cvConvertScaleAbs = _rpythonic_function_(		"cvConvertScaleAbs", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvCreateData = _rpythonic_function_(		"cvCreateData", ctypes.c_void_p, [("arr",		ctypes.c_void_p)] )
-
-cvReleaseData = _rpythonic_function_(		"cvReleaseData", ctypes.c_void_p, [("arr",		ctypes.c_void_p)] )
-
-cvSetData = _rpythonic_function_(		"cvSetData", ctypes.c_void_p, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("step",		ctypes.c_int),] )
-
-cvPtrND = _rpythonic_function_(		"cvPtrND", ctypes.POINTER(ctypes.c_ubyte), [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("idx",		ctypes.POINTER(ctypes.c_int)),
-	("C_type",		ctypes.POINTER(ctypes.c_int)),
-	("create_node",		ctypes.c_int),
-	("precalc_hashval",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvPtr3D = _rpythonic_function_(		"cvPtr3D", ctypes.POINTER(ctypes.c_ubyte), [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("idx0",		ctypes.c_int),
-	("idx1",		ctypes.c_int),
-	("idx2",		ctypes.c_int),
-	("C_type",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvGet2D = _rpythonic_function_(		"cvGet2D", CvScalar, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("idx0",		ctypes.c_int),
-	("idx1",		ctypes.c_int),] )
-
-cvGet3D = _rpythonic_function_(		"cvGet3D", CvScalar, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("idx0",		ctypes.c_int),
-	("idx1",		ctypes.c_int),
-	("idx2",		ctypes.c_int),] )
-
-cvGetND = _rpythonic_function_(		"cvGetND", CvScalar, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("idx",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvGet1D = _rpythonic_function_(		"cvGet1D", CvScalar, [
-	("arr",		ctypes.POINTER(ctypes.c_void_p)),
-	("idx0",		ctypes.c_int),] )
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("scale",		ctypes.c_double),
+	("shift",		ctypes.c_double),] )
 
 cvConvertScale = _rpythonic_function_(		"cvConvertScale", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
@@ -1798,22 +1740,16 @@ cvMixChannels = _rpythonic_function_(		"cvMixChannels", ctypes.c_void_p, [
 	("from_to",		ctypes.POINTER(ctypes.c_int)),
 	("pair_count",		ctypes.c_int),] )
 
-cvConvertScaleAbs = _rpythonic_function_(		"cvConvertScaleAbs", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("scale",		ctypes.c_double),
-	("shift",		ctypes.c_double),] )
+cvCheckTermCriteria = _rpythonic_function_(		"cvCheckTermCriteria", CvTermCriteria, [
+	("criteria",		CvTermCriteria),
+	("default_eps",		ctypes.c_double),
+	("default_max_iters",		ctypes.c_int),] )
 
 cvAdd = _rpythonic_function_(		"cvAdd", ctypes.c_void_p, [
 	("src1",		ctypes.POINTER(ctypes.c_void_p)),
 	("src2",		ctypes.POINTER(ctypes.c_void_p)),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),
 	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvCheckTermCriteria = _rpythonic_function_(		"cvCheckTermCriteria", CvTermCriteria, [
-	("criteria",		CvTermCriteria),
-	("default_eps",		ctypes.c_double),
-	("default_max_iters",		ctypes.c_int),] )
 
 cvAddS = _rpythonic_function_(		"cvAddS", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
@@ -1856,6 +1792,39 @@ cvSolveCubic = _rpythonic_function_(		"cvSolveCubic", ctypes.c_int, [
 	("coeffs",		ctypes.POINTER(CvMat)),
 	("roots",		ctypes.POINTER(CvMat)),] )
 
+cvGet1D = _rpythonic_function_(		"cvGet1D", CvScalar, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("idx0",		ctypes.c_int),] )
+
+cvGetND = _rpythonic_function_(		"cvGetND", CvScalar, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("idx",		ctypes.POINTER(ctypes.c_int)),] )
+
+cvPtrND = _rpythonic_function_(		"cvPtrND", ctypes.POINTER(ctypes.c_ubyte), [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("idx",		ctypes.POINTER(ctypes.c_int)),
+	("C_type",		ctypes.POINTER(ctypes.c_int)),
+	("create_node",		ctypes.c_int),
+	("precalc_hashval",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvGet3D = _rpythonic_function_(		"cvGet3D", CvScalar, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("idx0",		ctypes.c_int),
+	("idx1",		ctypes.c_int),
+	("idx2",		ctypes.c_int),] )
+
+cvGet2D = _rpythonic_function_(		"cvGet2D", CvScalar, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("idx0",		ctypes.c_int),
+	("idx1",		ctypes.c_int),] )
+
+cvPtr3D = _rpythonic_function_(		"cvPtr3D", ctypes.POINTER(ctypes.c_ubyte), [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("idx0",		ctypes.c_int),
+	("idx1",		ctypes.c_int),
+	("idx2",		ctypes.c_int),
+	("C_type",		ctypes.POINTER(ctypes.c_int)),] )
+
 cvAbsDiffS = _rpythonic_function_(		"cvAbsDiffS", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),
@@ -1888,35 +1857,446 @@ cvLog = _rpythonic_function_(		"cvLog", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-cvSub = _rpythonic_function_(		"cvSub", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
+cvGetRawData = _rpythonic_function_(		"cvGetRawData", ctypes.c_void_p, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("data",		ctypes.POINTER(ctypes.POINTER(ctypes.c_ubyte))),
+	("step",		ctypes.POINTER(ctypes.c_int)),
+	("roi_size",		ctypes.POINTER(CvSize)),] )
 
-cvSubRS = _rpythonic_function_(		"cvSubRS", ctypes.c_void_p, [
+cvGetSize = _rpythonic_function_(		"cvGetSize", CvSize, [("arr",		ctypes.c_void_p)] )
+
+cvCopy = _rpythonic_function_(		"cvCopy", ctypes.c_void_p, [
 	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("value",		CvScalar),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),
 	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-cvMul = _rpythonic_function_(		"cvMul", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("scale",		ctypes.c_double),] )
+cvSet = _rpythonic_function_(		"cvSet", ctypes.c_void_p, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("value",		CvScalar),
+	("mask",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-cvDiv = _rpythonic_function_(		"cvDiv", ctypes.c_void_p, [
-	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("src2",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("scale",		ctypes.c_double),] )
+cvSetZero = _rpythonic_function_(		"cvSetZero", ctypes.c_void_p, [("arr",		ctypes.c_void_p)] )
 
-cvScaleAdd = _rpythonic_function_(		"cvScaleAdd", ctypes.c_void_p, [
+cvSplit = _rpythonic_function_(		"cvSplit", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst0",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst1",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst2",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst3",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvMerge = _rpythonic_function_(		"cvMerge", ctypes.c_void_p, [
+	("src0",		ctypes.POINTER(ctypes.c_void_p)),
 	("src1",		ctypes.POINTER(ctypes.c_void_p)),
-	("scale",		CvScalar),
 	("src2",		ctypes.POINTER(ctypes.c_void_p)),
+	("src3",		ctypes.POINTER(ctypes.c_void_p)),
 	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvReshapeMatND = _rpythonic_function_(		"cvReshapeMatND", ctypes.POINTER(ctypes.c_void_p), [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("sizeof_header",		ctypes.c_int),
+	("header",		ctypes.POINTER(ctypes.c_void_p)),
+	("new_cn",		ctypes.c_int),
+	("new_dims",		ctypes.c_int),
+	("new_sizes",		ctypes.POINTER(ctypes.c_int)),] )
+
+cvReshape = _rpythonic_function_(		"cvReshape", ctypes.POINTER(CvMat), [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("header",		ctypes.POINTER(CvMat)),
+	("new_cn",		ctypes.c_int),
+	("new_rows",		ctypes.c_int),] )
+
+cvRepeat = _rpythonic_function_(		"cvRepeat", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvCreateData = _rpythonic_function_(		"cvCreateData", ctypes.c_void_p, [("arr",		ctypes.c_void_p)] )
+
+cvReleaseData = _rpythonic_function_(		"cvReleaseData", ctypes.c_void_p, [("arr",		ctypes.c_void_p)] )
+
+cvSetData = _rpythonic_function_(		"cvSetData", ctypes.c_void_p, [
+	("arr",		ctypes.POINTER(ctypes.c_void_p)),
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("step",		ctypes.c_int),] )
+
+cvGetFileNode = _rpythonic_function_(		"cvGetFileNode", ctypes.POINTER(CvFileNode), [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("map",		ctypes.POINTER(CvFileNode)),
+	("key",		ctypes.POINTER(CvStringHashNode)),
+	("create_missing",		ctypes.c_int),] )
+
+cvGetFileNodeByName = _rpythonic_function_(		"cvGetFileNodeByName", ctypes.POINTER(CvFileNode), [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("map",		ctypes.POINTER(CvFileNode)),
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvRead = _rpythonic_function_(		"cvRead", ctypes.POINTER(ctypes.c_void_p), [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("node",		ctypes.POINTER(CvFileNode)),
+	("attributes",		ctypes.POINTER(CvAttrList)),] )
+
+cvStartReadRawData = _rpythonic_function_(		"cvStartReadRawData", ctypes.c_void_p, [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("src",		ctypes.POINTER(CvFileNode)),
+	("reader",		ctypes.POINTER(CvSeqReader)),] )
+
+cvReadRawDataSlice = _rpythonic_function_(		"cvReadRawDataSlice", ctypes.c_void_p, [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("reader",		ctypes.POINTER(CvSeqReader)),
+	("count",		ctypes.c_int),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("dt",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvReadRawData = _rpythonic_function_(		"cvReadRawData", ctypes.c_void_p, [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("src",		ctypes.POINTER(CvFileNode)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("dt",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvWriteFileNode = _rpythonic_function_(		"cvWriteFileNode", ctypes.c_void_p, [
+	("fs",		ctypes.POINTER(CvFileStorage)),
+	("new_node_name",		ctypes.POINTER(ctypes.c_char)),
+	("node",		ctypes.POINTER(CvFileNode)),
+	("embed",		ctypes.c_int),] )
+
+cvGetFileNodeName = _rpythonic_function_(		"cvGetFileNodeName", ctypes.POINTER(ctypes.c_char), [
+	("node",		ctypes.POINTER(CvFileNode)),] )
+
+cvRegisterType = _rpythonic_function_(		"cvRegisterType", ctypes.c_void_p, [
+	("info",		ctypes.POINTER(CvTypeInfo)),] )
+
+cvUnregisterType = _rpythonic_function_(		"cvUnregisterType", ctypes.c_void_p, [
+	("type_name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvFirstType = _rpythonic_function_(		"cvFirstType", ctypes.POINTER(CvTypeInfo), [] )
+
+cvFindType = _rpythonic_function_(		"cvFindType", ctypes.POINTER(CvTypeInfo), [
+	("type_name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvTypeOf = _rpythonic_function_(		"cvTypeOf", ctypes.POINTER(CvTypeInfo), [("struct_ptr",		ctypes.c_void_p)] )
+
+cvRelease = _rpythonic_function_(		"cvRelease", ctypes.c_void_p, [("struct_ptr",		ctypes.c_void_p)] )
+
+cvClone = _rpythonic_function_(		"cvClone", ctypes.POINTER(ctypes.c_void_p), [("struct_ptr",		ctypes.c_void_p)] )
+
+cvSave = _rpythonic_function_(		"cvSave", ctypes.c_void_p, [
+	("filename",		ctypes.POINTER(ctypes.c_char)),
+	("struct_ptr",		ctypes.POINTER(ctypes.c_void_p)),
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("comment",		ctypes.POINTER(ctypes.c_char)),
+	("attributes",		CvAttrList),] )
+
+cvLoad = _rpythonic_function_(		"cvLoad", ctypes.POINTER(ctypes.c_void_p), [
+	("filename",		ctypes.POINTER(ctypes.c_char)),
+	("memstorage",		ctypes.POINTER(CvMemStorage)),
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("real_name",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),] )
+
+cvGetTickCount = _rpythonic_function_(		"cvGetTickCount", ctypes.c_int64, [] )
+
+cvGetTickFrequency = _rpythonic_function_(		"cvGetTickFrequency", ctypes.c_double, [] )
+
+cvCheckHardwareSupport = _rpythonic_function_(		"cvCheckHardwareSupport", ctypes.c_int, [
+	("feature",		ctypes.c_int),] )
+
+cvGetNumThreads = _rpythonic_function_(		"cvGetNumThreads", ctypes.c_int, [] )
+
+cvSetNumThreads = _rpythonic_function_(		"cvSetNumThreads", ctypes.c_void_p, [
+	("threads",		ctypes.c_int),] )
+
+cvGetThreadNum = _rpythonic_function_(		"cvGetThreadNum", ctypes.c_int, [] )
+
+cvGetErrStatus = _rpythonic_function_(		"cvGetErrStatus", ctypes.c_int, [] )
+
+cvSetErrStatus = _rpythonic_function_(		"cvSetErrStatus", ctypes.c_void_p, [
+	("status",		ctypes.c_int),] )
+
+cvGetErrMode = _rpythonic_function_(		"cvGetErrMode", ctypes.c_int, [] )
+
+cvSetErrMode = _rpythonic_function_(		"cvSetErrMode", ctypes.c_int, [
+	("mode",		ctypes.c_int),] )
+
+cvError = _rpythonic_function_(		"cvError", ctypes.c_void_p, [
+	("status",		ctypes.c_int),
+	("func_name",		ctypes.POINTER(ctypes.c_char)),
+	("err_msg",		ctypes.POINTER(ctypes.c_char)),
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("line",		ctypes.c_int),] )
+
+cvErrorStr = _rpythonic_function_(		"cvErrorStr", ctypes.POINTER(ctypes.c_char), [
+	("status",		ctypes.c_int),] )
+
+cvGetErrInfo = _rpythonic_function_(		"cvGetErrInfo", ctypes.c_int, [
+	("errcode_desc",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("description",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("filename",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("line",		ctypes.POINTER(ctypes.c_int)),] )
+
+cvErrorFromIppStatus = _rpythonic_function_(		"cvErrorFromIppStatus", ctypes.c_int, [
+	("ipp_status",		ctypes.c_int),] )
+
+CvErrorCallback = _rpythonic_function_(		"CvErrorCallback", ctypes.c_int, [
+	("status",		ctypes.c_int),
+	("func_name",		ctypes.POINTER(ctypes.c_char)),
+	("err_msg",		ctypes.POINTER(ctypes.c_char)),
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("line",		ctypes.c_int),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvRedirectError = _rpythonic_function_(		"cvRedirectError", ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),), [
+	("error_handler",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),
+	("prev_userdata",		ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))),] )
+
+cvNulDevReport = _rpythonic_function_(		"cvNulDevReport", ctypes.c_int, [
+	("status",		ctypes.c_int),
+	("func_name",		ctypes.POINTER(ctypes.c_char)),
+	("err_msg",		ctypes.POINTER(ctypes.c_char)),
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("line",		ctypes.c_int),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvStdErrReport = _rpythonic_function_(		"cvStdErrReport", ctypes.c_int, [
+	("status",		ctypes.c_int),
+	("func_name",		ctypes.POINTER(ctypes.c_char)),
+	("err_msg",		ctypes.POINTER(ctypes.c_char)),
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("line",		ctypes.c_int),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvGuiBoxReport = _rpythonic_function_(		"cvGuiBoxReport", ctypes.c_int, [
+	("status",		ctypes.c_int),
+	("func_name",		ctypes.POINTER(ctypes.c_char)),
+	("err_msg",		ctypes.POINTER(ctypes.c_char)),
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("line",		ctypes.c_int),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvFontQt = _rpythonic_function_(		"cvFontQt", CvFont, [
+	("nameFont",		ctypes.POINTER(ctypes.c_char)),
+	("pointSize",		ctypes.c_int),
+	("color",		CvScalar),
+	("weight",		ctypes.c_int),
+	("style",		ctypes.c_int),
+	("spacing",		ctypes.c_int),] )
+
+cvAddText = _rpythonic_function_(		"cvAddText", ctypes.c_void_p, [
+	("img",		ctypes.POINTER(ctypes.c_void_p)),
+	("text",		ctypes.POINTER(ctypes.c_char)),
+	("org",		CvPoint),
+	("arg2",		ctypes.POINTER(CvFont)),] )
+
+cvDisplayOverlay = _rpythonic_function_(		"cvDisplayOverlay", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("text",		ctypes.POINTER(ctypes.c_char)),
+	("delayms",		ctypes.c_int),] )
+
+cvDisplayStatusBar = _rpythonic_function_(		"cvDisplayStatusBar", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("text",		ctypes.POINTER(ctypes.c_char)),
+	("delayms",		ctypes.c_int),] )
+
+CvOpenGLCallback = _rpythonic_function_(		"CvOpenGLCallback", ctypes.c_void_p, [("userdata",		ctypes.c_void_p)] )
+
+cvCreateOpenGLCallback = _rpythonic_function_(		"cvCreateOpenGLCallback", ctypes.c_void_p, [
+	("window_name",		ctypes.POINTER(ctypes.c_char)),
+	("callbackOpenGL",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),
+	("angle",		ctypes.c_double),
+	("zmin",		ctypes.c_double),
+	("zmax",		ctypes.c_double),] )
+
+cvSaveWindowParameters = _rpythonic_function_(		"cvSaveWindowParameters", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvLoadWindowParameters = _rpythonic_function_(		"cvLoadWindowParameters", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvStartLoop = _rpythonic_function_(		"cvStartLoop", ctypes.c_int, [
+	("pt2Func",		ctypes.c_void_p),
+	("argc",		ctypes.c_int),
+	("argv",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvStopLoop = _rpythonic_function_(		"cvStopLoop", ctypes.c_void_p, [] )
+
+pt2Func = _rpythonic_function_(		"pt2Func", ctypes.c_int, [
+	("argc",		ctypes.c_int),
+	("argv",		ctypes.POINTER(ctypes.c_char)),] )
+
+CvButtonCallback = _rpythonic_function_(		"CvButtonCallback", ctypes.c_void_p, [
+	("state",		ctypes.c_int),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvCreateButton = _rpythonic_function_(		"cvCreateButton", ctypes.c_int, [
+	("button_name",		ctypes.POINTER(ctypes.c_char)),
+	("on_change",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),
+	("button_type",		ctypes.c_int),
+	("initial_button_state",		ctypes.c_int),] )
+
+cvInitSystem = _rpythonic_function_(		"cvInitSystem", ctypes.c_int, [
+	("argc",		ctypes.c_int),
+	("argv",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),] )
+
+cvStartWindowThread = _rpythonic_function_(		"cvStartWindowThread", ctypes.c_int, [] )
+
+cvNamedWindow = _rpythonic_function_(		"cvNamedWindow", ctypes.c_int, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("flags",		ctypes.c_int),] )
+
+cvSetWindowProperty = _rpythonic_function_(		"cvSetWindowProperty", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("prop_id",		ctypes.c_int),
+	("prop_value",		ctypes.c_double),] )
+
+cvGetWindowProperty = _rpythonic_function_(		"cvGetWindowProperty", ctypes.c_double, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("prop_id",		ctypes.c_int),] )
+
+cvShowImage = _rpythonic_function_(		"cvShowImage", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("image",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvResizeWindow = _rpythonic_function_(		"cvResizeWindow", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("width",		ctypes.c_int),
+	("height",		ctypes.c_int),] )
+
+cvMoveWindow = _rpythonic_function_(		"cvMoveWindow", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("x",		ctypes.c_int),
+	("y",		ctypes.c_int),] )
+
+cvDestroyWindow = _rpythonic_function_(		"cvDestroyWindow", ctypes.c_void_p, [
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvDestroyAllWindows = _rpythonic_function_(		"cvDestroyAllWindows", ctypes.c_void_p, [] )
+
+cvGetWindowHandle = _rpythonic_function_(		"cvGetWindowHandle", ctypes.POINTER(ctypes.c_void_p), [
+	("name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvGetWindowName = _rpythonic_function_(		"cvGetWindowName", ctypes.POINTER(ctypes.c_char), [("window_handle",		ctypes.c_void_p)] )
+
+CvTrackbarCallback = _rpythonic_function_(		"CvTrackbarCallback", ctypes.c_void_p, [
+	("pos",		ctypes.c_int),] )
+
+cvCreateTrackbar = _rpythonic_function_(		"cvCreateTrackbar", ctypes.c_int, [
+	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
+	("window_name",		ctypes.POINTER(ctypes.c_char)),
+	("value",		ctypes.POINTER(ctypes.c_int)),
+	("count",		ctypes.c_int),
+	("on_change",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,)),] )
+
+CvTrackbarCallback2 = _rpythonic_function_(		"CvTrackbarCallback2", ctypes.c_void_p, [
+	("pos",		ctypes.c_int),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvCreateTrackbar2 = _rpythonic_function_(		"cvCreateTrackbar2", ctypes.c_int, [
+	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
+	("window_name",		ctypes.POINTER(ctypes.c_char)),
+	("value",		ctypes.POINTER(ctypes.c_int)),
+	("count",		ctypes.c_int),
+	("on_change",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
+	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvGetTrackbarPos = _rpythonic_function_(		"cvGetTrackbarPos", ctypes.c_int, [
+	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
+	("window_name",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvSetTrackbarPos = _rpythonic_function_(		"cvSetTrackbarPos", ctypes.c_void_p, [
+	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
+	("window_name",		ctypes.POINTER(ctypes.c_char)),
+	("pos",		ctypes.c_int),] )
+
+CvMouseCallback = _rpythonic_function_(		"CvMouseCallback", ctypes.c_void_p, [
+	("event",		ctypes.c_int),
+	("x",		ctypes.c_int),
+	("y",		ctypes.c_int),
+	("flags",		ctypes.c_int),
+	("param",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvSetMouseCallback = _rpythonic_function_(		"cvSetMouseCallback", ctypes.c_void_p, [
+	("window_name",		ctypes.POINTER(ctypes.c_char)),
+	("on_mouse",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,ctypes.c_int,ctypes.c_int,ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
+	("param",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvLoadImage = _rpythonic_function_(		"cvLoadImage", ctypes.POINTER(_IplImage), [
+	("filename",		ctypes.POINTER(ctypes.c_char)),
+	("iscolor",		ctypes.c_int),] )
+
+cvLoadImageM = _rpythonic_function_(		"cvLoadImageM", ctypes.POINTER(CvMat), [
+	("filename",		ctypes.POINTER(ctypes.c_char)),
+	("iscolor",		ctypes.c_int),] )
+
+cvSaveImage = _rpythonic_function_(		"cvSaveImage", ctypes.c_int, [
+	("filename",		ctypes.POINTER(ctypes.c_char)),
+	("image",		ctypes.POINTER(ctypes.c_void_p)),
+	("params",		ctypes.POINTER(ctypes.c_int)),] )
+
+cvDecodeImage = _rpythonic_function_(		"cvDecodeImage", ctypes.POINTER(_IplImage), [
+	("buf",		ctypes.POINTER(CvMat)),
+	("iscolor",		ctypes.c_int),] )
+
+cvDecodeImageM = _rpythonic_function_(		"cvDecodeImageM", ctypes.POINTER(CvMat), [
+	("buf",		ctypes.POINTER(CvMat)),
+	("iscolor",		ctypes.c_int),] )
+
+cvEncodeImage = _rpythonic_function_(		"cvEncodeImage", ctypes.POINTER(CvMat), [
+	("ext",		ctypes.POINTER(ctypes.c_char)),
+	("image",		ctypes.POINTER(ctypes.c_void_p)),
+	("params",		ctypes.POINTER(ctypes.c_int)),] )
+
+cvConvertImage = _rpythonic_function_(		"cvConvertImage", ctypes.c_void_p, [
+	("src",		ctypes.POINTER(ctypes.c_void_p)),
+	("dst",		ctypes.POINTER(ctypes.c_void_p)),
+	("flags",		ctypes.c_int),] )
+
+cvWaitKey = _rpythonic_function_(		"cvWaitKey", ctypes.c_int, [
+	("delay",		ctypes.c_int),] )
+
+cvCreateFileCapture = _rpythonic_function_(		"cvCreateFileCapture", ctypes.POINTER(CvCapture), [
+	("filename",		ctypes.POINTER(ctypes.c_char)),] )
+
+cvCreateCameraCapture = _rpythonic_function_(		"cvCreateCameraCapture", ctypes.POINTER(CvCapture), [
+	("index",		ctypes.c_int),] )
+
+cvGrabFrame = _rpythonic_function_(		"cvGrabFrame", ctypes.c_int, [
+	("capture",		ctypes.POINTER(CvCapture)),] )
+
+cvRetrieveFrame = _rpythonic_function_(		"cvRetrieveFrame", ctypes.POINTER(_IplImage), [
+	("capture",		ctypes.POINTER(CvCapture)),
+	("streamIdx",		ctypes.c_int),] )
+
+cvQueryFrame = _rpythonic_function_(		"cvQueryFrame", ctypes.POINTER(_IplImage), [
+	("capture",		ctypes.POINTER(CvCapture)),] )
+
+cvReleaseCapture = _rpythonic_function_(		"cvReleaseCapture", ctypes.c_void_p, [
+	("capture",		ctypes.POINTER(ctypes.POINTER(CvCapture))),] )
+
+cvGetCaptureProperty = _rpythonic_function_(		"cvGetCaptureProperty", ctypes.c_double, [
+	("capture",		ctypes.POINTER(CvCapture)),
+	("property_id",		ctypes.c_int),] )
+
+cvSetCaptureProperty = _rpythonic_function_(		"cvSetCaptureProperty", ctypes.c_int, [
+	("capture",		ctypes.POINTER(CvCapture)),
+	("property_id",		ctypes.c_int),
+	("value",		ctypes.c_double),] )
+
+cvGetCaptureDomain = _rpythonic_function_(		"cvGetCaptureDomain", ctypes.c_int, [
+	("capture",		ctypes.POINTER(CvCapture)),] )
+
+cvCreateVideoWriter = _rpythonic_function_(		"cvCreateVideoWriter", ctypes.POINTER(CvVideoWriter), [
+	("filename",		ctypes.POINTER(ctypes.c_char)),
+	("fourcc",		ctypes.c_int),
+	("fps",		ctypes.c_double),
+	("frame_size",		CvSize),
+	("is_color",		ctypes.c_int),] )
+
+cvWriteFrame = _rpythonic_function_(		"cvWriteFrame", ctypes.c_int, [
+	("writer",		ctypes.POINTER(CvVideoWriter)),
+	("image",		ctypes.POINTER(_IplImage)),] )
+
+cvReleaseVideoWriter = _rpythonic_function_(		"cvReleaseVideoWriter", ctypes.c_void_p, [
+	("writer",		ctypes.POINTER(ctypes.POINTER(CvVideoWriter))),] )
 
 cvCreateGraph = _rpythonic_function_(		"cvCreateGraph", ctypes.POINTER(CvGraph), [
 	("graph_flags",		ctypes.c_int),
@@ -2447,16 +2827,16 @@ cvInitMatNDHeader = _rpythonic_function_(		"cvInitMatNDHeader", ctypes.POINTER(C
 	("C_type",		ctypes.c_int),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-cvCreateSparseMat = _rpythonic_function_(		"cvCreateSparseMat", ctypes.POINTER(CvSparseMat), [
-	("dims",		ctypes.c_int),
-	("sizes",		ctypes.POINTER(ctypes.c_int)),
-	("C_type",		ctypes.c_int),] )
-
 cvCloneMatND = _rpythonic_function_(		"cvCloneMatND", ctypes.POINTER(CvMatND), [
 	("mat",		ctypes.POINTER(CvMatND)),] )
 
 cvReleaseSparseMat = _rpythonic_function_(		"cvReleaseSparseMat", ctypes.c_void_p, [
 	("mat",		ctypes.POINTER(ctypes.POINTER(CvSparseMat))),] )
+
+cvCreateSparseMat = _rpythonic_function_(		"cvCreateSparseMat", ctypes.POINTER(CvSparseMat), [
+	("dims",		ctypes.c_int),
+	("sizes",		ctypes.POINTER(ctypes.c_int)),
+	("C_type",		ctypes.c_int),] )
 
 cvInitSparseMatIterator = _rpythonic_function_(		"cvInitSparseMatIterator", ctypes.POINTER(CvSparseNode), [
 	("mat",		ctypes.POINTER(CvSparseMat)),
@@ -2496,386 +2876,6 @@ cvPtr2D = _rpythonic_function_(		"cvPtr2D", ctypes.POINTER(ctypes.c_ubyte), [
 	("idx0",		ctypes.c_int),
 	("idx1",		ctypes.c_int),
 	("C_type",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvGetFileNode = _rpythonic_function_(		"cvGetFileNode", ctypes.POINTER(CvFileNode), [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("map",		ctypes.POINTER(CvFileNode)),
-	("key",		ctypes.POINTER(CvStringHashNode)),
-	("create_missing",		ctypes.c_int),] )
-
-cvGetFileNodeByName = _rpythonic_function_(		"cvGetFileNodeByName", ctypes.POINTER(CvFileNode), [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("map",		ctypes.POINTER(CvFileNode)),
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvRead = _rpythonic_function_(		"cvRead", ctypes.POINTER(ctypes.c_void_p), [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("node",		ctypes.POINTER(CvFileNode)),
-	("attributes",		ctypes.POINTER(CvAttrList)),] )
-
-cvStartReadRawData = _rpythonic_function_(		"cvStartReadRawData", ctypes.c_void_p, [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("src",		ctypes.POINTER(CvFileNode)),
-	("reader",		ctypes.POINTER(CvSeqReader)),] )
-
-cvReadRawDataSlice = _rpythonic_function_(		"cvReadRawDataSlice", ctypes.c_void_p, [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("reader",		ctypes.POINTER(CvSeqReader)),
-	("count",		ctypes.c_int),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("dt",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvReadRawData = _rpythonic_function_(		"cvReadRawData", ctypes.c_void_p, [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("src",		ctypes.POINTER(CvFileNode)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("dt",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvWriteFileNode = _rpythonic_function_(		"cvWriteFileNode", ctypes.c_void_p, [
-	("fs",		ctypes.POINTER(CvFileStorage)),
-	("new_node_name",		ctypes.POINTER(ctypes.c_char)),
-	("node",		ctypes.POINTER(CvFileNode)),
-	("embed",		ctypes.c_int),] )
-
-cvGetFileNodeName = _rpythonic_function_(		"cvGetFileNodeName", ctypes.POINTER(ctypes.c_char), [
-	("node",		ctypes.POINTER(CvFileNode)),] )
-
-cvRegisterType = _rpythonic_function_(		"cvRegisterType", ctypes.c_void_p, [
-	("info",		ctypes.POINTER(CvTypeInfo)),] )
-
-cvUnregisterType = _rpythonic_function_(		"cvUnregisterType", ctypes.c_void_p, [
-	("type_name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvFirstType = _rpythonic_function_(		"cvFirstType", ctypes.POINTER(CvTypeInfo), [] )
-
-cvFindType = _rpythonic_function_(		"cvFindType", ctypes.POINTER(CvTypeInfo), [
-	("type_name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvTypeOf = _rpythonic_function_(		"cvTypeOf", ctypes.POINTER(CvTypeInfo), [("struct_ptr",		ctypes.c_void_p)] )
-
-cvRelease = _rpythonic_function_(		"cvRelease", ctypes.c_void_p, [("struct_ptr",		ctypes.c_void_p)] )
-
-cvClone = _rpythonic_function_(		"cvClone", ctypes.POINTER(ctypes.c_void_p), [("struct_ptr",		ctypes.c_void_p)] )
-
-cvSave = _rpythonic_function_(		"cvSave", ctypes.c_void_p, [
-	("filename",		ctypes.POINTER(ctypes.c_char)),
-	("struct_ptr",		ctypes.POINTER(ctypes.c_void_p)),
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("comment",		ctypes.POINTER(ctypes.c_char)),
-	("attributes",		CvAttrList),] )
-
-cvLoad = _rpythonic_function_(		"cvLoad", ctypes.POINTER(ctypes.c_void_p), [
-	("filename",		ctypes.POINTER(ctypes.c_char)),
-	("memstorage",		ctypes.POINTER(CvMemStorage)),
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("real_name",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),] )
-
-cvGetTickCount = _rpythonic_function_(		"cvGetTickCount", ctypes.c_int64, [] )
-
-cvGetTickFrequency = _rpythonic_function_(		"cvGetTickFrequency", ctypes.c_double, [] )
-
-cvCheckHardwareSupport = _rpythonic_function_(		"cvCheckHardwareSupport", ctypes.c_int, [
-	("feature",		ctypes.c_int),] )
-
-cvGetNumThreads = _rpythonic_function_(		"cvGetNumThreads", ctypes.c_int, [] )
-
-cvSetNumThreads = _rpythonic_function_(		"cvSetNumThreads", ctypes.c_void_p, [
-	("threads",		ctypes.c_int),] )
-
-cvGetThreadNum = _rpythonic_function_(		"cvGetThreadNum", ctypes.c_int, [] )
-
-cvGetErrStatus = _rpythonic_function_(		"cvGetErrStatus", ctypes.c_int, [] )
-
-cvSetErrStatus = _rpythonic_function_(		"cvSetErrStatus", ctypes.c_void_p, [
-	("status",		ctypes.c_int),] )
-
-cvGetErrMode = _rpythonic_function_(		"cvGetErrMode", ctypes.c_int, [] )
-
-cvSetErrMode = _rpythonic_function_(		"cvSetErrMode", ctypes.c_int, [
-	("mode",		ctypes.c_int),] )
-
-cvError = _rpythonic_function_(		"cvError", ctypes.c_void_p, [
-	("status",		ctypes.c_int),
-	("func_name",		ctypes.POINTER(ctypes.c_char)),
-	("err_msg",		ctypes.POINTER(ctypes.c_char)),
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("line",		ctypes.c_int),] )
-
-cvErrorStr = _rpythonic_function_(		"cvErrorStr", ctypes.POINTER(ctypes.c_char), [
-	("status",		ctypes.c_int),] )
-
-cvGetErrInfo = _rpythonic_function_(		"cvGetErrInfo", ctypes.c_int, [
-	("errcode_desc",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("description",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("filename",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("line",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvErrorFromIppStatus = _rpythonic_function_(		"cvErrorFromIppStatus", ctypes.c_int, [
-	("ipp_status",		ctypes.c_int),] )
-
-CvErrorCallback = _rpythonic_function_(		"CvErrorCallback", ctypes.c_int, [
-	("status",		ctypes.c_int),
-	("func_name",		ctypes.POINTER(ctypes.c_char)),
-	("err_msg",		ctypes.POINTER(ctypes.c_char)),
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("line",		ctypes.c_int),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvRedirectError = _rpythonic_function_(		"cvRedirectError", ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),), [
-	("error_handler",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int,ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),
-	("prev_userdata",		ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))),] )
-
-cvNulDevReport = _rpythonic_function_(		"cvNulDevReport", ctypes.c_int, [
-	("status",		ctypes.c_int),
-	("func_name",		ctypes.POINTER(ctypes.c_char)),
-	("err_msg",		ctypes.POINTER(ctypes.c_char)),
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("line",		ctypes.c_int),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvStdErrReport = _rpythonic_function_(		"cvStdErrReport", ctypes.c_int, [
-	("status",		ctypes.c_int),
-	("func_name",		ctypes.POINTER(ctypes.c_char)),
-	("err_msg",		ctypes.POINTER(ctypes.c_char)),
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("line",		ctypes.c_int),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvGuiBoxReport = _rpythonic_function_(		"cvGuiBoxReport", ctypes.c_int, [
-	("status",		ctypes.c_int),
-	("func_name",		ctypes.POINTER(ctypes.c_char)),
-	("err_msg",		ctypes.POINTER(ctypes.c_char)),
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("line",		ctypes.c_int),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvFontQt = _rpythonic_function_(		"cvFontQt", CvFont, [
-	("nameFont",		ctypes.POINTER(ctypes.c_char)),
-	("pointSize",		ctypes.c_int),
-	("color",		CvScalar),
-	("weight",		ctypes.c_int),
-	("style",		ctypes.c_int),
-	("spacing",		ctypes.c_int),] )
-
-cvAddText = _rpythonic_function_(		"cvAddText", ctypes.c_void_p, [
-	("img",		ctypes.POINTER(ctypes.c_void_p)),
-	("text",		ctypes.POINTER(ctypes.c_char)),
-	("org",		CvPoint),
-	("arg2",		ctypes.POINTER(CvFont)),] )
-
-cvDisplayOverlay = _rpythonic_function_(		"cvDisplayOverlay", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("text",		ctypes.POINTER(ctypes.c_char)),
-	("delayms",		ctypes.c_int),] )
-
-cvDisplayStatusBar = _rpythonic_function_(		"cvDisplayStatusBar", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("text",		ctypes.POINTER(ctypes.c_char)),
-	("delayms",		ctypes.c_int),] )
-
-CvOpenGLCallback = _rpythonic_function_(		"CvOpenGLCallback", ctypes.c_void_p, [("userdata",		ctypes.c_void_p)] )
-
-cvCreateOpenGLCallback = _rpythonic_function_(		"cvCreateOpenGLCallback", ctypes.c_void_p, [
-	("window_name",		ctypes.POINTER(ctypes.c_char)),
-	("callbackOpenGL",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),
-	("angle",		ctypes.c_double),
-	("zmin",		ctypes.c_double),
-	("zmax",		ctypes.c_double),] )
-
-cvSaveWindowParameters = _rpythonic_function_(		"cvSaveWindowParameters", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvLoadWindowParameters = _rpythonic_function_(		"cvLoadWindowParameters", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvStartLoop = _rpythonic_function_(		"cvStartLoop", ctypes.c_int, [
-	("pt2Func",		ctypes.c_void_p),
-	("argc",		ctypes.c_int),
-	("argv",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvStopLoop = _rpythonic_function_(		"cvStopLoop", ctypes.c_void_p, [] )
-
-pt2Func = _rpythonic_function_(		"pt2Func", ctypes.c_int, [
-	("argc",		ctypes.c_int),
-	("argv",		ctypes.POINTER(ctypes.c_char)),] )
-
-CvButtonCallback = _rpythonic_function_(		"CvButtonCallback", ctypes.c_void_p, [
-	("state",		ctypes.c_int),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvCreateButton = _rpythonic_function_(		"cvCreateButton", ctypes.c_int, [
-	("button_name",		ctypes.POINTER(ctypes.c_char)),
-	("on_change",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),
-	("button_type",		ctypes.c_int),
-	("initial_button_state",		ctypes.c_int),] )
-
-cvInitSystem = _rpythonic_function_(		"cvInitSystem", ctypes.c_int, [
-	("argc",		ctypes.c_int),
-	("argv",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),] )
-
-cvStartWindowThread = _rpythonic_function_(		"cvStartWindowThread", ctypes.c_int, [] )
-
-cvNamedWindow = _rpythonic_function_(		"cvNamedWindow", ctypes.c_int, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("flags",		ctypes.c_int),] )
-
-cvSetWindowProperty = _rpythonic_function_(		"cvSetWindowProperty", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("prop_id",		ctypes.c_int),
-	("prop_value",		ctypes.c_double),] )
-
-cvGetWindowProperty = _rpythonic_function_(		"cvGetWindowProperty", ctypes.c_double, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("prop_id",		ctypes.c_int),] )
-
-cvShowImage = _rpythonic_function_(		"cvShowImage", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("image",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvResizeWindow = _rpythonic_function_(		"cvResizeWindow", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("width",		ctypes.c_int),
-	("height",		ctypes.c_int),] )
-
-cvMoveWindow = _rpythonic_function_(		"cvMoveWindow", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("x",		ctypes.c_int),
-	("y",		ctypes.c_int),] )
-
-cvDestroyWindow = _rpythonic_function_(		"cvDestroyWindow", ctypes.c_void_p, [
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvDestroyAllWindows = _rpythonic_function_(		"cvDestroyAllWindows", ctypes.c_void_p, [] )
-
-cvGetWindowHandle = _rpythonic_function_(		"cvGetWindowHandle", ctypes.POINTER(ctypes.c_void_p), [
-	("name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvGetWindowName = _rpythonic_function_(		"cvGetWindowName", ctypes.POINTER(ctypes.c_char), [("window_handle",		ctypes.c_void_p)] )
-
-CvTrackbarCallback = _rpythonic_function_(		"CvTrackbarCallback", ctypes.c_void_p, [
-	("pos",		ctypes.c_int),] )
-
-cvCreateTrackbar = _rpythonic_function_(		"cvCreateTrackbar", ctypes.c_int, [
-	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
-	("window_name",		ctypes.POINTER(ctypes.c_char)),
-	("value",		ctypes.POINTER(ctypes.c_int)),
-	("count",		ctypes.c_int),
-	("on_change",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,)),] )
-
-CvTrackbarCallback2 = _rpythonic_function_(		"CvTrackbarCallback2", ctypes.c_void_p, [
-	("pos",		ctypes.c_int),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvCreateTrackbar2 = _rpythonic_function_(		"cvCreateTrackbar2", ctypes.c_int, [
-	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
-	("window_name",		ctypes.POINTER(ctypes.c_char)),
-	("value",		ctypes.POINTER(ctypes.c_int)),
-	("count",		ctypes.c_int),
-	("on_change",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
-	("userdata",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvGetTrackbarPos = _rpythonic_function_(		"cvGetTrackbarPos", ctypes.c_int, [
-	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
-	("window_name",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvSetTrackbarPos = _rpythonic_function_(		"cvSetTrackbarPos", ctypes.c_void_p, [
-	("trackbar_name",		ctypes.POINTER(ctypes.c_char)),
-	("window_name",		ctypes.POINTER(ctypes.c_char)),
-	("pos",		ctypes.c_int),] )
-
-CvMouseCallback = _rpythonic_function_(		"CvMouseCallback", ctypes.c_void_p, [
-	("event",		ctypes.c_int),
-	("x",		ctypes.c_int),
-	("y",		ctypes.c_int),
-	("flags",		ctypes.c_int),
-	("param",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvSetMouseCallback = _rpythonic_function_(		"cvSetMouseCallback", ctypes.c_void_p, [
-	("window_name",		ctypes.POINTER(ctypes.c_char)),
-	("on_mouse",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,ctypes.c_int,ctypes.c_int,ctypes.c_int,ctypes.POINTER(ctypes.c_void_p),)),
-	("param",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvLoadImage = _rpythonic_function_(		"cvLoadImage", ctypes.POINTER(_IplImage), [
-	("filename",		ctypes.POINTER(ctypes.c_char)),
-	("iscolor",		ctypes.c_int),] )
-
-cvLoadImageM = _rpythonic_function_(		"cvLoadImageM", ctypes.POINTER(CvMat), [
-	("filename",		ctypes.POINTER(ctypes.c_char)),
-	("iscolor",		ctypes.c_int),] )
-
-cvSaveImage = _rpythonic_function_(		"cvSaveImage", ctypes.c_int, [
-	("filename",		ctypes.POINTER(ctypes.c_char)),
-	("image",		ctypes.POINTER(ctypes.c_void_p)),
-	("params",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvDecodeImage = _rpythonic_function_(		"cvDecodeImage", ctypes.POINTER(_IplImage), [
-	("buf",		ctypes.POINTER(CvMat)),
-	("iscolor",		ctypes.c_int),] )
-
-cvDecodeImageM = _rpythonic_function_(		"cvDecodeImageM", ctypes.POINTER(CvMat), [
-	("buf",		ctypes.POINTER(CvMat)),
-	("iscolor",		ctypes.c_int),] )
-
-cvEncodeImage = _rpythonic_function_(		"cvEncodeImage", ctypes.POINTER(CvMat), [
-	("ext",		ctypes.POINTER(ctypes.c_char)),
-	("image",		ctypes.POINTER(ctypes.c_void_p)),
-	("params",		ctypes.POINTER(ctypes.c_int)),] )
-
-cvConvertImage = _rpythonic_function_(		"cvConvertImage", ctypes.c_void_p, [
-	("src",		ctypes.POINTER(ctypes.c_void_p)),
-	("dst",		ctypes.POINTER(ctypes.c_void_p)),
-	("flags",		ctypes.c_int),] )
-
-cvWaitKey = _rpythonic_function_(		"cvWaitKey", ctypes.c_int, [
-	("delay",		ctypes.c_int),] )
-
-cvCreateFileCapture = _rpythonic_function_(		"cvCreateFileCapture", ctypes.POINTER(CvCapture), [
-	("filename",		ctypes.POINTER(ctypes.c_char)),] )
-
-cvCreateCameraCapture = _rpythonic_function_(		"cvCreateCameraCapture", ctypes.POINTER(CvCapture), [
-	("index",		ctypes.c_int),] )
-
-cvGrabFrame = _rpythonic_function_(		"cvGrabFrame", ctypes.c_int, [
-	("capture",		ctypes.POINTER(CvCapture)),] )
-
-cvRetrieveFrame = _rpythonic_function_(		"cvRetrieveFrame", ctypes.POINTER(_IplImage), [
-	("capture",		ctypes.POINTER(CvCapture)),
-	("streamIdx",		ctypes.c_int),] )
-
-cvQueryFrame = _rpythonic_function_(		"cvQueryFrame", ctypes.POINTER(_IplImage), [
-	("capture",		ctypes.POINTER(CvCapture)),] )
-
-cvReleaseCapture = _rpythonic_function_(		"cvReleaseCapture", ctypes.c_void_p, [
-	("capture",		ctypes.POINTER(ctypes.POINTER(CvCapture))),] )
-
-cvGetCaptureProperty = _rpythonic_function_(		"cvGetCaptureProperty", ctypes.c_double, [
-	("capture",		ctypes.POINTER(CvCapture)),
-	("property_id",		ctypes.c_int),] )
-
-cvSetCaptureProperty = _rpythonic_function_(		"cvSetCaptureProperty", ctypes.c_int, [
-	("capture",		ctypes.POINTER(CvCapture)),
-	("property_id",		ctypes.c_int),
-	("value",		ctypes.c_double),] )
-
-cvGetCaptureDomain = _rpythonic_function_(		"cvGetCaptureDomain", ctypes.c_int, [
-	("capture",		ctypes.POINTER(CvCapture)),] )
-
-cvCreateVideoWriter = _rpythonic_function_(		"cvCreateVideoWriter", ctypes.POINTER(CvVideoWriter), [
-	("filename",		ctypes.POINTER(ctypes.c_char)),
-	("fourcc",		ctypes.c_int),
-	("fps",		ctypes.c_double),
-	("frame_size",		CvSize),
-	("is_color",		ctypes.c_int),] )
-
-cvReleaseVideoWriter = _rpythonic_function_(		"cvReleaseVideoWriter", ctypes.c_void_p, [
-	("writer",		ctypes.POINTER(ctypes.POINTER(CvVideoWriter))),] )
-
-cvWriteFrame = _rpythonic_function_(		"cvWriteFrame", ctypes.c_int, [
-	("writer",		ctypes.POINTER(CvVideoWriter)),
-	("image",		ctypes.POINTER(_IplImage)),] )
 
 cvSolvePoly = _rpythonic_function_(		"cvSolvePoly", ctypes.c_void_p, [
 	("coeffs",		ctypes.POINTER(CvMat)),
@@ -2984,21 +2984,10 @@ cvCalcCovarMatrix = _rpythonic_function_(		"cvCalcCovarMatrix", ctypes.c_void_p,
 
 cvSum = _rpythonic_function_(		"cvSum", CvScalar, [("arr",		ctypes.c_void_p)] )
 
-cvProjectPCA = _rpythonic_function_(		"cvProjectPCA", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("mean",		ctypes.POINTER(ctypes.c_void_p)),
-	("eigenvects",		ctypes.POINTER(ctypes.c_void_p)),
-	("result",		ctypes.POINTER(ctypes.c_void_p)),] )
-
 cvCountNonZero = _rpythonic_function_(		"cvCountNonZero", ctypes.c_int, [("arr",		ctypes.c_void_p)] )
 
-cvMahalanobis = _rpythonic_function_(		"cvMahalanobis", ctypes.c_double, [
-	("vec1",		ctypes.POINTER(ctypes.c_void_p)),
-	("vec2",		ctypes.POINTER(ctypes.c_void_p)),
-	("mat",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-cvBackProjectPCA = _rpythonic_function_(		"cvBackProjectPCA", ctypes.c_void_p, [
-	("proj",		ctypes.POINTER(ctypes.c_void_p)),
+cvProjectPCA = _rpythonic_function_(		"cvProjectPCA", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
 	("mean",		ctypes.POINTER(ctypes.c_void_p)),
 	("eigenvects",		ctypes.POINTER(ctypes.c_void_p)),
 	("result",		ctypes.POINTER(ctypes.c_void_p)),] )
@@ -3009,6 +2998,17 @@ cvCalcPCA = _rpythonic_function_(		"cvCalcPCA", ctypes.c_void_p, [
 	("eigenvals",		ctypes.POINTER(ctypes.c_void_p)),
 	("eigenvects",		ctypes.POINTER(ctypes.c_void_p)),
 	("flags",		ctypes.c_int),] )
+
+cvBackProjectPCA = _rpythonic_function_(		"cvBackProjectPCA", ctypes.c_void_p, [
+	("proj",		ctypes.POINTER(ctypes.c_void_p)),
+	("mean",		ctypes.POINTER(ctypes.c_void_p)),
+	("eigenvects",		ctypes.POINTER(ctypes.c_void_p)),
+	("result",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+cvMahalanobis = _rpythonic_function_(		"cvMahalanobis", ctypes.c_double, [
+	("vec1",		ctypes.POINTER(ctypes.c_void_p)),
+	("vec2",		ctypes.POINTER(ctypes.c_void_p)),
+	("mat",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 cvAvg = _rpythonic_function_(		"cvAvg", CvScalar, [
 	("arr",		ctypes.POINTER(ctypes.c_void_p)),
@@ -3185,15 +3185,6 @@ cvStartReadSeq = _rpythonic_function_(		"cvStartReadSeq", ctypes.c_void_p, [
 cvGetSeqReaderPos = _rpythonic_function_(		"cvGetSeqReaderPos", ctypes.c_int, [
 	("reader",		ctypes.POINTER(CvSeqReader)),] )
 
-cvMakeSeqHeaderForArray = _rpythonic_function_(		"cvMakeSeqHeaderForArray", ctypes.POINTER(CvSeq), [
-	("seq_type",		ctypes.c_int),
-	("header_size",		ctypes.c_int),
-	("elem_size",		ctypes.c_int),
-	("elements",		ctypes.POINTER(ctypes.c_void_p)),
-	("total",		ctypes.c_int),
-	("seq",		ctypes.POINTER(CvSeq)),
-	("block",		ctypes.POINTER(CvSeqBlock)),] )
-
 cvSetSeqReaderPos = _rpythonic_function_(		"cvSetSeqReaderPos", ctypes.c_void_p, [
 	("reader",		ctypes.POINTER(CvSeqReader)),
 	("index",		ctypes.c_int),
@@ -3203,6 +3194,15 @@ cvCvtSeqToArray = _rpythonic_function_(		"cvCvtSeqToArray", ctypes.POINTER(ctype
 	("seq",		ctypes.POINTER(CvSeq)),
 	("elements",		ctypes.POINTER(ctypes.c_void_p)),
 	("slice",		CvSlice),] )
+
+cvMakeSeqHeaderForArray = _rpythonic_function_(		"cvMakeSeqHeaderForArray", ctypes.POINTER(CvSeq), [
+	("seq_type",		ctypes.c_int),
+	("header_size",		ctypes.c_int),
+	("elem_size",		ctypes.c_int),
+	("elements",		ctypes.POINTER(ctypes.c_void_p)),
+	("total",		ctypes.c_int),
+	("seq",		ctypes.POINTER(CvSeq)),
+	("block",		ctypes.POINTER(CvSeqBlock)),] )
 
 cvSeqSlice = _rpythonic_function_(		"cvSeqSlice", ctypes.POINTER(CvSeq), [
 	("seq",		ctypes.POINTER(CvSeq)),

@@ -484,7 +484,7 @@ def _rpythonic_make_nice_global_enums_():
 def _rpythonic_clean_up_missing_functions_():
 	G = globals()
 	for f in RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES:
-		G.pop( f ); print('FAILED',f)
+		G.pop( f )
 	print( "C functions loaded: %s" %len(RPYTHONIC_WRAPPER_FUNCTIONS) )
 	print( "C functions failed: %s" %len(RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES) )
 

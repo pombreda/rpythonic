@@ -261,17 +261,11 @@ IplImage.Convert = lambda a, b: cvConvertScale( a, b, 1.0, 0.0 )
 	defines = []
 	rpythonic.wrap(
 		'opencv_highgui',
+		library_names=['opencv_highgui'],
 		defines = ['_MMINTRIN_H_INCLUDED', '_XMMINTRIN_H_INCLUDED', '_EMMINTRIN_H_INCLUDED'],
 		header='/usr/include/opencv2/highgui/highgui_c.h',
 		strip_prefixes = ['cv'],
 	)
-
-#if '--opencvaux' in sys.argv or ALL:
-#	rpythonic.wrap( 
-#		'cvaux', 
-#		header='/usr/include/opencv/cvaux.h', 
-#		strip_prefixes = ['cv'],
-#	)
 
 
 if '--openal' in sys.argv or ALL:

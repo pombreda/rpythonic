@@ -1,21 +1,10 @@
 #!/usr/bin/python
-# may5th 2011, test ported to ctypes opencv
-import os,sys, time
+import os,sys, time, ctypes
+import opencv_core as cv
+import opencv_highgui as gui
 
-if '..' not in sys.path: sys.path.append( '..' )
-import rpythonic
-
-cv = rpythonic.module( 'cv', globals() )
-assert cv
-gui = rpythonic.module( 'highgui', globals() )
-assert gui
-
-
-#! /usr/bin/env python
 from random import Random
 import colorsys
-
-print "OpenCV Python version of drawing"
 
 
 vec4 = ctypes.c_double * 4
@@ -26,7 +15,7 @@ def random_color(random):
     """
     icolor = random.randint(0, 0xFFFFFF)
     d = vec4( icolor & 0xff, (icolor >> 8) & 0xff, (icolor >> 16) & 0xff )
-    return cv.Scalar(d)().contents
+    return cv.Scalar(d)
 
 if __name__ == '__main__':
 
@@ -40,12 +29,12 @@ if __name__ == '__main__':
     
     # create the source image
     print( 'creating image' )
-    image = cvCreateImage( (width, height), 8, 3)
+    image = cv.CreateImage( (width, height), 8, 3)
 
     # create window and display the original picture in it
-    cvNamedWindow(window_name, 1); print( window_name )
-    cvSetZero(image)
-    cvShowImage(window_name, image() )
+    gui.NamedWindow(window_name, 1); print( window_name )
+    cv.SetZero(image)
+    gui.ShowImage(window_name, image )
 
     # create the random number
     random = Random()
@@ -56,7 +45,7 @@ if __name__ == '__main__':
                           random.randrange(-height, 2 * height))
         pt2 =  cv.Point(random.randrange(-width, 2 * width),
                           random.randrange(-height, 2 * height))
-        cv.Line(image, pt1().contents, pt2().contents,
+        cv.Line(image, pt1, pt2,
                    random_color(random),
                    random.randrange(0, 10),
                    line_type, 0)

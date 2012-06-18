@@ -1,14 +1,8 @@
 #!/usr/bin/python
-# may5th 2011, test ported to ctypes opencv
+# June 2012, test ported to opencv2
 import os,sys, time
-
-if '..' not in sys.path: sys.path.append( '..' )
-import rpythonic
-
-cv = rpythonic.module( 'cv' )
-assert cv
-gui = rpythonic.module( 'highgui' )
-assert gui
+import opencv_core as cv
+import opencv_highgui as gui
 
 class Camera(object):
 	def __init__(self):
