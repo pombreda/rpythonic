@@ -1893,6 +1893,10 @@ def make_pycparser_compatible( data ):
 		## final hacks ##
 		if line.endswith('__attribute__;'): line = line.replace('__attribute__;',';')
 
+		if line.endswith('__attribute__ ((__nothrow__));'): line = line.replace('__attribute__ ((__nothrow__));',';')
+		elif line.endswith('__attribute__ ((__nothrow__)) __attribute__ ((__const__));'): line = line.replace('__attribute__ ((__nothrow__)) __attribute__ ((__const__));',';')
+
+
 		#######################
 		d += line + '\n'
 	return d

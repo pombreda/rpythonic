@@ -117,4 +117,37 @@ for func in _RETURNS_CHARP_:
 	)
 
 
+if '--nautilus' in sys.argv:
+	# sudo yum install eel2-devel nautilus-devel
+	# and get source code from git #
+	# sudo yum install libxml2-devel
+
+	headers = []
+	for path in ('../../nautilus/src', '../../nautilus/libnautilus-private','../../nautilus/libnautilus-extension'):
+		for name in os.listdir( path ):
+			if name.endswith('.h'):
+				if name == 'nautilus-undo-private.h': continue
+				if name == 'nautilus-extension-i18n.h': continue
+				if name == 'nautilus-window.h': continue
+				if name == 'nautilus-list-view-private.h': continue
+				if name == 'nautilus-debug.h': continue
+
+				headers.append( os.path.join(path,name) )
+	print('---------------------NAUTILUS HEADERS------------------------')
+	headers.sort()
+	for name in headers: print(name)
+
+	includes = ['/usr/include/libxml2', '../../nautilus', '../../nautilus/src', '../../nautilus/libnautilus-extension', '../../nautilus/libnautilus-private']
+
+	rpythonic.wrap( 'libnautilus', 
+		header='../../nautilus/src/nautilus-window.h',
+		insert_headers = headers,
+		includes=[
+			'/usr/include/gtk-3.0/',
+			] + GINCLUDE + includes,
+		ctypes_footer= glibfooter + gtkfooter,
+		strip_prefixes = ['GTK_', 'gtk_'],
+	)
+
+
 

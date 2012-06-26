@@ -5,6 +5,8 @@ import os, sys, time, ctypes
 import openGL as gl
 import xlib as X
 
+print( 'X threads init', X.InitThreads() )
+
 display = X.OpenDisplay()
 print(display)
 
