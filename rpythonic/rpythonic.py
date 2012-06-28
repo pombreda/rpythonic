@@ -2,7 +2,7 @@
 # RPythonic - June, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8f'
+VERSION = '0.4.8g'
 
 _doc_ = '''
 NAME
@@ -1021,12 +1021,13 @@ class Enum( SomeThing ):		# an enum can be nameless
 	def _parse_constant( self, const ):
 		value = const.value.strip()
 		if const.type in 'int long'.split():
-			if value.startswith('0x'):
-				try: return int(value, 16)
-				except: return int( value, 34 )	# base 2-36, is '0x0FFFFFFFU' base 34?
-
-			elif value.endswith('U'): return int(value[:-1])	# what is ending with U?
+			unsigned = False
+			if value.endswith('U'):
+				unsigned = True
+				value = value[ :-1 ]
+			if value.startswith('0x'): return int(value, 16)
 			else: return int( value )
+
 		elif const.type in 'float double'.split():
 			if value.lower().endswith('f'): value = value[:-1]
 			return float( value )

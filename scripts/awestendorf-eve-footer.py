@@ -1,9 +1,8 @@
 '''
 Copyright 2011, Aaron Westendorf, All Rights Reserved.
-
 https://github.com/awestendorf/eve/blob/master/LICENSE
-
 Copyright (c) 2011 Aaron Westendorf
+Updated June 2012 by Brett for libev-4.11
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -24,21 +23,9 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 Define the constants used from libev/ev.h in ev.c. The case is preserved.
-
-Spec'd to libev-4.04. Attempted to use documentation straight from libev for
-structs.
+Spec'd to libev-4.04. Attempted to use documentation straight from libev for structs.
 '''
-
-#from ctypes import *
-
-###
-### Typedefs
-###
 ev_tstamp = ctypes.c_double
-
-###
-### Structs
-###
 
 class ev_loop(ctypes.Structure):
   '''
@@ -64,12 +51,7 @@ class ev_watcher(ctypes.Structure):
     ('pending', ctypes.c_int),
     ('priority', ctypes.c_int),  # TODO: handle "#if EV_MINPRI == EV_MAXPRI"
     ('data', ctypes.c_void_p),
-
-    # TODO: make this real. It must be noted that the "ev_watcher" arg is 
-    # strongly typed for each of the ev_watcher subclasses defined below.
-    # libev does this by using macros, but we need to dynamically assign it.
-    # however, the address needs to be here for the struct to be compatible.
-    ('cb', ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(ev_loop), ctypes.POINTER(_ev_watcher), ctypes.c_int,))#"void (*cb)(struct ev_loop *loop, struct ev_watcher *w, int revents);)"), # TODO: make this real
+    ('cb', ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(ev_loop), ctypes.POINTER(_ev_watcher), ctypes.c_int,))
   ]
 
 # TODO: Determine if subclassing structs combines the _fields_ parameter
@@ -113,7 +95,7 @@ class ev_periodic(ctypes.Structure):
   _fields_ = ev_watcher_time._fields_ + [
     ('offset', ev_tstamp), # rw
     ('interval', ev_tstamp), # rw
-    ('callback', ctypes.CFUNCTYPE(ev_tstamp, ctypes.c_void_p, ev_tstamp))#'ev_tstamp (*reschedule_cb)(struct ev_periodic *w, ev_tstamp now); /* rw */') # rw TODO: make real
+    ('callback', ctypes.CFUNCTYPE(ev_tstamp, ctypes.c_void_p, ev_tstamp))
   ]
 
 class ev_signal(ctypes.Structure):
@@ -184,14 +166,12 @@ class ev_stat(ctypes.Structure):
     ('wd', ctypes.c_int), # wd for inotify, fd for kqueue 
   ]
 
-#if EV_IDLE_ENABLE
 class ev_idle(ctypes.Structure):
   '''
   invoked when the nothing else needs to be done, keeps the process from blocking
   revent EV_IDLE
   '''
   _fields_ = ev_watcher._fields_[:]
-#endif
 
 class ev_prepare(ctypes.Structure):
   '''
@@ -215,18 +195,14 @@ class ev_fork(ctypes.Structure):
   revent EV_FORK
   '''
   _fields_ = ev_watcher._fields_[:]
-#endif
 
-#if EV_CLEANUP_ENABLE
 class ev_cleanup(ctypes.Structure):
   '''
   is invoked just before the loop gets destroyed
   revent EV_CLEANUP
   '''
   _fields_ = ev_watcher._fields_[:]
-#endif
 
-#if EV_EMBED_ENABLE
 class ev_embed(ctypes.Structure):
   '''
   used to embed an event loop inside another
@@ -242,6 +218,20 @@ class ev_embed(ctypes.Structure):
     ('idle', ev_idle), # unused
     ('fork', ev_fork), # private
     ('cleanup', ev_cleanup), # unused
-    ]
+  ]
 
+#############################################
+
+def ev_init(watcher, callback):
+	watcher.active = 0
+	watcher.pending = 0
+	cfunctype = ev_watcher._fields_[-1][-1]
+	watcher.cb = cfunctype( callback )
+init = ev_init
+
+def ev_stat_init( watcher, callback, path, interval=0.0 ):
+	ev_init( watcher, callback )
+	watcher.path = path
+	watcher.interval = interval
+stat_init = ev_stat_init
 
