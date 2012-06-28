@@ -466,6 +466,17 @@ if '--mono' in sys.argv or ALL:
 	)
 
 
+# gevent is moving from libevent to libev
+# http://dist.schmorp.de/libev/libev-4.11.tar.gz
+if '--libev' in sys.argv or ALL:
+	rpythonic.wrap( 'libev', 
+		header='/usr/local/include/ev.h',
+		library_names=['libev'],
+		strip_prefixes = ['ev_', 'EV_'],
+	)
+
+
+
 if '--test' in sys.argv:
 	rpythonic.wrap( 'testing', 
 		header='./test.h',
