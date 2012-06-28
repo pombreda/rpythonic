@@ -465,7 +465,7 @@ if '--mono' in sys.argv or ALL:
 		insert_headers = pynet,
 	)
 
-
+# moving to: http://code.google.com/p/pyev-ctypes/
 # gevent is moving from libevent to libev
 # http://dist.schmorp.de/libev/libev-4.11.tar.gz
 if '--libev' in sys.argv or ALL:
@@ -473,10 +473,16 @@ if '--libev' in sys.argv or ALL:
 		header='/usr/local/include/ev.h',
 		library_names=['libev'],
 		strip_prefixes = ['ev_', 'EV_'],
-		ctypes_footer = open('awestendorf-eve-footer.py','rb').read(),
+		#ctypes_footer = open('awestendorf-eve-footer.py','rb').read(),
 	)
 
-
+#http://c-ares.haxx.se/download/c-ares-1.9.1.tar.gz
+if '--cares' in sys.argv or ALL:
+	rpythonic.wrap( 'cares', 
+		header='/usr/local/include/ares.h',
+		library_names=['libcares'],
+		strip_prefixes = ['ares_', 'ARES_'],
+	)
 
 if '--test' in sys.argv:
 	rpythonic.wrap( 'testing', 
