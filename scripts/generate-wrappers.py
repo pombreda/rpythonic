@@ -473,6 +473,7 @@ if '--libev' in sys.argv or ALL:
 		header='/usr/local/include/ev.h',
 		library_names=['libev'],
 		strip_prefixes = ['ev_', 'EV_'],
+		ctypes_footer = open('awestendorf-eve-footer.py','rb').read(),
 	)
 
 

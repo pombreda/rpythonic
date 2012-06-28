@@ -766,9 +766,6 @@ SI_QUEUE = -1
 SI_USER = 0 
 SI_KERNEL = 128 
 
-SS_ONSTACK = 1 
-SS_DISABLE = 2 
-
 ILL_ILLOPC = 1 
 ILL_ILLOPN = 2 
 ILL_ILLADR = 3 
@@ -816,6 +813,9 @@ SIGEV_NONE = 1
 SIGEV_THREAD = 2 
 SIGEV_THREAD_ID = 4 
 
+SS_ONSTACK = 1 
+SS_DISABLE = 2 
+
 EVRUN_NOWAIT = 1 
 EVRUN_ONCE = 2 
 
@@ -844,7 +844,6 @@ EVBACKEND_MASK = 2003660781945792
 RPYTHONIC_GLOBAL_ENUMS = { 
  "EV_UNDEF" : 4294967295,  "EV_NONE" : 0,  "EV_READ" : 1,  "EV_WRITE" : 2,  "EV__IOFDSET" : 128,  "EV_IO" : 1,  "EV_TIMER" : 256,  "EV_TIMEOUT" : 256,  "EV_PERIODIC" : 512,  "EV_SIGNAL" : 1024,  "EV_CHILD" : 2048,  "EV_STAT" : 4096,  "EV_IDLE" : 8192,  "EV_PREPARE" : 16384,  "EV_CHECK" : 32768,  "EV_EMBED" : 65536,  "EV_FORK" : 131072,  "EV_CLEANUP" : 262144,  "EV_ASYNC" : 524288,  "EV_CUSTOM" : 16777216,  "EV_ERROR" : 2147483648, 
  "SI_ASYNCNL" : -60,  "SI_TKILL" : -6,  "SI_SIGIO" : -5,  "SI_ASYNCIO" : -4,  "SI_MESGQ" : -3,  "SI_TIMER" : -2,  "SI_QUEUE" : -1,  "SI_USER" : 0,  "SI_KERNEL" : 128, 
- "SS_ONSTACK" : 1,  "SS_DISABLE" : 2, 
  "ILL_ILLOPC" : 1,  "ILL_ILLOPN" : 2,  "ILL_ILLADR" : 3,  "ILL_ILLTRP" : 4,  "ILL_PRVOPC" : 5,  "ILL_PRVREG" : 6,  "ILL_COPROC" : 7,  "ILL_BADSTK" : 8, 
  "FPE_INTDIV" : 1,  "FPE_INTOVF" : 2,  "FPE_FLTDIV" : 3,  "FPE_FLTOVF" : 4,  "FPE_FLTUND" : 5,  "FPE_FLTRES" : 6,  "FPE_FLTINV" : 7,  "FPE_FLTSUB" : 8, 
  "SEGV_MAPERR" : 1,  "SEGV_ACCERR" : 2, 
@@ -853,6 +852,7 @@ RPYTHONIC_GLOBAL_ENUMS = {
  "CLD_EXITED" : 1,  "CLD_KILLED" : 2,  "CLD_DUMPED" : 3,  "CLD_TRAPPED" : 4,  "CLD_STOPPED" : 5,  "CLD_CONTINUED" : 6, 
  "POLL_IN" : 1,  "POLL_OUT" : 2,  "POLL_MSG" : 3,  "POLL_ERR" : 4,  "POLL_PRI" : 5,  "POLL_HUP" : 6, 
  "SIGEV_SIGNAL" : 0,  "SIGEV_NONE" : 1,  "SIGEV_THREAD" : 2,  "SIGEV_THREAD_ID" : 4, 
+ "SS_ONSTACK" : 1,  "SS_DISABLE" : 2, 
  "EVRUN_NOWAIT" : 1,  "EVRUN_ONCE" : 2, 
  "EVBREAK_CANCEL" : 0,  "EVBREAK_ONE" : 1,  "EVBREAK_ALL" : 2, 
  "EVFLAG_AUTO" : 2003660761293342,  "EVFLAG_NOENV" : 2003713284643486,  "EVFLAG_FORKCHECK" : 2003765807993630,  "EVFLAG_NOINOTIFY" : 2003662306097758,  "EVFLAG_NOSIGFD" : 0,  "EVFLAG_SIGNALFD" : 2003663850902174,  "EVFLAG_NOSIGMASK" : 2003666940511006, 
@@ -1425,77 +1425,60 @@ cb = _rpythonic_function_(		"cb", ctypes.c_void_p, [
 	("w",		ctypes.POINTER(ev_watcher)),
 	("revents",		ctypes.c_int),] )
 
-sigsuspend = _rpythonic_function_(		"sigsuspend", ctypes.c_int, [
+sigreturn = _rpythonic_function_(		"sigreturn", ctypes.c_int, [
+	("__scp",		ctypes.POINTER(sigcontext)),] )
+
+sigsetmask = _rpythonic_function_(		"sigsetmask", ctypes.c_int, [
+	("__mask",		ctypes.c_int),] )
+
+siggetmask = _rpythonic_function_(		"siggetmask", ctypes.c_int, [] )
+
+sigemptyset = _rpythonic_function_(		"sigemptyset", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),] )
 
-sigpending = _rpythonic_function_(		"sigpending", ctypes.c_int, [
+sigfillset = _rpythonic_function_(		"sigfillset", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),] )
 
-sigwait = _rpythonic_function_(		"sigwait", ctypes.c_int, [
+sigaddset = _rpythonic_function_(		"sigaddset", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),
-	("__sig",		ctypes.POINTER(ctypes.c_int)),] )
+	("__signo",		ctypes.c_int),] )
 
-sigwaitinfo = _rpythonic_function_(		"sigwaitinfo", ctypes.c_int, [
+sigdelset = _rpythonic_function_(		"sigdelset", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),
-	("__info",		ctypes.POINTER(siginfo)),] )
+	("__signo",		ctypes.c_int),] )
 
-sigtimedwait = _rpythonic_function_(		"sigtimedwait", ctypes.c_int, [
+_function = _rpythonic_function_(		"_function", ctypes.c_void_p, [
+	("none",		ctypes.c_void_p),] )
+
+sigismember = _rpythonic_function_(		"sigismember", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),
-	("__info",		ctypes.POINTER(siginfo)),
-	("__timeout",		ctypes.POINTER(timespec)),] )
+	("__signo",		ctypes.c_int),] )
 
-sigqueue = _rpythonic_function_(		"sigqueue", ctypes.c_int, [
-	("__pid",		ctypes.c_int),
+sa_sigaction = _rpythonic_function_(		"sa_sigaction", ctypes.c_void_p, [
+	("none",		ctypes.c_int),
+	("none",		ctypes.POINTER(ctypes.c_void_p)),
+	("none",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+sa_restorer = _rpythonic_function_(		"sa_restorer", ctypes.c_void_p, [] )
+
+signal = _rpythonic_function_(		"signal", ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,), [
 	("__sig",		ctypes.c_int),
-	("__val",		sigval),] )
+	("__handler",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,)),] )
+
+kill = _rpythonic_function_(		"kill", ctypes.c_int, [
+	("__pid",		ctypes.c_int),
+	("__sig",		ctypes.c_int),] )
+
+killpg = _rpythonic_function_(		"killpg", ctypes.c_int, [
+	("__pgrp",		ctypes.c_int),
+	("__sig",		ctypes.c_int),] )
+
+C_raise = _rpythonic_function_(		"C_raise", ctypes.c_int, [
+	("__sig",		ctypes.c_int),] )
 
 fstat = _rpythonic_function_(		"fstat", ctypes.c_int, [
 	("__fd",		ctypes.c_int),
 	("__buf",		ctypes.POINTER(stat)),] )
-
-utimensat = _rpythonic_function_(		"utimensat", ctypes.c_int, [
-	("__fd",		ctypes.c_int),
-	("__path",		ctypes.POINTER(ctypes.c_char)),
-	("__times",		( timespec * 2 )),
-	("__flags",		ctypes.c_int),] )
-
-futimens = _rpythonic_function_(		"futimens", ctypes.c_int, [
-	("__fd",		ctypes.c_int),
-	("__times",		( timespec * 2 )),] )
-
-fchmod = _rpythonic_function_(		"fchmod", ctypes.c_int, [
-	("__fd",		ctypes.c_int),
-	("__mode",		ctypes.c_uint),] )
-
-fchmodat = _rpythonic_function_(		"fchmodat", ctypes.c_int, [
-	("__fd",		ctypes.c_int),
-	("__file",		ctypes.POINTER(ctypes.c_char)),
-	("__mode",		ctypes.c_uint),
-	("__flag",		ctypes.c_int),] )
-
-umask = _rpythonic_function_(		"umask", ctypes.c_uint, [
-	("__mask",		ctypes.c_uint),] )
-
-mkdir = _rpythonic_function_(		"mkdir", ctypes.c_int, [
-	("__path",		ctypes.POINTER(ctypes.c_char)),
-	("__mode",		ctypes.c_uint),] )
-
-mkdirat = _rpythonic_function_(		"mkdirat", ctypes.c_int, [
-	("__fd",		ctypes.c_int),
-	("__path",		ctypes.POINTER(ctypes.c_char)),
-	("__mode",		ctypes.c_uint),] )
-
-sigreturn = _rpythonic_function_(		"sigreturn", ctypes.c_int, [
-	("__scp",		ctypes.POINTER(sigcontext)),] )
-
-siginterrupt = _rpythonic_function_(		"siginterrupt", ctypes.c_int, [
-	("__sig",		ctypes.c_int),
-	("__interrupt",		ctypes.c_int),] )
-
-pthread_sigmask = _rpythonic_function_(		"pthread_sigmask", ctypes.c_int, [
-	("__how",		ctypes.c_int),
-	("__newmask",		ctypes.POINTER(__sigset_t)),
-	("__oldmask",		ctypes.POINTER(__sigset_t)),] )
 
 fstatat = _rpythonic_function_(		"fstatat", ctypes.c_int, [
 	("__fd",		ctypes.c_int),
@@ -1515,47 +1498,71 @@ lchmod = _rpythonic_function_(		"lchmod", ctypes.c_int, [
 	("__file",		ctypes.POINTER(ctypes.c_char)),
 	("__mode",		ctypes.c_uint),] )
 
-siggetmask = _rpythonic_function_(		"siggetmask", ctypes.c_int, [] )
+fchmod = _rpythonic_function_(		"fchmod", ctypes.c_int, [
+	("__fd",		ctypes.c_int),
+	("__mode",		ctypes.c_uint),] )
 
-sigemptyset = _rpythonic_function_(		"sigemptyset", ctypes.c_int, [
-	("__set",		ctypes.POINTER(__sigset_t)),] )
+fchmodat = _rpythonic_function_(		"fchmodat", ctypes.c_int, [
+	("__fd",		ctypes.c_int),
+	("__file",		ctypes.POINTER(ctypes.c_char)),
+	("__mode",		ctypes.c_uint),
+	("__flag",		ctypes.c_int),] )
 
-sigfillset = _rpythonic_function_(		"sigfillset", ctypes.c_int, [
-	("__set",		ctypes.POINTER(__sigset_t)),] )
+umask = _rpythonic_function_(		"umask", ctypes.c_uint, [
+	("__mask",		ctypes.c_uint),] )
 
-sigaddset = _rpythonic_function_(		"sigaddset", ctypes.c_int, [
+mkdir = _rpythonic_function_(		"mkdir", ctypes.c_int, [
+	("__path",		ctypes.POINTER(ctypes.c_char)),
+	("__mode",		ctypes.c_uint),] )
+
+sigwaitinfo = _rpythonic_function_(		"sigwaitinfo", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),
-	("__signo",		ctypes.c_int),] )
+	("__info",		ctypes.POINTER(siginfo)),] )
 
-sigdelset = _rpythonic_function_(		"sigdelset", ctypes.c_int, [
+sigtimedwait = _rpythonic_function_(		"sigtimedwait", ctypes.c_int, [
 	("__set",		ctypes.POINTER(__sigset_t)),
-	("__signo",		ctypes.c_int),] )
+	("__info",		ctypes.POINTER(siginfo)),
+	("__timeout",		ctypes.POINTER(timespec)),] )
 
-sigismember = _rpythonic_function_(		"sigismember", ctypes.c_int, [
-	("__set",		ctypes.POINTER(__sigset_t)),
-	("__signo",		ctypes.c_int),] )
-
-_function = _rpythonic_function_(		"_function", ctypes.c_void_p, [
-	("none",		ctypes.c_void_p),] )
-
-signal = _rpythonic_function_(		"signal", ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,), [
-	("__sig",		ctypes.c_int),
-	("__handler",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,)),] )
-
-kill = _rpythonic_function_(		"kill", ctypes.c_int, [
+sigqueue = _rpythonic_function_(		"sigqueue", ctypes.c_int, [
 	("__pid",		ctypes.c_int),
-	("__sig",		ctypes.c_int),] )
-
-killpg = _rpythonic_function_(		"killpg", ctypes.c_int, [
-	("__pgrp",		ctypes.c_int),
-	("__sig",		ctypes.c_int),] )
-
-C_raise = _rpythonic_function_(		"C_raise", ctypes.c_int, [
-	("__sig",		ctypes.c_int),] )
-
-ssignal = _rpythonic_function_(		"ssignal", ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,), [
 	("__sig",		ctypes.c_int),
-	("__handler",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,)),] )
+	("__val",		sigval),] )
+
+sigprocmask = _rpythonic_function_(		"sigprocmask", ctypes.c_int, [
+	("__how",		ctypes.c_int),
+	("__set",		ctypes.POINTER(__sigset_t)),
+	("__oset",		ctypes.POINTER(__sigset_t)),] )
+
+sigsuspend = _rpythonic_function_(		"sigsuspend", ctypes.c_int, [
+	("__set",		ctypes.POINTER(__sigset_t)),] )
+
+sigpending = _rpythonic_function_(		"sigpending", ctypes.c_int, [
+	("__set",		ctypes.POINTER(__sigset_t)),] )
+
+sigwait = _rpythonic_function_(		"sigwait", ctypes.c_int, [
+	("__set",		ctypes.POINTER(__sigset_t)),
+	("__sig",		ctypes.POINTER(ctypes.c_int)),] )
+
+mkfifoat = _rpythonic_function_(		"mkfifoat", ctypes.c_int, [
+	("__fd",		ctypes.c_int),
+	("__path",		ctypes.POINTER(ctypes.c_char)),
+	("__mode",		ctypes.c_uint),] )
+
+utimensat = _rpythonic_function_(		"utimensat", ctypes.c_int, [
+	("__fd",		ctypes.c_int),
+	("__path",		ctypes.POINTER(ctypes.c_char)),
+	("__times",		( timespec * 2 )),
+	("__flags",		ctypes.c_int),] )
+
+futimens = _rpythonic_function_(		"futimens", ctypes.c_int, [
+	("__fd",		ctypes.c_int),
+	("__times",		( timespec * 2 )),] )
+
+mkdirat = _rpythonic_function_(		"mkdirat", ctypes.c_int, [
+	("__fd",		ctypes.c_int),
+	("__path",		ctypes.POINTER(ctypes.c_char)),
+	("__mode",		ctypes.c_uint),] )
 
 mknod = _rpythonic_function_(		"mknod", ctypes.c_int, [
 	("__path",		ctypes.POINTER(ctypes.c_char)),
@@ -1572,10 +1579,9 @@ mkfifo = _rpythonic_function_(		"mkfifo", ctypes.c_int, [
 	("__path",		ctypes.POINTER(ctypes.c_char)),
 	("__mode",		ctypes.c_uint),] )
 
-mkfifoat = _rpythonic_function_(		"mkfifoat", ctypes.c_int, [
-	("__fd",		ctypes.c_int),
-	("__path",		ctypes.POINTER(ctypes.c_char)),
-	("__mode",		ctypes.c_uint),] )
+ssignal = _rpythonic_function_(		"ssignal", ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,), [
+	("__sig",		ctypes.c_int),
+	("__handler",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int,)),] )
 
 gsignal = _rpythonic_function_(		"gsignal", ctypes.c_int, [
 	("__sig",		ctypes.c_int),] )
@@ -1591,24 +1597,22 @@ psiginfo = _rpythonic_function_(		"psiginfo", ctypes.c_void_p, [
 sigblock = _rpythonic_function_(		"sigblock", ctypes.c_int, [
 	("__mask",		ctypes.c_int),] )
 
-sigsetmask = _rpythonic_function_(		"sigsetmask", ctypes.c_int, [
-	("__mask",		ctypes.c_int),] )
-
-sa_sigaction = _rpythonic_function_(		"sa_sigaction", ctypes.c_void_p, [
-	("none",		ctypes.c_int),
-	("none",		ctypes.POINTER(ctypes.c_void_p)),
-	("none",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-sa_restorer = _rpythonic_function_(		"sa_restorer", ctypes.c_void_p, [] )
-
-sigprocmask = _rpythonic_function_(		"sigprocmask", ctypes.c_int, [
+pthread_sigmask = _rpythonic_function_(		"pthread_sigmask", ctypes.c_int, [
 	("__how",		ctypes.c_int),
-	("__set",		ctypes.POINTER(__sigset_t)),
-	("__oset",		ctypes.POINTER(__sigset_t)),] )
+	("__newmask",		ctypes.POINTER(__sigset_t)),
+	("__oldmask",		ctypes.POINTER(__sigset_t)),] )
 
 pthread_kill = _rpythonic_function_(		"pthread_kill", ctypes.c_int, [
 	("__threadid",		ctypes.c_uint64),
 	("__signo",		ctypes.c_int),] )
+
+siginterrupt = _rpythonic_function_(		"siginterrupt", ctypes.c_int, [
+	("__sig",		ctypes.c_int),
+	("__interrupt",		ctypes.c_int),] )
+
+ev_async_start = _rpythonic_function_(		"ev_async_start", ctypes.c_void_p, [
+	("loop",		ctypes.POINTER(ev_loop)),
+	("w",		ctypes.POINTER(ev_async)),] )
 
 ev_async_stop = _rpythonic_function_(		"ev_async_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1617,6 +1621,10 @@ ev_async_stop = _rpythonic_function_(		"ev_async_stop", ctypes.c_void_p, [
 ev_async_send = _rpythonic_function_(		"ev_async_send", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_async)),] )
+
+ev_cleanup_stop = _rpythonic_function_(		"ev_cleanup_stop", ctypes.c_void_p, [
+	("loop",		ctypes.POINTER(ev_loop)),
+	("w",		ctypes.POINTER(ev_cleanup)),] )
 
 ev_embed_start = _rpythonic_function_(		"ev_embed_start", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1630,9 +1638,9 @@ ev_embed_sweep = _rpythonic_function_(		"ev_embed_sweep", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_embed)),] )
 
-ev_async_start = _rpythonic_function_(		"ev_async_start", ctypes.c_void_p, [
+ev_check_start = _rpythonic_function_(		"ev_check_start", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_async)),] )
+	("w",		ctypes.POINTER(ev_check)),] )
 
 ev_check_stop = _rpythonic_function_(		"ev_check_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1650,9 +1658,9 @@ ev_cleanup_start = _rpythonic_function_(		"ev_cleanup_start", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_cleanup)),] )
 
-ev_cleanup_stop = _rpythonic_function_(		"ev_cleanup_stop", ctypes.c_void_p, [
+ev_idle_start = _rpythonic_function_(		"ev_idle_start", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_cleanup)),] )
+	("w",		ctypes.POINTER(ev_idle)),] )
 
 ev_idle_stop = _rpythonic_function_(		"ev_idle_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1666,9 +1674,9 @@ ev_prepare_stop = _rpythonic_function_(		"ev_prepare_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_prepare)),] )
 
-ev_check_start = _rpythonic_function_(		"ev_check_start", ctypes.c_void_p, [
+ev_child_start = _rpythonic_function_(		"ev_child_start", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_check)),] )
+	("w",		ctypes.POINTER(ev_child)),] )
 
 ev_child_stop = _rpythonic_function_(		"ev_child_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1686,9 +1694,9 @@ ev_stat_stat = _rpythonic_function_(		"ev_stat_stat", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_stat)),] )
 
-ev_idle_start = _rpythonic_function_(		"ev_idle_start", ctypes.c_void_p, [
+ev_periodic_stop = _rpythonic_function_(		"ev_periodic_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_idle)),] )
+	("w",		ctypes.POINTER(ev_periodic)),] )
 
 ev_periodic_again = _rpythonic_function_(		"ev_periodic_again", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1702,9 +1710,9 @@ ev_signal_stop = _rpythonic_function_(		"ev_signal_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_signal)),] )
 
-ev_child_start = _rpythonic_function_(		"ev_child_start", ctypes.c_void_p, [
+ev_timer_start = _rpythonic_function_(		"ev_timer_start", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_child)),] )
+	("w",		ctypes.POINTER(ev_timer)),] )
 
 ev_timer_stop = _rpythonic_function_(		"ev_timer_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1722,9 +1730,10 @@ ev_periodic_start = _rpythonic_function_(		"ev_periodic_start", ctypes.c_void_p,
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_periodic)),] )
 
-ev_periodic_stop = _rpythonic_function_(		"ev_periodic_stop", ctypes.c_void_p, [
+ev_invoke = _rpythonic_function_(		"ev_invoke", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_periodic)),] )
+	("w",		ctypes.POINTER(ctypes.c_void_p)),
+	("revents",		ctypes.c_int),] )
 
 ev_clear_pending = _rpythonic_function_(		"ev_clear_pending", ctypes.c_int, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1738,9 +1747,8 @@ ev_io_stop = _rpythonic_function_(		"ev_io_stop", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
 	("w",		ctypes.POINTER(ev_io)),] )
 
-ev_timer_start = _rpythonic_function_(		"ev_timer_start", ctypes.c_void_p, [
-	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ev_timer)),] )
+ev_resume = _rpythonic_function_(		"ev_resume", ctypes.c_void_p, [
+	("loop",		ctypes.POINTER(ev_loop)),] )
 
 ev_feed_event = _rpythonic_function_(		"ev_feed_event", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1759,10 +1767,10 @@ ev_feed_signal_event = _rpythonic_function_(		"ev_feed_signal_event", ctypes.c_v
 	("loop",		ctypes.POINTER(ev_loop)),
 	("signum",		ctypes.c_int),] )
 
-ev_invoke = _rpythonic_function_(		"ev_invoke", ctypes.c_void_p, [
+ev_set_loop_release_cb = _rpythonic_function_(		"ev_set_loop_release_cb", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("w",		ctypes.POINTER(ctypes.c_void_p)),
-	("revents",		ctypes.c_int),] )
+	("release",		ctypes.c_void_p),
+	("acquire",		ctypes.c_void_p),] )
 
 release = _rpythonic_function_(		"release", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),] )
@@ -1779,8 +1787,9 @@ ev_invoke_pending = _rpythonic_function_(		"ev_invoke_pending", ctypes.c_void_p,
 ev_suspend = _rpythonic_function_(		"ev_suspend", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),] )
 
-ev_resume = _rpythonic_function_(		"ev_resume", ctypes.c_void_p, [
-	("loop",		ctypes.POINTER(ev_loop)),] )
+ev_set_timeout_collect_interval = _rpythonic_function_(		"ev_set_timeout_collect_interval", ctypes.c_void_p, [
+	("loop",		ctypes.POINTER(ev_loop)),
+	("interval",		ctypes.c_double),] )
 
 ev_set_userdata = _rpythonic_function_(		"ev_set_userdata", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1796,11 +1805,6 @@ ev_set_invoke_pending_cb = _rpythonic_function_(		"ev_set_invoke_pending_cb", ct
 invoke_pending_cb = _rpythonic_function_(		"invoke_pending_cb", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),] )
 
-ev_set_loop_release_cb = _rpythonic_function_(		"ev_set_loop_release_cb", ctypes.c_void_p, [
-	("loop",		ctypes.POINTER(ev_loop)),
-	("release",		ctypes.c_void_p),
-	("acquire",		ctypes.c_void_p),] )
-
 ev_iteration = _rpythonic_function_(		"ev_iteration", ctypes.c_uint, [
 	("loop",		ctypes.POINTER(ev_loop)),] )
 
@@ -1814,9 +1818,9 @@ ev_set_io_collect_interval = _rpythonic_function_(		"ev_set_io_collect_interval"
 	("loop",		ctypes.POINTER(ev_loop)),
 	("interval",		ctypes.c_double),] )
 
-ev_set_timeout_collect_interval = _rpythonic_function_(		"ev_set_timeout_collect_interval", ctypes.c_void_p, [
+ev_run = _rpythonic_function_(		"ev_run", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
-	("interval",		ctypes.c_double),] )
+	("flags",		ctypes.c_int),] )
 
 ev_break = _rpythonic_function_(		"ev_break", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),
@@ -1836,6 +1840,9 @@ ev_once = _rpythonic_function_(		"ev_once", ctypes.c_void_p, [
 	("cb",		ctypes.c_void_p),
 	("arg",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+ev_loop_new = _rpythonic_function_(		"ev_loop_new", ctypes.POINTER(ev_loop), [
+	("flags",		ctypes.c_uint),] )
+
 ev_now = _rpythonic_function_(		"ev_now", ctypes.c_double, [
 	("loop",		ctypes.POINTER(ev_loop)),] )
 
@@ -1851,9 +1858,8 @@ ev_backend = _rpythonic_function_(		"ev_backend", ctypes.c_uint, [
 ev_now_update = _rpythonic_function_(		"ev_now_update", ctypes.c_void_p, [
 	("loop",		ctypes.POINTER(ev_loop)),] )
 
-ev_run = _rpythonic_function_(		"ev_run", ctypes.c_void_p, [
-	("loop",		ctypes.POINTER(ev_loop)),
-	("flags",		ctypes.c_int),] )
+ev_set_allocator = _rpythonic_function_(		"ev_set_allocator", ctypes.c_void_p, [
+	("cb",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 ev_set_syserr_cb = _rpythonic_function_(		"ev_set_syserr_cb", ctypes.c_void_p, [
 	("cb",		ctypes.c_void_p),] )
@@ -1861,8 +1867,7 @@ ev_set_syserr_cb = _rpythonic_function_(		"ev_set_syserr_cb", ctypes.c_void_p, [
 ev_default_loop = _rpythonic_function_(		"ev_default_loop", ctypes.POINTER(ev_loop), [
 	("flags",		ctypes.c_uint),] )
 
-ev_loop_new = _rpythonic_function_(		"ev_loop_new", ctypes.POINTER(ev_loop), [
-	("flags",		ctypes.c_uint),] )
+ev_version_major = _rpythonic_function_(		"ev_version_major", ctypes.c_int, [] )
 
 ev_version_minor = _rpythonic_function_(		"ev_version_minor", ctypes.c_int, [] )
 
@@ -1877,13 +1882,255 @@ ev_time = _rpythonic_function_(		"ev_time", ctypes.c_double, [] )
 ev_sleep = _rpythonic_function_(		"ev_sleep", ctypes.c_void_p, [
 	("delay",		ctypes.c_double),] )
 
-ev_set_allocator = _rpythonic_function_(		"ev_set_allocator", ctypes.c_void_p, [
-	("cb",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-ev_version_major = _rpythonic_function_(		"ev_version_major", ctypes.c_int, [] )
-
 
 _rpythonic_convert_structs_to_objects()
+'''
+Copyright 2011, Aaron Westendorf, All Rights Reserved.
+
+https://github.com/awestendorf/eve/blob/master/LICENSE
+
+Copyright (c) 2011 Aaron Westendorf
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+Define the constants used from libev/ev.h in ev.c. The case is preserved.
+
+Spec'd to libev-4.04. Attempted to use documentation straight from libev for
+structs.
+'''
+
+#from ctypes import *
+
+###
+### Typedefs
+###
+ev_tstamp = ctypes.c_double
+
+###
+### Structs
+###
+
+class ev_loop(ctypes.Structure):
+  '''
+  Assuming built wth EV_MULTIPLICITY.
+  '''
+  _fields_ = [
+    ('ev_rt_now', ev_tstamp),
+  ]
+
+class _ev_watcher( ctypes.Structure ):
+  _fields_ = [
+    ('active', ctypes.c_int),
+    ('pending', ctypes.c_int),
+    ('priority', ctypes.c_int),
+    ('data', ctypes.c_void_p),
+    ('cb', ctypes.c_void_p),
+  ]
+
+class ev_watcher(ctypes.Structure):
+  '''base class, nothing to see here unless you subclass'''
+  _fields_ = [
+    ('active', ctypes.c_int),
+    ('pending', ctypes.c_int),
+    ('priority', ctypes.c_int),  # TODO: handle "#if EV_MINPRI == EV_MAXPRI"
+    ('data', ctypes.c_void_p),
+
+    # TODO: make this real. It must be noted that the "ev_watcher" arg is 
+    # strongly typed for each of the ev_watcher subclasses defined below.
+    # libev does this by using macros, but we need to dynamically assign it.
+    # however, the address needs to be here for the struct to be compatible.
+    ('cb', ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(ev_loop), ctypes.POINTER(_ev_watcher), ctypes.c_int,))#"void (*cb)(struct ev_loop *loop, struct ev_watcher *w, int revents);)"), # TODO: make this real
+  ]
+
+# TODO: Determine if subclassing structs combines the _fields_ parameter
+
+class ev_watcher_list(ctypes.Structure):
+  '''base class, nothing to see here unless you subclass'''
+  _fields_ = ev_watcher._fields_ + [
+    ('next', ctypes.c_void_p), # TODO: make this real
+  ]
+
+class ev_watcher_time(ctypes.Structure):
+  '''base class, nothing to see here unless you subclass'''
+  _fields_ = ev_watcher._fields_ + [
+    ('at', ev_tstamp),
+  ]
+
+class ev_io(ctypes.Structure):
+  '''
+  invoked when fd is either EV_READable or EV_WRITEable
+  revent EV_READ, EV_WRITE
+  '''
+  _fields_ = ev_watcher_list._fields_ + [
+    ('fd', ctypes.c_int), # ro
+    ('events', ctypes.c_int), # ro
+  ]
+
+class ev_timer(ctypes.Structure):
+  '''
+  invoked after a specific time, repeatable (based on monotonic clock)
+  revent EV_TIMEOUT
+  '''
+  _fields_ = ev_watcher_time._fields_ + [
+    ('repeat', ev_tstamp), # rw
+  ]
+
+class ev_periodic(ctypes.Structure):
+  '''
+  invoked at some specific time, possibly repeating at regular intervals (based on UTC)
+  revent EV_PERIODIC
+  '''
+  _fields_ = ev_watcher_time._fields_ + [
+    ('offset', ev_tstamp), # rw
+    ('interval', ev_tstamp), # rw
+    ('callback', ctypes.CFUNCTYPE(ev_tstamp, ctypes.c_void_p, ev_tstamp))#'ev_tstamp (*reschedule_cb)(struct ev_periodic *w, ev_tstamp now); /* rw */') # rw TODO: make real
+  ]
+
+class ev_signal(ctypes.Structure):
+  '''
+  invoked when the given signal has been received
+  revent EV_SIGNAL
+  '''
+  _fields_ = ev_watcher_list._fields_ + [
+    ('signum', ctypes.c_int), # ro
+  ]
+
+class ev_child(ctypes.Structure):
+  '''
+  invoked when sigchld is received and waitpid indicates the given pid
+  revent EV_CHILD
+  does not support priorities
+  '''
+  _fields_ = ev_watcher_list._fields_ + [
+    ('flags', ctypes.c_int), # private
+    ('pid', ctypes.c_int), # ro
+    ('rpid', ctypes.c_int), # rw, holds the received pid
+    ('rstatus', ctypes.c_int), # rw, holds the exit status, use the macros from sys/wait.h
+  ]
+
+class stat(ctypes.Structure):
+  '''
+  Defines sys/stat.h
+  '''
+  # TODO: Fill this in, figure something else out. Could just skip ev_stat
+  # support.
+  '''
+  struct stat {
+     dev_t     st_dev;     /* ID of device containing file */
+     ino_t     st_ino;     /* inode number */
+     mode_t    st_mode;    /* protection */
+     nlink_t   st_nlink;   /* number of hard links */
+     uid_t     st_uid;     /* user ID of owner */
+     gid_t     st_gid;     /* group ID of owner */
+     dev_t     st_rdev;    /* device ID (if special file) */
+     off_t     st_size;    /* total size, in bytes */
+     blksize_t st_blksize; /* blocksize for file system I/O */
+     blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
+     time_t    st_atime;   /* time of last access */
+     time_t    st_mtime;   /* time of last modification */
+     time_t    st_ctime;   /* time of last status change */
+  };
+  '''
+
+# TODO: implement win32 support
+'''
+typedef struct _stati64 ev_statdata;
+# else
+typedef struct stat ev_statdata;
+'''
+ev_statdata = stat
+
+class ev_stat(ctypes.Structure):
+  '''
+  invoked each time the stat data changes for a given path
+  revent EV_STAT
+  '''
+  _fields_ = ev_watcher_list._fields_ + [
+    ('timer', ev_timer), # private
+    ('interval', ev_tstamp), # ro
+    ('path', ctypes.c_char_p), # ro
+    ('prev', ev_statdata), # ro
+    ('attr', ev_statdata), # ro
+    ('wd', ctypes.c_int), # wd for inotify, fd for kqueue 
+  ]
+
+#if EV_IDLE_ENABLE
+class ev_idle(ctypes.Structure):
+  '''
+  invoked when the nothing else needs to be done, keeps the process from blocking
+  revent EV_IDLE
+  '''
+  _fields_ = ev_watcher._fields_[:]
+#endif
+
+class ev_prepare(ctypes.Structure):
+  '''
+  invoked for each run of the mainloop, just before the blocking call
+  you can still change events in any way you like
+  revent EV_PREPARE
+  '''
+  _fields_ = ev_watcher._fields_[:]
+
+class ev_check(ctypes.Structure):
+  '''
+  invoked for each run of the mainloop, just after the blocking call
+  revent EV_CHECK
+  '''
+  _fields_ = ev_watcher._fields_[:]
+
+#if EV_FORK_ENABLE
+class ev_fork(ctypes.Structure):
+  '''
+  the callback gets invoked before check in the child process when a fork was detected
+  revent EV_FORK
+  '''
+  _fields_ = ev_watcher._fields_[:]
+#endif
+
+#if EV_CLEANUP_ENABLE
+class ev_cleanup(ctypes.Structure):
+  '''
+  is invoked just before the loop gets destroyed
+  revent EV_CLEANUP
+  '''
+  _fields_ = ev_watcher._fields_[:]
+#endif
+
+#if EV_EMBED_ENABLE
+class ev_embed(ctypes.Structure):
+  '''
+  used to embed an event loop inside another
+  the callback gets invoked when the event loop has handled events, and can be 0
+  '''
+  _fields_ = ev_watcher._fields_ + [
+    ('other', ctypes.c_void_p), # ro TODO: make this real
+    ('io', ev_io), # private
+    ('prepare', ev_prepare), # private
+    ('check', ev_check), # unused
+    ('timer', ev_timer), # unused
+    ('periodic', ev_periodic), # unused
+    ('idle', ev_idle), # unused
+    ('fork', ev_fork), # private
+    ('cleanup', ev_cleanup), # unused
+    ]
+
+
 
 _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()
