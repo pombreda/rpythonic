@@ -2,7 +2,7 @@
 # RPythonic - June, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8g'
+VERSION = '0.4.8h'
 
 _doc_ = '''
 NAME
@@ -1900,7 +1900,7 @@ def make_pycparser_compatible( data ):
 		if line.endswith('((__nothrow__ , __leaf__));'): line = line.replace( '((__nothrow__ , __leaf__));', ';')
 		if line.endswith('((__nothrow__ , __leaf__))  ;'): line = line.replace('((__nothrow__ , __leaf__))  ;', ';')
 		if line.endswith('__attribute__ ;'): line = line.replace('__attribute__ ;', ';')
-
+		if line.endswith('((__nothrow__ , __leaf__)) ;'): line = line.replace('((__nothrow__ , __leaf__)) ;',';')
 		#######################
 		d += line + '\n'
 	return d

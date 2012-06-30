@@ -484,6 +484,26 @@ if '--cares' in sys.argv or ALL:
 		strip_prefixes = ['ares_', 'ARES_'],
 	)
 
+if '--inotify' in sys.argv or ALL:
+	footer = '''
+IN_MOVE = IN_MOVED_FROM | IN_MOVED_TO
+IN_CLOSE = IN_CLOSE_WRITE | IN_CLOSE_NOWRITE
+IN_ALL_EVENTS = IN_ACCESS | IN_MODIFY | IN_ATTRIB | IN_CLOSE_WRITE | IN_CLOSE_NOWRITE | IN_OPEN | IN_MOVED_FROM | IN_MOVED_TO | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_MOVE_SELF
+	'''
+	rpythonic.wrap( 'inotify', 
+		header='/usr/include/x86_64-linux-gnu/sys/inotify.h',
+		library_names=[''],
+		strip_prefixes = ['inotify_', 'IN_'],
+		ctypes_footer = footer,
+	)
+
+if '--unistd' in sys.argv or ALL:
+	rpythonic.wrap( 'unistd', 
+		header='/usr/include/unistd.h',
+		library_names=[''],
+	)
+
+
 if '--test' in sys.argv:
 	rpythonic.wrap( 'testing', 
 		header='./test.h',
