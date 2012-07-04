@@ -768,7 +768,7 @@ __freeze_rpythonic_struct( inotify_event, [
 	( "wd", ctypes.c_int ),
 	( "mask", ctypes.c_uint32 ),
 	( "cookie", ctypes.c_uint32 ),
-	( "C_len", ctypes.c_uint32 ),
+	( "len", ctypes.c_uint32 ),
 	( "name", ctypes.c_char ),
 ])
 

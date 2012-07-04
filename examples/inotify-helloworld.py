@@ -29,7 +29,7 @@ def loop( fd ):
 			#print('wd',event.wd)
 			#print('mask',event.mask)
 			#print('cookie',event.cookie)
-			#print('len', event.C_len)
+			#print('len', event.len)
 
 			mask = event.mask
 			if mask & inotify.ACCESS: print( 'access file' )

@@ -1901,6 +1901,8 @@ def make_pycparser_compatible( data ):
 		if line.endswith('((__nothrow__ , __leaf__))  ;'): line = line.replace('((__nothrow__ , __leaf__))  ;', ';')
 		if line.endswith('__attribute__ ;'): line = line.replace('__attribute__ ;', ';')
 		if line.endswith('((__nothrow__ , __leaf__)) ;'): line = line.replace('((__nothrow__ , __leaf__)) ;',';')
+		if line.strip().endswith(';') and '((__nothrow__ , __leaf__))' in line: line = line.replace('((__nothrow__ , __leaf__))','')
+		if line.endswith('((__format__ (__scanf__, 2, 0)));'): line = line.replace('((__format__ (__scanf__, 2, 0)));',';')
 		#######################
 		d += line + '\n'
 	return d

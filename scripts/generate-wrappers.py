@@ -503,6 +503,16 @@ if '--unistd' in sys.argv or ALL:
 		library_names=[''],
 	)
 
+if '--libvnc' in sys.argv or ALL:
+	rpythonic.wrap( 'vncserver', 
+		header='/usr/include/rfb/rfb.h',
+		library_names=['libvncserver'],
+	)
+	rpythonic.wrap( 'vncclient', 
+		header='/usr/include/rfb/rfbclient.h',
+		library_names=['libvncclient'],
+	)
+
 
 if '--test' in sys.argv:
 	rpythonic.wrap( 'testing', 
