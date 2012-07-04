@@ -29,7 +29,9 @@ def _CHARP2STRING( charp, encoding='utf-8' ):
 _clibs_dir = os.path.dirname(os.path.abspath(__file__))
 
 def _load_ctypes_lib( name ):
-	if __os.name == 'posix':
+	if name.startswith('/'):		# if a full path is given bypass all the loading logic and try to load it
+		if __os.path.isfile( name ): return ctypes.CDLL( name )
+	elif __os.name == 'posix':
 		if __sys.platform.startswith('linux'):
 			if not name.endswith('.so'): name += '.so'
 			if not name.startswith('lib'): name = 'lib' + name

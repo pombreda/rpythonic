@@ -149,5 +149,22 @@ if '--nautilus' in sys.argv:
 		strip_prefixes = ['GTK_', 'gtk_'],
 	)
 
+if '--gio' in sys.argv:
+	rpythonic.wrap( 'libgio', 
+		header='/usr/include/glib-2.0/gio/gio.h',
+		includes = GINCLUDE,
+		ctypes_footer= glibfooter,
+		strip_prefixes = ['g_'],
+		library_names = ['/usr/lib/x86_64-linux-gnu/libgio-2.0.so', '/usr/lib/i386-linux-gnu/libgio-2.0.so'],
+	)
+
+if '--gvfs' in sys.argv:	# not working
+	rpythonic.wrap( 'libgvfs', 
+		header='/usr/include/glib-2.0/gio/gvfs.h',
+		includes = GINCLUDE,
+		ctypes_footer= glibfooter,
+		strip_prefixes = ['g_'],
+		library_names = ['/usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so', '/usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon-dnssd.so'],
+	)
 
 
