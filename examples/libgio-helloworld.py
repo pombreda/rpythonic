@@ -1,6 +1,4 @@
 #!/usr/bin/pypy
-# this also works in python3
-
 import os, sys, time, ctypes
 import libgio as gio
 glib = gio
@@ -17,11 +15,31 @@ print('info-content-type', info.get_content_type() )
 
 ############## test Glib ################
 def Variant( *args ):
-	gargs = ( ctypes.POINTER(glib.GVariant.CSTRUCT)*len(args) )()
-	if type(args[0]) == str:
-		for i,a in enumerate(args):
-			gargs[i] = glib.variant_new_string( a ).POINTER
-	return glib.variant_new_array( None, gargs, len(args) )
+	'''
+	can call this with multiple or single arguments,
+	if a single argument and its wrapped in a tuple,
+	then wrap Variant in a tuple. (required for remote method calls)
+	'''
+	if len(args) == 1:
+		a = args[0]
+		wrap = False
+		if isinstance(a, tuple):
+			wrap = True
+			a = a[0]
+		if isinstance(a, basestring):
+			var = glib.variant_new_string( a )
+		if wrap:
+			array = ( ctypes.POINTER(glib.GVariant.CSTRUCT)*1 )( var.POINTER )
+			var = glib.variant_new_tuple( array, 1 )
+		return var
+
+	elif len(args) > 1:
+		gargs = ( ctypes.POINTER(glib.GVariant.CSTRUCT)*len(args) )()
+		if type(args[0]) == str:
+			for i,a in enumerate(args):
+				gargs[i] = glib.variant_new_string( a ).POINTER
+
+		return glib.variant_new_array( None, gargs, len(args) )
 
 hello = 'hello'
 world = 'world'
@@ -59,14 +77,16 @@ proxy = gio.dbus_proxy_new_sync(
 	None,
 	None
 )
+error = glib.GError()
 res = proxy.call_sync(
 	'ListNames', 
 	None, 
 	gio.G_DBUS_CALL_FLAGS_NO_AUTO_START,
 	500,
 	None,
-	None
+	error
 )
+assert not error.code
 ## unbox ##
 assert res.n_children() == 1
 assert res.get_type().peek_string() == '(as)'
@@ -76,24 +96,34 @@ for i in range( a.n_children() ):
 	if not name.startswith(':'):		#ignore private
 		print( name )
 
-
 #########################################
-bus = gio.bus_get_sync( gio.G_BUS_TYPE_SESSION, None )
-
 ##Creates a proxy for accessing interface_name on the remote object at object_path owned by name at connection and synchronously loads D-Bus properties unless the G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES flag is used. ##
+## possible issue with Properties: 'org.freedesktop.DBus.Properties'
 proxy = gio.dbus_proxy_new_sync(
 	bus,		# GIOStream
 	gio.G_DBUS_PROXY_FLAGS_NONE,
 	None,	# info : ctypes.POINTER(_GDBusInterfaceInfo)
-	'org.something',	# name
-	'/org/something',	# object path
-	'org.freedesktop.DBus.Properties',	# interface name
+	'org.cinnamon.insync',	# name
+	'/org/cinnamon/insync',	# object path
+	'org.freedesktop.DBus',	# interface name
 	None,	# ctypes.POINTER(_GCancellable))
 	None	# ctypes.POINTER(ctypes.POINTER(_GError)))
 )
-print('proxy', proxy)
+error = ctypes.pointer(ctypes.c_void_p())
+arg = Variant( tuple(['ctypes test']) )
+arg.ref_sink()
+res = proxy.call_sync(
+	'hello_world', 
+	arg, 
+	gio.G_DBUS_CALL_FLAGS_NO_AUTO_START,
+	500,
+	None,
+	error
+)
+error = ctypes.cast( error, ctypes.POINTER(glib.GError.CSTRUCT) )
+assert not error.contents.code
 
-proxy.set_cached_property( 'someproperty', var )
-print('gio test complete')
+print('ctypes gio test complete')
+
 
 
