@@ -46,3 +46,13 @@ def connect( ptr, name, func, *args ):
 	return g_signal_connect_data( ptr, name, wrapper.cfunc, wrapper.userdata )
 
 
+################## Charp to Python String ###############
+_GLIB_RETURNS_CHARP_ = (
+	g_variant_type_peek_string,
+	g_variant_get_string,
+	g_value_get_string,
+)
+
+for func in _GLIB_RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+

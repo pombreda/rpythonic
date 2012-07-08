@@ -150,11 +150,56 @@ if '--nautilus' in sys.argv:
 	)
 
 if '--gio' in sys.argv:
+	footer = '''
+_RETURNS_CHARP_ = (
+	g_settings_get_string,
+	g_checksum_get_string,
+	g_hmac_get_string,
+	g_key_file_get_string,
+	g_match_info_get_string,
+	g_param_spec_get_name,
+
+	g_param_spec_get_nick,
+	g_param_spec_get_blurb,
+	g_action_get_name,
+	g_app_info_get_name,
+	g_app_info_get_display_name,
+	g_app_info_get_description,
+	g_app_info_get_executable,
+	g_app_info_get_commandline,
+
+	g_dbus_proxy_get_name,
+	g_dbus_proxy_get_name_owner,
+	g_dbus_proxy_get_object_path,
+	g_dbus_proxy_get_interface_name,
+	g_drive_get_name,
+
+	g_file_info_get_content_type,
+	g_file_info_get_name,
+	g_file_info_get_display_name,
+	g_file_info_get_edit_name,
+	g_io_extension_get_name,
+	g_mount_get_name,
+	g_volume_get_name,
+
+	g_dbus_object_manager_client_get_name,
+	g_dbus_object_manager_client_get_name_owner,
+
+	g_menu_attribute_iter_get_name,
+	g_menu_link_iter_get_name,
+)
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
+'''
+
+
 	rpythonic.wrap( 'libgio', 
 		header='/usr/include/glib-2.0/gio/gio.h',
 		includes = GINCLUDE,
-		ctypes_footer= glibfooter,
-		strip_prefixes = ['g_'],
+		ctypes_footer= glibfooter + footer,
+		strip_prefixes = ['g_', 'G_'],
 		library_names = ['/usr/lib/x86_64-linux-gnu/libgio-2.0.so', '/usr/lib/i386-linux-gnu/libgio-2.0.so'],
 	)
 

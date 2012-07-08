@@ -486,7 +486,7 @@ def _rpythonic_make_nice_global_enums_():
 def _rpythonic_clean_up_missing_functions_():
 	G = globals()
 	for f in RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES:
-		G.pop( f )#; print(f)
+		G.pop( f )
 	print( "C functions loaded: %s" %len(RPYTHONIC_WRAPPER_FUNCTIONS) )
 	print( "C functions failed: %s" %len(RPYTHONIC_WRAPPER_FUNCTIONS_FAILURES) )
 
@@ -6093,18 +6093,6 @@ gmtime_r = _rpythonic_function_(		"gmtime_r", ctypes.POINTER(tm), [
 	("__timer",		ctypes.POINTER(ctypes.c_int64)),
 	("__tp",		ctypes.POINTER(tm)),] )
 
-ctime_r = _rpythonic_function_(		"ctime_r", ctypes.POINTER(ctypes.c_char), [
-	("__timer",		ctypes.POINTER(ctypes.c_int64)),
-	("__buf",		ctypes.POINTER(ctypes.c_char)),] )
-
-tzset = _rpythonic_function_(		"tzset", ctypes.c_void_p, [] )
-
-stime = _rpythonic_function_(		"stime", ctypes.c_int, [
-	("__when",		ctypes.POINTER(ctypes.c_int64)),] )
-
-timegm = _rpythonic_function_(		"timegm", ctypes.c_int64, [
-	("__tp",		ctypes.POINTER(tm)),] )
-
 localtime_r = _rpythonic_function_(		"localtime_r", ctypes.POINTER(tm), [
 	("__timer",		ctypes.POINTER(ctypes.c_int64)),
 	("__tp",		ctypes.POINTER(tm)),] )
@@ -6118,6 +6106,18 @@ ctime = _rpythonic_function_(		"ctime", ctypes.POINTER(ctypes.c_char), [
 asctime_r = _rpythonic_function_(		"asctime_r", ctypes.POINTER(ctypes.c_char), [
 	("__tp",		ctypes.POINTER(tm)),
 	("__buf",		ctypes.POINTER(ctypes.c_char)),] )
+
+ctime_r = _rpythonic_function_(		"ctime_r", ctypes.POINTER(ctypes.c_char), [
+	("__timer",		ctypes.POINTER(ctypes.c_int64)),
+	("__buf",		ctypes.POINTER(ctypes.c_char)),] )
+
+tzset = _rpythonic_function_(		"tzset", ctypes.c_void_p, [] )
+
+stime = _rpythonic_function_(		"stime", ctypes.c_int, [
+	("__when",		ctypes.POINTER(ctypes.c_int64)),] )
+
+timegm = _rpythonic_function_(		"timegm", ctypes.c_int64, [
+	("__tp",		ctypes.POINTER(tm)),] )
 
 timelocal = _rpythonic_function_(		"timelocal", ctypes.c_int64, [
 	("__tp",		ctypes.POINTER(tm)),] )
@@ -6207,6 +6207,22 @@ g_array_new = _rpythonic_function_(		"g_array_new", ctypes.POINTER(_GArray), [
 	("clear_",		ctypes.c_int),
 	("element_size",		ctypes.c_uint),] )
 
+g_array_sized_new = _rpythonic_function_(		"g_array_sized_new", ctypes.POINTER(_GArray), [
+	("zero_terminated",		ctypes.c_int),
+	("clear_",		ctypes.c_int),
+	("element_size",		ctypes.c_uint),
+	("reserved_size",		ctypes.c_uint),] )
+
+g_array_free = _rpythonic_function_(		"g_array_free", ctypes.POINTER(ctypes.c_char), [
+	("array",		ctypes.POINTER(_GArray)),
+	("free_segment",		ctypes.c_int),] )
+
+g_array_ref = _rpythonic_function_(		"g_array_ref", ctypes.POINTER(_GArray), [
+	("array",		ctypes.POINTER(_GArray)),] )
+
+g_array_unref = _rpythonic_function_(		"g_array_unref", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GArray)),] )
+
 g_array_get_element_size = _rpythonic_function_(		"g_array_get_element_size", ctypes.c_uint, [
 	("array",		ctypes.POINTER(_GArray)),] )
 
@@ -6225,39 +6241,6 @@ g_array_insert_vals = _rpythonic_function_(		"g_array_insert_vals", ctypes.POINT
 	("index_",		ctypes.c_uint),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),
 	("C_len",		ctypes.c_uint),] )
-
-g_array_sized_new = _rpythonic_function_(		"g_array_sized_new", ctypes.POINTER(_GArray), [
-	("zero_terminated",		ctypes.c_int),
-	("clear_",		ctypes.c_int),
-	("element_size",		ctypes.c_uint),
-	("reserved_size",		ctypes.c_uint),] )
-
-g_array_free = _rpythonic_function_(		"g_array_free", ctypes.POINTER(ctypes.c_char), [
-	("array",		ctypes.POINTER(_GArray)),
-	("free_segment",		ctypes.c_int),] )
-
-g_array_ref = _rpythonic_function_(		"g_array_ref", ctypes.POINTER(_GArray), [
-	("array",		ctypes.POINTER(_GArray)),] )
-
-g_array_unref = _rpythonic_function_(		"g_array_unref", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GArray)),] )
-
-g_ptr_array_sized_new = _rpythonic_function_(		"g_ptr_array_sized_new", ctypes.POINTER(_GPtrArray), [
-	("reserved_size",		ctypes.c_uint),] )
-
-g_ptr_array_new_full = _rpythonic_function_(		"g_ptr_array_new_full", ctypes.POINTER(_GPtrArray), [
-	("reserved_size",		ctypes.c_uint),
-	("element_free_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),] )
-
-g_ptr_array_free = _rpythonic_function_(		"g_ptr_array_free", ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p)), [
-	("array",		ctypes.POINTER(_GPtrArray)),
-	("free_seg",		ctypes.c_int),] )
-
-g_ptr_array_ref = _rpythonic_function_(		"g_ptr_array_ref", ctypes.POINTER(_GPtrArray), [
-	("array",		ctypes.POINTER(_GPtrArray)),] )
-
-g_ptr_array_unref = _rpythonic_function_(		"g_ptr_array_unref", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GPtrArray)),] )
 
 g_array_set_size = _rpythonic_function_(		"g_array_set_size", ctypes.POINTER(_GArray), [
 	("array",		ctypes.POINTER(_GArray)),
@@ -6294,6 +6277,23 @@ g_ptr_array_new = _rpythonic_function_(		"g_ptr_array_new", ctypes.POINTER(_GPtr
 g_ptr_array_new_with_free_func = _rpythonic_function_(		"g_ptr_array_new_with_free_func", ctypes.POINTER(_GPtrArray), [
 	("element_free_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),] )
 
+g_ptr_array_sized_new = _rpythonic_function_(		"g_ptr_array_sized_new", ctypes.POINTER(_GPtrArray), [
+	("reserved_size",		ctypes.c_uint),] )
+
+g_ptr_array_new_full = _rpythonic_function_(		"g_ptr_array_new_full", ctypes.POINTER(_GPtrArray), [
+	("reserved_size",		ctypes.c_uint),
+	("element_free_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),] )
+
+g_ptr_array_free = _rpythonic_function_(		"g_ptr_array_free", ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p)), [
+	("array",		ctypes.POINTER(_GPtrArray)),
+	("free_seg",		ctypes.c_int),] )
+
+g_ptr_array_ref = _rpythonic_function_(		"g_ptr_array_ref", ctypes.POINTER(_GPtrArray), [
+	("array",		ctypes.POINTER(_GPtrArray)),] )
+
+g_ptr_array_unref = _rpythonic_function_(		"g_ptr_array_unref", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GPtrArray)),] )
+
 g_ptr_array_set_free_func = _rpythonic_function_(		"g_ptr_array_set_free_func", ctypes.c_void_p, [
 	("array",		ctypes.POINTER(_GPtrArray)),
 	("element_free_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),] )
@@ -6314,6 +6314,23 @@ g_ptr_array_remove = _rpythonic_function_(		"g_ptr_array_remove", ctypes.c_int, 
 	("array",		ctypes.POINTER(_GPtrArray)),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+g_ptr_array_remove_fast = _rpythonic_function_(		"g_ptr_array_remove_fast", ctypes.c_int, [
+	("array",		ctypes.POINTER(_GPtrArray)),
+	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+g_ptr_array_remove_range = _rpythonic_function_(		"g_ptr_array_remove_range", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GPtrArray)),
+	("index_",		ctypes.c_uint),
+	("length",		ctypes.c_uint),] )
+
+g_ptr_array_add = _rpythonic_function_(		"g_ptr_array_add", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GPtrArray)),
+	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+g_ptr_array_sort = _rpythonic_function_(		"g_ptr_array_sort", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GPtrArray)),
+	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),] )
+
 g_ptr_array_sort_with_data = _rpythonic_function_(		"g_ptr_array_sort_with_data", ctypes.c_void_p, [
 	("array",		ctypes.POINTER(_GPtrArray)),
 	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),
@@ -6333,23 +6350,6 @@ g_byte_array_new_take = _rpythonic_function_(		"g_byte_array_new_take", ctypes.P
 g_byte_array_sized_new = _rpythonic_function_(		"g_byte_array_sized_new", ctypes.POINTER(_GByteArray), [
 	("reserved_size",		ctypes.c_uint),] )
 
-g_ptr_array_remove_fast = _rpythonic_function_(		"g_ptr_array_remove_fast", ctypes.c_int, [
-	("array",		ctypes.POINTER(_GPtrArray)),
-	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-g_ptr_array_remove_range = _rpythonic_function_(		"g_ptr_array_remove_range", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GPtrArray)),
-	("index_",		ctypes.c_uint),
-	("length",		ctypes.c_uint),] )
-
-g_ptr_array_add = _rpythonic_function_(		"g_ptr_array_add", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GPtrArray)),
-	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-g_ptr_array_sort = _rpythonic_function_(		"g_ptr_array_sort", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GPtrArray)),
-	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),] )
-
 g_byte_array_free = _rpythonic_function_(		"g_byte_array_free", ctypes.POINTER(ctypes.c_ubyte), [
 	("array",		ctypes.POINTER(_GByteArray)),
 	("free_segment",		ctypes.c_int),] )
@@ -6368,23 +6368,6 @@ g_byte_array_append = _rpythonic_function_(		"g_byte_array_append", ctypes.POINT
 	("data",		ctypes.POINTER(ctypes.c_ubyte)),
 	("C_len",		ctypes.c_uint),] )
 
-g_byte_array_remove_range = _rpythonic_function_(		"g_byte_array_remove_range", ctypes.POINTER(_GByteArray), [
-	("array",		ctypes.POINTER(_GByteArray)),
-	("index_",		ctypes.c_uint),
-	("length",		ctypes.c_uint),] )
-
-g_byte_array_sort = _rpythonic_function_(		"g_byte_array_sort", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GByteArray)),
-	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),] )
-
-g_byte_array_sort_with_data = _rpythonic_function_(		"g_byte_array_sort_with_data", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(_GByteArray)),
-	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),
-	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-g_atomic_int_get = _rpythonic_function_(		"g_atomic_int_get", ctypes.c_int, [
-	("atomic",		ctypes.POINTER(ctypes.c_int)),] )
-
 g_byte_array_prepend = _rpythonic_function_(		"g_byte_array_prepend", ctypes.POINTER(_GByteArray), [
 	("array",		ctypes.POINTER(_GByteArray)),
 	("data",		ctypes.POINTER(ctypes.c_ubyte)),
@@ -6401,6 +6384,23 @@ g_byte_array_remove_index = _rpythonic_function_(		"g_byte_array_remove_index", 
 g_byte_array_remove_index_fast = _rpythonic_function_(		"g_byte_array_remove_index_fast", ctypes.POINTER(_GByteArray), [
 	("array",		ctypes.POINTER(_GByteArray)),
 	("index_",		ctypes.c_uint),] )
+
+g_byte_array_remove_range = _rpythonic_function_(		"g_byte_array_remove_range", ctypes.POINTER(_GByteArray), [
+	("array",		ctypes.POINTER(_GByteArray)),
+	("index_",		ctypes.c_uint),
+	("length",		ctypes.c_uint),] )
+
+g_byte_array_sort = _rpythonic_function_(		"g_byte_array_sort", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GByteArray)),
+	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),] )
+
+g_byte_array_sort_with_data = _rpythonic_function_(		"g_byte_array_sort_with_data", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(_GByteArray)),
+	("compare_func",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(ctypes.c_void_p),)),
+	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+g_atomic_int_get = _rpythonic_function_(		"g_atomic_int_get", ctypes.c_int, [
+	("atomic",		ctypes.POINTER(ctypes.c_int)),] )
 
 g_atomic_int_set = _rpythonic_function_(		"g_atomic_int_set", ctypes.c_void_p, [
 	("atomic",		ctypes.POINTER(ctypes.c_int)),
@@ -6420,22 +6420,6 @@ g_atomic_int_compare_and_exchange = _rpythonic_function_(		"g_atomic_int_compare
 g_atomic_int_add = _rpythonic_function_(		"g_atomic_int_add", ctypes.c_int, [
 	("atomic",		ctypes.POINTER(ctypes.c_int)),
 	("val",		ctypes.c_int),] )
-
-g_atomic_int_exchange_and_add = _rpythonic_function_(		"g_atomic_int_exchange_and_add", ctypes.c_int, [
-	("atomic",		ctypes.POINTER(ctypes.c_int)),
-	("val",		ctypes.c_int),] )
-
-g_quark_try_string = _rpythonic_function_(		"g_quark_try_string", ctypes.c_uint, [
-	("string",		ctypes.POINTER(ctypes.c_char)),] )
-
-g_quark_from_static_string = _rpythonic_function_(		"g_quark_from_static_string", ctypes.c_uint, [
-	("string",		ctypes.POINTER(ctypes.c_char)),] )
-
-g_quark_from_string = _rpythonic_function_(		"g_quark_from_string", ctypes.c_uint, [
-	("string",		ctypes.POINTER(ctypes.c_char)),] )
-
-g_quark_to_string = _rpythonic_function_(		"g_quark_to_string", ctypes.POINTER(ctypes.c_char), [
-	("quark",		ctypes.c_uint),] )
 
 g_atomic_int_and = _rpythonic_function_(		"g_atomic_int_and", ctypes.c_uint, [
 	("atomic",		ctypes.POINTER(ctypes.c_uint)),
@@ -6476,26 +6460,27 @@ g_atomic_pointer_xor = _rpythonic_function_(		"g_atomic_pointer_xor", ctypes.c_u
 	("atomic",		ctypes.POINTER(ctypes.c_void_p)),
 	("val",		ctypes.c_ulong),] )
 
+g_atomic_int_exchange_and_add = _rpythonic_function_(		"g_atomic_int_exchange_and_add", ctypes.c_int, [
+	("atomic",		ctypes.POINTER(ctypes.c_int)),
+	("val",		ctypes.c_int),] )
+
+g_quark_try_string = _rpythonic_function_(		"g_quark_try_string", ctypes.c_uint, [
+	("string",		ctypes.POINTER(ctypes.c_char)),] )
+
+g_quark_from_static_string = _rpythonic_function_(		"g_quark_from_static_string", ctypes.c_uint, [
+	("string",		ctypes.POINTER(ctypes.c_char)),] )
+
+g_quark_from_string = _rpythonic_function_(		"g_quark_from_string", ctypes.c_uint, [
+	("string",		ctypes.POINTER(ctypes.c_char)),] )
+
+g_quark_to_string = _rpythonic_function_(		"g_quark_to_string", ctypes.POINTER(ctypes.c_char), [
+	("quark",		ctypes.c_uint),] )
+
 g_intern_string = _rpythonic_function_(		"g_intern_string", ctypes.POINTER(ctypes.c_char), [
 	("string",		ctypes.POINTER(ctypes.c_char)),] )
 
 g_intern_static_string = _rpythonic_function_(		"g_intern_static_string", ctypes.POINTER(ctypes.c_char), [
 	("string",		ctypes.POINTER(ctypes.c_char)),] )
-
-g_error_matches = _rpythonic_function_(		"g_error_matches", ctypes.c_int, [
-	("error",		ctypes.POINTER(_GError)),
-	("domain",		ctypes.c_uint),
-	("code",		ctypes.c_int),] )
-
-g_set_error_literal = _rpythonic_function_(		"g_set_error_literal", ctypes.c_void_p, [
-	("err",		ctypes.POINTER(ctypes.POINTER(_GError))),
-	("domain",		ctypes.c_uint),
-	("code",		ctypes.c_int),
-	("message",		ctypes.POINTER(ctypes.c_char)),] )
-
-g_propagate_error = _rpythonic_function_(		"g_propagate_error", ctypes.c_void_p, [
-	("dest",		ctypes.POINTER(ctypes.POINTER(_GError))),
-	("src",		ctypes.POINTER(_GError)),] )
 
 g_error_new_literal = _rpythonic_function_(		"g_error_new_literal", ctypes.POINTER(_GError), [
 	("domain",		ctypes.c_uint),
@@ -6513,6 +6498,21 @@ g_error_free = _rpythonic_function_(		"g_error_free", ctypes.c_void_p, [
 
 g_error_copy = _rpythonic_function_(		"g_error_copy", ctypes.POINTER(_GError), [
 	("error",		ctypes.POINTER(_GError)),] )
+
+g_error_matches = _rpythonic_function_(		"g_error_matches", ctypes.c_int, [
+	("error",		ctypes.POINTER(_GError)),
+	("domain",		ctypes.c_uint),
+	("code",		ctypes.c_int),] )
+
+g_set_error_literal = _rpythonic_function_(		"g_set_error_literal", ctypes.c_void_p, [
+	("err",		ctypes.POINTER(ctypes.POINTER(_GError))),
+	("domain",		ctypes.c_uint),
+	("code",		ctypes.c_int),
+	("message",		ctypes.POINTER(ctypes.c_char)),] )
+
+g_propagate_error = _rpythonic_function_(		"g_propagate_error", ctypes.c_void_p, [
+	("dest",		ctypes.POINTER(ctypes.POINTER(_GError))),
+	("src",		ctypes.POINTER(_GError)),] )
 
 g_clear_error = _rpythonic_function_(		"g_clear_error", ctypes.c_void_p, [
 	("err",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
@@ -7567,6 +7567,23 @@ g_date_strftime = _rpythonic_function_(		"g_date_strftime", ctypes.c_ulong, [
 	("format",		ctypes.POINTER(ctypes.c_char)),
 	("date",		ctypes.POINTER(_GDate)),] )
 
+g_time_zone_adjust_time = _rpythonic_function_(		"g_time_zone_adjust_time", ctypes.c_int, [
+	("tz",		ctypes.POINTER(_GTimeZone)),
+	("C_type",		ctypes.c_int),
+	("time_",		ctypes.POINTER(ctypes.c_long)),] )
+
+g_time_zone_get_abbreviation = _rpythonic_function_(		"g_time_zone_get_abbreviation", ctypes.POINTER(ctypes.c_char), [
+	("tz",		ctypes.POINTER(_GTimeZone)),
+	("interval",		ctypes.c_int),] )
+
+g_time_zone_get_offset = _rpythonic_function_(		"g_time_zone_get_offset", ctypes.c_int, [
+	("tz",		ctypes.POINTER(_GTimeZone)),
+	("interval",		ctypes.c_int),] )
+
+g_time_zone_is_dst = _rpythonic_function_(		"g_time_zone_is_dst", ctypes.c_int, [
+	("tz",		ctypes.POINTER(_GTimeZone)),
+	("interval",		ctypes.c_int),] )
+
 g_time_zone_new = _rpythonic_function_(		"g_time_zone_new", ctypes.POINTER(_GTimeZone), [
 	("identifier",		ctypes.POINTER(ctypes.c_char)),] )
 
@@ -7584,23 +7601,6 @@ g_time_zone_find_interval = _rpythonic_function_(		"g_time_zone_find_interval", 
 	("tz",		ctypes.POINTER(_GTimeZone)),
 	("C_type",		ctypes.c_int),
 	("time_",		ctypes.c_long),] )
-
-g_time_zone_adjust_time = _rpythonic_function_(		"g_time_zone_adjust_time", ctypes.c_int, [
-	("tz",		ctypes.POINTER(_GTimeZone)),
-	("C_type",		ctypes.c_int),
-	("time_",		ctypes.POINTER(ctypes.c_long)),] )
-
-g_time_zone_get_abbreviation = _rpythonic_function_(		"g_time_zone_get_abbreviation", ctypes.POINTER(ctypes.c_char), [
-	("tz",		ctypes.POINTER(_GTimeZone)),
-	("interval",		ctypes.c_int),] )
-
-g_time_zone_get_offset = _rpythonic_function_(		"g_time_zone_get_offset", ctypes.c_int, [
-	("tz",		ctypes.POINTER(_GTimeZone)),
-	("interval",		ctypes.c_int),] )
-
-g_time_zone_is_dst = _rpythonic_function_(		"g_time_zone_is_dst", ctypes.c_int, [
-	("tz",		ctypes.POINTER(_GTimeZone)),
-	("interval",		ctypes.c_int),] )
 
 g_date_time_unref = _rpythonic_function_(		"g_date_time_unref", ctypes.c_void_p, [
 	("datetime",		ctypes.POINTER(_GDateTime)),] )
@@ -11007,6 +11007,18 @@ g_slice_get_config_state = _rpythonic_function_(		"g_slice_get_config_state", ct
 
 GSpawnChildSetupFunc = _rpythonic_function_(		"GSpawnChildSetupFunc", ctypes.c_void_p, [("user_data",		ctypes.c_void_p)] )
 
+g_spawn_sync = _rpythonic_function_(		"g_spawn_sync", ctypes.c_int, [
+	("working_directory",		ctypes.POINTER(ctypes.c_char)),
+	("argv",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("envp",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("flags",		ctypes.c_int),
+	("child_setup",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),
+	("user_data",		ctypes.POINTER(ctypes.c_void_p)),
+	("standard_output",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("standard_error",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("exit_status",		ctypes.POINTER(ctypes.c_int)),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+
 g_spawn_error_quark = _rpythonic_function_(		"g_spawn_error_quark", ctypes.c_uint, [] )
 
 g_spawn_async = _rpythonic_function_(		"g_spawn_async", ctypes.c_int, [
@@ -11030,18 +11042,6 @@ g_spawn_async_with_pipes = _rpythonic_function_(		"g_spawn_async_with_pipes", ct
 	("standard_input",		ctypes.POINTER(ctypes.c_int)),
 	("standard_output",		ctypes.POINTER(ctypes.c_int)),
 	("standard_error",		ctypes.POINTER(ctypes.c_int)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
-g_spawn_sync = _rpythonic_function_(		"g_spawn_sync", ctypes.c_int, [
-	("working_directory",		ctypes.POINTER(ctypes.c_char)),
-	("argv",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("envp",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("flags",		ctypes.c_int),
-	("child_setup",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),
-	("user_data",		ctypes.POINTER(ctypes.c_void_p)),
-	("standard_output",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("standard_error",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("exit_status",		ctypes.POINTER(ctypes.c_int)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
 g_spawn_command_line_sync = _rpythonic_function_(		"g_spawn_command_line_sync", ctypes.c_int, [
@@ -16365,21 +16365,6 @@ nice = _rpythonic_function_(		"nice", ctypes.c_int, [
 _exit = _rpythonic_function_(		"_exit", ctypes.c_void_p, [
 	("__status",		ctypes.c_int),] )
 
-getppid = _rpythonic_function_(		"getppid", ctypes.c_int, [] )
-
-getpgrp = _rpythonic_function_(		"getpgrp", ctypes.c_int, [] )
-
-getpgid = _rpythonic_function_(		"getpgid", ctypes.c_int, [
-	("__pid",		ctypes.c_int),] )
-
-setpgid = _rpythonic_function_(		"setpgid", ctypes.c_int, [
-	("__pid",		ctypes.c_int),
-	("__pgid",		ctypes.c_int),] )
-
-setpgrp = _rpythonic_function_(		"setpgrp", ctypes.c_int, [] )
-
-setsid = _rpythonic_function_(		"setsid", ctypes.c_int, [] )
-
 pathconf = _rpythonic_function_(		"pathconf", ctypes.c_int64, [
 	("__path",		ctypes.POINTER(ctypes.c_char)),
 	("__name",		ctypes.c_int),] )
@@ -16397,6 +16382,39 @@ confstr = _rpythonic_function_(		"confstr", ctypes.c_uint64, [
 	("__len",		ctypes.c_uint64),] )
 
 getpid = _rpythonic_function_(		"getpid", ctypes.c_int, [] )
+
+getsid = _rpythonic_function_(		"getsid", ctypes.c_int, [
+	("__pid",		ctypes.c_int),] )
+
+getuid = _rpythonic_function_(		"getuid", ctypes.c_uint, [] )
+
+geteuid = _rpythonic_function_(		"geteuid", ctypes.c_uint, [] )
+
+getgid = _rpythonic_function_(		"getgid", ctypes.c_uint, [] )
+
+getegid = _rpythonic_function_(		"getegid", ctypes.c_uint, [] )
+
+getgroups = _rpythonic_function_(		"getgroups", ctypes.c_int, [
+	("__size",		ctypes.c_int),
+	("__list",		ctypes.c_uint),] )
+
+getppid = _rpythonic_function_(		"getppid", ctypes.c_int, [] )
+
+getpgrp = _rpythonic_function_(		"getpgrp", ctypes.c_int, [] )
+
+getpgid = _rpythonic_function_(		"getpgid", ctypes.c_int, [
+	("__pid",		ctypes.c_int),] )
+
+setpgid = _rpythonic_function_(		"setpgid", ctypes.c_int, [
+	("__pid",		ctypes.c_int),
+	("__pgid",		ctypes.c_int),] )
+
+setpgrp = _rpythonic_function_(		"setpgrp", ctypes.c_int, [] )
+
+setsid = _rpythonic_function_(		"setsid", ctypes.c_int, [] )
+
+setuid = _rpythonic_function_(		"setuid", ctypes.c_int, [
+	("__uid",		ctypes.c_uint),] )
 
 setreuid = _rpythonic_function_(		"setreuid", ctypes.c_int, [
 	("__ruid",		ctypes.c_uint),
@@ -16416,24 +16434,6 @@ setegid = _rpythonic_function_(		"setegid", ctypes.c_int, [
 	("__gid",		ctypes.c_uint),] )
 
 fork = _rpythonic_function_(		"fork", ctypes.c_int, [] )
-
-getsid = _rpythonic_function_(		"getsid", ctypes.c_int, [
-	("__pid",		ctypes.c_int),] )
-
-getuid = _rpythonic_function_(		"getuid", ctypes.c_uint, [] )
-
-geteuid = _rpythonic_function_(		"geteuid", ctypes.c_uint, [] )
-
-getgid = _rpythonic_function_(		"getgid", ctypes.c_uint, [] )
-
-getegid = _rpythonic_function_(		"getegid", ctypes.c_uint, [] )
-
-getgroups = _rpythonic_function_(		"getgroups", ctypes.c_int, [
-	("__size",		ctypes.c_int),
-	("__list",		ctypes.c_uint),] )
-
-setuid = _rpythonic_function_(		"setuid", ctypes.c_int, [
-	("__uid",		ctypes.c_uint),] )
 
 vfork = _rpythonic_function_(		"vfork", ctypes.c_int, [] )
 
@@ -23812,8 +23812,60 @@ def connect( ptr, name, func, *args ):
 	return g_signal_connect_data( ptr, name, wrapper.cfunc, wrapper.userdata )
 
 
+################## Charp to Python String ###############
+_GLIB_RETURNS_CHARP_ = (
+	g_variant_type_peek_string,
+	g_variant_get_string,
+	g_value_get_string,
+)
+
+for func in _GLIB_RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
+
+_RETURNS_CHARP_ = (
+	g_settings_get_string,
+	g_checksum_get_string,
+	g_hmac_get_string,
+	g_key_file_get_string,
+	g_match_info_get_string,
+	g_param_spec_get_name,
+
+	g_param_spec_get_nick,
+	g_param_spec_get_blurb,
+	g_action_get_name,
+	g_app_info_get_name,
+	g_app_info_get_display_name,
+	g_app_info_get_description,
+	g_app_info_get_executable,
+	g_app_info_get_commandline,
+
+	g_dbus_proxy_get_name,
+	g_dbus_proxy_get_name_owner,
+	g_dbus_proxy_get_object_path,
+	g_dbus_proxy_get_interface_name,
+	g_drive_get_name,
+
+	g_file_info_get_content_type,
+	g_file_info_get_name,
+	g_file_info_get_display_name,
+	g_file_info_get_edit_name,
+	g_io_extension_get_name,
+	g_mount_get_name,
+	g_volume_get_name,
+
+	g_dbus_object_manager_client_get_name,
+	g_dbus_object_manager_client_get_name_owner,
+
+	g_menu_attribute_iter_get_name,
+	g_menu_link_iter_get_name,
+)
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
 
 _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()
 _rpythonic_clean_up_missing_functions_()
-_rpythonic_strip_prefixes_(['g_'])
+_rpythonic_strip_prefixes_(['g_', 'G_'])
