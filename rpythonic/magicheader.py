@@ -11,8 +11,12 @@ PYTHON_RESERVED_KEYWORDS = 'for while in as global with try except lambda return
 IS32BIT = (ctypes.sizeof(ctypes.c_void_p)==4)
 
 _ISPYTHON2 = sys.version_info[0] == 2
-if _ISPYTHON2: _NULLBYTE = '\0'
-else: _NULLBYTE = bytes( chr(0), 'ascii' )
+if _ISPYTHON2:
+	_NULLBYTE = '\0'
+	_basestring = basestring
+else:
+	_NULLBYTE = bytes( chr(0), 'ascii' )
+	_basestring = str
 
 def _CHARP2STRING( charp, encoding='utf-8' ):
 	b = bytes()

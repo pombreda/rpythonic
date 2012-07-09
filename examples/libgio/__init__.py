@@ -13,8 +13,12 @@ PYTHON_RESERVED_KEYWORDS = 'for while in as global with try except lambda return
 IS32BIT = (ctypes.sizeof(ctypes.c_void_p)==4)
 
 _ISPYTHON2 = sys.version_info[0] == 2
-if _ISPYTHON2: _NULLBYTE = '\0'
-else: _NULLBYTE = bytes( chr(0), 'ascii' )
+if _ISPYTHON2:
+	_NULLBYTE = '\0'
+	_basestring = basestring
+else:
+	_NULLBYTE = bytes( chr(0), 'ascii' )
+	_basestring = str
 
 def _CHARP2STRING( charp, encoding='utf-8' ):
 	b = bytes()
@@ -23821,6 +23825,67 @@ _GLIB_RETURNS_CHARP_ = (
 
 for func in _GLIB_RETURNS_CHARP_:
 	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
+
+
+############## test Glib ################
+def _python_simple_type_to_gvariant( arg ):
+		'''
+		TODO other int types, byte and bytearray
+		'''
+		if isinstance(arg, _basestring):
+			var = variant_new_string( arg )
+		elif isinstance(arg, float):
+			var = g_variant_new_double( arg )
+		elif isinstance(arg, int):
+			var = g_variant_new_int32( arg )
+		elif isinstance(arg, bool):
+			var = g_variant_new_boolean( arg )
+
+		elif isinstance(arg, list):	# assume array (RECURSIVE)
+			array = ( ctypes.POINTER(GVariant.CSTRUCT)*len(arg) )()
+			for i,a in enumerate(arg): array[ i ] = _python_simple_type_to_gvariant( a ).POINTER
+			return variant_new_array( None, array, len(arg) )
+
+		else:
+			raise NotImplementedError
+
+		return var
+
+def Variant( *args, **kw ):
+	'''
+	can call this with multiple or single arguments,
+	Single Argument:
+		. if argument is a tuple, then wrap Variant in a tuple. (required for remote method calls)
+		. if argument is a tuple, and container a sub-tuple, wrap return in tuple (required for remote properties "Set")
+	'''
+	if len(args) == 1:
+		sub = args[0]
+		array = None
+		if isinstance(sub, tuple) or 'wrap_tuple' in kw:
+			if isinstance(sub, tuple): _len = len(sub)
+			else: _len = 1; sub = [sub]
+			array = ( ctypes.POINTER(GVariant.CSTRUCT)*_len )()
+		if array:
+			for i,arg in enumerate(sub): array[ i ] = _python_simple_type_to_gvariant( arg ).POINTER
+			return variant_new_tuple( array, len(sub) )
+		else:
+			return _python_simple_type_to_gvariant( sub )
+
+
+	elif len(args) > 1:
+		## check if all the same - if not then wrap in tuple ##
+		_types = [type(a) for a in args]
+		is_array = _types.count(_types[0]) == len(_types)
+		if 'wrap_tuple' in kw: is_array = False	# force over-ride
+
+		array = ( ctypes.POINTER(GVariant.CSTRUCT)*len(args) )()
+		for i,a in enumerate(args):
+				array[ i ] = _python_simple_type_to_gvariant( a ).POINTER
+		if is_array:
+			return variant_new_array( None, array, len(args) )
+		else:
+			return variant_new_tuple( array, len(args) )
 
 
 _RETURNS_CHARP_ = (
