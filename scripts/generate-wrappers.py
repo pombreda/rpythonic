@@ -514,11 +514,20 @@ if '--libvnc' in sys.argv or ALL:
 	)
 
 if '--wayland' in sys.argv or ALL:
+	footer = '''
+for name in dir(wl_event_loop):
+	if name.startswith('wl_event_loop_'):
+		method = getattr( wl_event_loop, name )
+		setattr( wl_event_loop, name[ len('wl_event_loop_') : ], method )
+
+'''
+
 	rpythonic.wrap( 'wayland_server', 
 		header='../../wayland/src/wayland-server.h',
 		includes=['../../wayland/src/'],
 		library_names=['libwayland-server'],
 		strip_prefixes = ['wl_', 'WL_'],
+		ctypes_footer = footer,
 	)
 	rpythonic.wrap( 'wayland_client', 
 		header='../../wayland/src/wayland-client.h',

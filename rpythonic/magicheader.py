@@ -2,6 +2,7 @@ import os, sys, ctypes, inspect
 __os = os
 __sys = sys
 __inspect = inspect
+_list = list
 _CTYPES_CDLLS = []	# support loading functions from multiple libraries
 
 
@@ -361,7 +362,7 @@ class _rpythonic_metafunc_(object):
 				_OOAPI_[ klass ].append( self )
 
 	def _call_( self, *args ):			# allow flexible calling types
-		cargs = list( self.defaults )
+		cargs = _list( self.defaults )
 		for i,arg in enumerate(args):
 			if isinstance( arg, _rpythonic_meta_ ): arg = arg.POINTER
 			elif hasattr( arg, '_rpythonic_' ): arg = arg.POINTER		# workaround - instance from another module
@@ -709,7 +710,7 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 
 def _rpythonic_strip_prefixes_( prefixes ):
 	G = globals()
-	names = list(G.keys())	# ensure list in py3
+	names = _list(G.keys())	# ensure list in py3
 	for name in names:
 		for prefix in prefixes:
 			if name.startswith( prefix ):

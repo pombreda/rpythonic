@@ -4,6 +4,7 @@ import os, sys, ctypes, inspect
 __os = os
 __sys = sys
 __inspect = inspect
+_list = list
 _CTYPES_CDLLS = []	# support loading functions from multiple libraries
 
 
@@ -363,7 +364,7 @@ class _rpythonic_metafunc_(object):
 				_OOAPI_[ klass ].append( self )
 
 	def _call_( self, *args ):			# allow flexible calling types
-		cargs = list( self.defaults )
+		cargs = _list( self.defaults )
 		for i,arg in enumerate(args):
 			if isinstance( arg, _rpythonic_meta_ ): arg = arg.POINTER
 			elif hasattr( arg, '_rpythonic_' ): arg = arg.POINTER		# workaround - instance from another module
@@ -711,7 +712,7 @@ class meta:	# NEW API - allow run time switch from ctypes to rffi
 
 def _rpythonic_strip_prefixes_( prefixes ):
 	G = globals()
-	names = list(G.keys())	# ensure list in py3
+	names = _list(G.keys())	# ensure list in py3
 	for name in names:
 		for prefix in prefixes:
 			if name.startswith( prefix ):
@@ -798,6 +799,20 @@ wl_seat_capability = {
 	"WL_SEAT_CAPABILITY_TOUCH" : 4, 
 }
 
+wl_output_subpixel = { 
+	"WL_OUTPUT_SUBPIXEL_UNKNOWN" : 0, 
+	"WL_OUTPUT_SUBPIXEL_NONE" : 1, 
+	"WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB" : 2, 
+	"WL_OUTPUT_SUBPIXEL_HORIZONTAL_BGR" : 3, 
+	"WL_OUTPUT_SUBPIXEL_VERTICAL_RGB" : 4, 
+	"WL_OUTPUT_SUBPIXEL_VERTICAL_BGR" : 5, 
+}
+
+wl_output_mode = { 
+	"WL_OUTPUT_MODE_CURRENT" : 1, 
+	"WL_OUTPUT_MODE_PREFERRED" : 2, 
+}
+
 wl_pointer_button_state = { 
 	"WL_POINTER_BUTTON_STATE_RELEASED" : 0, 
 	"WL_POINTER_BUTTON_STATE_PRESSED" : 1, 
@@ -816,20 +831,6 @@ wl_keyboard_key_state = {
 	"WL_KEYBOARD_KEY_STATE_RELEASED" : 0, 
 	"WL_KEYBOARD_KEY_STATE_PRESSED" : 1, 
 	"WL_KEYBOARD_KEY_STATE_REPEAT" : 2, 
-}
-
-wl_output_subpixel = { 
-	"WL_OUTPUT_SUBPIXEL_UNKNOWN" : 0, 
-	"WL_OUTPUT_SUBPIXEL_NONE" : 1, 
-	"WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB" : 2, 
-	"WL_OUTPUT_SUBPIXEL_HORIZONTAL_BGR" : 3, 
-	"WL_OUTPUT_SUBPIXEL_VERTICAL_RGB" : 4, 
-	"WL_OUTPUT_SUBPIXEL_VERTICAL_BGR" : 5, 
-}
-
-wl_output_mode = { 
-	"WL_OUTPUT_MODE_CURRENT" : 1, 
-	"WL_OUTPUT_MODE_PREFERRED" : 2, 
 }
 
 ## simple enums ##
@@ -1080,6 +1081,461 @@ __freeze_rpythonic_struct( wl_global_listener, [
 ])
 
 ## wrapper functions ##
+scalbf = _rpythonic_function_(		"scalbf", ctypes.c_float, [
+	("__x",		ctypes.c_float),
+	("__n",		ctypes.c_float),] )
+
+acosl = _rpythonic_function_(		"acosl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+asinl = _rpythonic_function_(		"asinl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+atanl = _rpythonic_function_(		"atanl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+atan2l = _rpythonic_function_(		"atan2l", ctypes.c_double, [
+	("__y",		ctypes.c_double),
+	("__x",		ctypes.c_double),] )
+
+cosl = _rpythonic_function_(		"cosl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+sinl = _rpythonic_function_(		"sinl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+tanl = _rpythonic_function_(		"tanl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+coshl = _rpythonic_function_(		"coshl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+sinhl = _rpythonic_function_(		"sinhl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+tanhl = _rpythonic_function_(		"tanhl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+acoshl = _rpythonic_function_(		"acoshl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+asinhl = _rpythonic_function_(		"asinhl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+atanhl = _rpythonic_function_(		"atanhl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+expl = _rpythonic_function_(		"expl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+frexpl = _rpythonic_function_(		"frexpl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__exponent",		ctypes.POINTER(ctypes.c_int)),] )
+
+ldexpl = _rpythonic_function_(		"ldexpl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__exponent",		ctypes.c_int),] )
+
+logl = _rpythonic_function_(		"logl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+log10l = _rpythonic_function_(		"log10l", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+modfl = _rpythonic_function_(		"modfl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__iptr",		ctypes.POINTER(ctypes.c_double)),] )
+
+expm1l = _rpythonic_function_(		"expm1l", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+log1pl = _rpythonic_function_(		"log1pl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+logbl = _rpythonic_function_(		"logbl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+exp2l = _rpythonic_function_(		"exp2l", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+log2l = _rpythonic_function_(		"log2l", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+powl = _rpythonic_function_(		"powl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+sqrtl = _rpythonic_function_(		"sqrtl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+hypotl = _rpythonic_function_(		"hypotl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+cbrtl = _rpythonic_function_(		"cbrtl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+ceill = _rpythonic_function_(		"ceill", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+fabsl = _rpythonic_function_(		"fabsl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+floorl = _rpythonic_function_(		"floorl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+fmodl = _rpythonic_function_(		"fmodl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+isinfl = _rpythonic_function_(		"isinfl", ctypes.c_int, [
+	("__value",		ctypes.c_double),] )
+
+finitel = _rpythonic_function_(		"finitel", ctypes.c_int, [
+	("__value",		ctypes.c_double),] )
+
+dreml = _rpythonic_function_(		"dreml", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+significandl = _rpythonic_function_(		"significandl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+copysignl = _rpythonic_function_(		"copysignl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+nanl = _rpythonic_function_(		"nanl", ctypes.c_double, [
+	("__tagb",		ctypes.POINTER(ctypes.c_char)),] )
+
+isnanl = _rpythonic_function_(		"isnanl", ctypes.c_int, [
+	("__value",		ctypes.c_double),] )
+
+j0l = _rpythonic_function_(		"j0l", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+j1l = _rpythonic_function_(		"j1l", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+jnl = _rpythonic_function_(		"jnl", ctypes.c_double, [
+	("none",		ctypes.c_int),
+	("none",		ctypes.c_double),] )
+
+y0l = _rpythonic_function_(		"y0l", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+y1l = _rpythonic_function_(		"y1l", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+ynl = _rpythonic_function_(		"ynl", ctypes.c_double, [
+	("none",		ctypes.c_int),
+	("none",		ctypes.c_double),] )
+
+erfl = _rpythonic_function_(		"erfl", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+erfcl = _rpythonic_function_(		"erfcl", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+lgammal = _rpythonic_function_(		"lgammal", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+tgammal = _rpythonic_function_(		"tgammal", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+gammal = _rpythonic_function_(		"gammal", ctypes.c_double, [
+	("none",		ctypes.c_double),] )
+
+lgammal_r = _rpythonic_function_(		"lgammal_r", ctypes.c_double, [
+	("none",		ctypes.c_double),
+	("__signgamp",		ctypes.POINTER(ctypes.c_int)),] )
+
+rintl = _rpythonic_function_(		"rintl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+nextafterl = _rpythonic_function_(		"nextafterl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+nexttowardl = _rpythonic_function_(		"nexttowardl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+remainderl = _rpythonic_function_(		"remainderl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+scalbnl = _rpythonic_function_(		"scalbnl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__n",		ctypes.c_int),] )
+
+ilogbl = _rpythonic_function_(		"ilogbl", ctypes.c_int, [
+	("__x",		ctypes.c_double),] )
+
+scalblnl = _rpythonic_function_(		"scalblnl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__n",		ctypes.c_int64),] )
+
+nearbyintl = _rpythonic_function_(		"nearbyintl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+roundl = _rpythonic_function_(		"roundl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+truncl = _rpythonic_function_(		"truncl", ctypes.c_double, [
+	("__x",		ctypes.c_double),] )
+
+remquol = _rpythonic_function_(		"remquol", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),
+	("__quo",		ctypes.POINTER(ctypes.c_int)),] )
+
+lrintl = _rpythonic_function_(		"lrintl", ctypes.c_int64, [
+	("__x",		ctypes.c_double),] )
+
+llrintl = _rpythonic_function_(		"llrintl", ctypes.c_longlong, [
+	("__x",		ctypes.c_double),] )
+
+lroundl = _rpythonic_function_(		"lroundl", ctypes.c_int64, [
+	("__x",		ctypes.c_double),] )
+
+llroundl = _rpythonic_function_(		"llroundl", ctypes.c_longlong, [
+	("__x",		ctypes.c_double),] )
+
+fdiml = _rpythonic_function_(		"fdiml", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+fmaxl = _rpythonic_function_(		"fmaxl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+fminl = _rpythonic_function_(		"fminl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),] )
+
+fmal = _rpythonic_function_(		"fmal", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__y",		ctypes.c_double),
+	("__z",		ctypes.c_double),] )
+
+scalbl = _rpythonic_function_(		"scalbl", ctypes.c_double, [
+	("__x",		ctypes.c_double),
+	("__n",		ctypes.c_double),] )
+
+matherr = _rpythonic_function_(		"matherr", ctypes.c_int, [
+	("__exc",		ctypes.POINTER(exception)),] )
+
+imaxabs = _rpythonic_function_(		"imaxabs", ctypes.c_int64, [
+	("__n",		ctypes.c_int64),] )
+
+imaxdiv = _rpythonic_function_(		"imaxdiv", imaxdiv_t, [
+	("__numer",		ctypes.c_int64),
+	("__denom",		ctypes.c_int64),] )
+
+strtoimax = _rpythonic_function_(		"strtoimax", ctypes.c_int64, [
+	("__nptr",		ctypes.POINTER(ctypes.c_char)),
+	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("__base",		ctypes.c_int),] )
+
+strtoumax = _rpythonic_function_(		"strtoumax", ctypes.c_uint64, [
+	("__nptr",		ctypes.POINTER(ctypes.c_char)),
+	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
+	("__base",		ctypes.c_int),] )
+
+wcstoimax = _rpythonic_function_(		"wcstoimax", ctypes.c_int64, [
+	("__nptr",		ctypes.POINTER(ctypes.c_int)),
+	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_int))),
+	("__base",		ctypes.c_int),] )
+
+wcstoumax = _rpythonic_function_(		"wcstoumax", ctypes.c_uint64, [
+	("__nptr",		ctypes.POINTER(ctypes.c_int)),
+	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_int))),
+	("__base",		ctypes.c_int),] )
+
+implementation = _rpythonic_function_(		"implementation", ctypes.c_void_p, [] )
+
+wl_list_init = _rpythonic_function_(		"wl_list_init", ctypes.c_void_p, [
+	("C_list",		ctypes.POINTER(wl_list)),] )
+
+wl_list_insert = _rpythonic_function_(		"wl_list_insert", ctypes.c_void_p, [
+	("C_list",		ctypes.POINTER(wl_list)),
+	("elm",		ctypes.POINTER(wl_list)),] )
+
+wl_list_remove = _rpythonic_function_(		"wl_list_remove", ctypes.c_void_p, [
+	("elm",		ctypes.POINTER(wl_list)),] )
+
+wl_list_length = _rpythonic_function_(		"wl_list_length", ctypes.c_int, [
+	("C_list",		ctypes.POINTER(wl_list)),] )
+
+wl_list_empty = _rpythonic_function_(		"wl_list_empty", ctypes.c_int, [
+	("C_list",		ctypes.POINTER(wl_list)),] )
+
+wl_list_insert_list = _rpythonic_function_(		"wl_list_insert_list", ctypes.c_void_p, [
+	("C_list",		ctypes.POINTER(wl_list)),
+	("other",		ctypes.POINTER(wl_list)),] )
+
+wl_array_init = _rpythonic_function_(		"wl_array_init", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(wl_array)),] )
+
+wl_array_release = _rpythonic_function_(		"wl_array_release", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(wl_array)),] )
+
+wl_array_add = _rpythonic_function_(		"wl_array_add", ctypes.POINTER(ctypes.c_void_p), [
+	("array",		ctypes.POINTER(wl_array)),
+	("size",		ctypes.c_uint64),] )
+
+wl_array_copy = _rpythonic_function_(		"wl_array_copy", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(wl_array)),
+	("source",		ctypes.POINTER(wl_array)),] )
+
+wl_log_func_t = _rpythonic_function_(		"wl_log_func_t", ctypes.c_void_p, [
+	("none",		ctypes.POINTER(ctypes.c_char)),
+	("none",		ctypes.c_char),] )
+
+wl_proxy_create = _rpythonic_function_(		"wl_proxy_create", ctypes.POINTER(wl_proxy), [
+	("factory",		ctypes.POINTER(wl_proxy)),
+	("interface",		ctypes.POINTER(wl_interface)),] )
+
+wl_proxy_create_for_id = _rpythonic_function_(		"wl_proxy_create_for_id", ctypes.POINTER(wl_proxy), [
+	("factory",		ctypes.POINTER(wl_proxy)),
+	("C_id",		ctypes.c_uint32),
+	("interface",		ctypes.POINTER(wl_interface)),] )
+
+wl_proxy_destroy = _rpythonic_function_(		"wl_proxy_destroy", ctypes.c_void_p, [
+	("proxy",		ctypes.POINTER(wl_proxy)),] )
+
+wl_proxy_add_listener = _rpythonic_function_(		"wl_proxy_add_listener", ctypes.c_int, [
+	("proxy",		ctypes.POINTER(wl_proxy)),
+	("implementation",		ctypes.POINTER(ctypes.c_void_p)),
+	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+wl_proxy_set_user_data = _rpythonic_function_(		"wl_proxy_set_user_data", ctypes.c_void_p, [
+	("proxy",		ctypes.POINTER(wl_proxy)),
+	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+wl_proxy_get_user_data = _rpythonic_function_(		"wl_proxy_get_user_data", ctypes.POINTER(ctypes.c_void_p), [
+	("proxy",		ctypes.POINTER(wl_proxy)),] )
+
+wl_proxy_get_id = _rpythonic_function_(		"wl_proxy_get_id", ctypes.c_uint32, [
+	("proxy",		ctypes.POINTER(wl_proxy)),] )
+
+wl_display_bind = _rpythonic_function_(		"wl_display_bind", ctypes.POINTER(ctypes.c_void_p), [
+	("display",		ctypes.POINTER(wl_display)),
+	("name",		ctypes.c_uint32),
+	("interface",		ctypes.POINTER(wl_interface)),] )
+
+wl_display_sync = _rpythonic_function_(		"wl_display_sync", ctypes.POINTER(wl_callback), [
+	("display",		ctypes.POINTER(wl_display)),] )
+
+error = _rpythonic_function_(		"error", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_display",		ctypes.POINTER(wl_display)),
+	("object_id",		ctypes.POINTER(wl_object)),
+	("code",		ctypes.c_uint32),
+	("message",		ctypes.POINTER(ctypes.c_char)),] )
+
+C_global = _rpythonic_function_(		"C_global", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_display",		ctypes.POINTER(wl_display)),
+	("name",		ctypes.c_uint32),
+	("interface",		ctypes.POINTER(ctypes.c_char)),
+	("version",		ctypes.c_uint32),] )
+
+global_remove = _rpythonic_function_(		"global_remove", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_display",		ctypes.POINTER(wl_display)),
+	("name",		ctypes.c_uint32),] )
+
+delete_id = _rpythonic_function_(		"delete_id", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_display",		ctypes.POINTER(wl_display)),
+	("C_id",		ctypes.c_uint32),] )
+
+done = _rpythonic_function_(		"done", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_callback",		ctypes.POINTER(wl_callback)),
+	("serial",		ctypes.c_uint32),] )
+
+format = _rpythonic_function_(		"format", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_shm",		ctypes.POINTER(wl_shm)),
+	("format",		ctypes.c_uint32),] )
+
+release = _rpythonic_function_(		"release", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_buffer",		ctypes.POINTER(wl_buffer)),] )
+
+offer = _rpythonic_function_(		"offer", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_offer",		ctypes.POINTER(wl_data_offer)),
+	("C_type",		ctypes.POINTER(ctypes.c_char)),] )
+
+target = _rpythonic_function_(		"target", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_source",		ctypes.POINTER(wl_data_source)),
+	("mime_type",		ctypes.POINTER(ctypes.c_char)),] )
+
+data_offer = _rpythonic_function_(		"data_offer", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_device",		ctypes.POINTER(wl_data_device)),
+	("C_id",		ctypes.POINTER(wl_data_offer)),] )
+
+enter = _rpythonic_function_(		"enter", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_device",		ctypes.POINTER(wl_data_device)),
+	("serial",		ctypes.c_uint32),
+	("surface",		ctypes.POINTER(wl_surface)),
+	("x",		ctypes.c_int32),
+	("y",		ctypes.c_int32),
+	("C_id",		ctypes.POINTER(wl_data_offer)),] )
+
+send = _rpythonic_function_(		"send", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_source",		ctypes.POINTER(wl_data_source)),
+	("mime_type",		ctypes.POINTER(ctypes.c_char)),
+	("fd",		ctypes.c_int32),] )
+
+cancelled = _rpythonic_function_(		"cancelled", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_source",		ctypes.POINTER(wl_data_source)),] )
+
+leave = _rpythonic_function_(		"leave", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_device",		ctypes.POINTER(wl_data_device)),] )
+
+motion = _rpythonic_function_(		"motion", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_device",		ctypes.POINTER(wl_data_device)),
+	("time",		ctypes.c_uint32),
+	("x",		ctypes.c_int32),
+	("y",		ctypes.c_int32),] )
+
+drop = _rpythonic_function_(		"drop", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_device",		ctypes.POINTER(wl_data_device)),] )
+
+selection = _rpythonic_function_(		"selection", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_data_device",		ctypes.POINTER(wl_data_device)),
+	("C_id",		ctypes.POINTER(wl_data_offer)),] )
+
+ping = _rpythonic_function_(		"ping", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_shell_surface",		ctypes.POINTER(wl_shell_surface)),
+	("serial",		ctypes.c_uint32),] )
+
+configure = _rpythonic_function_(		"configure", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_shell_surface",		ctypes.POINTER(wl_shell_surface)),
+	("edges",		ctypes.c_uint32),
+	("width",		ctypes.c_int32),
+	("height",		ctypes.c_int32),] )
+
+popup_done = _rpythonic_function_(		"popup_done", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_shell_surface",		ctypes.POINTER(wl_shell_surface)),] )
+
 acos = _rpythonic_function_(		"acos", ctypes.c_double, [
 	("__x",		ctypes.c_double),] )
 
@@ -1552,465 +2008,29 @@ fmaf = _rpythonic_function_(		"fmaf", ctypes.c_float, [
 	("__y",		ctypes.c_float),
 	("__z",		ctypes.c_float),] )
 
-scalbf = _rpythonic_function_(		"scalbf", ctypes.c_float, [
-	("__x",		ctypes.c_float),
-	("__n",		ctypes.c_float),] )
-
-acosl = _rpythonic_function_(		"acosl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-asinl = _rpythonic_function_(		"asinl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-atanl = _rpythonic_function_(		"atanl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-atan2l = _rpythonic_function_(		"atan2l", ctypes.c_double, [
-	("__y",		ctypes.c_double),
-	("__x",		ctypes.c_double),] )
-
-cosl = _rpythonic_function_(		"cosl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-sinl = _rpythonic_function_(		"sinl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-tanl = _rpythonic_function_(		"tanl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-coshl = _rpythonic_function_(		"coshl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-sinhl = _rpythonic_function_(		"sinhl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-tanhl = _rpythonic_function_(		"tanhl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-acoshl = _rpythonic_function_(		"acoshl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-asinhl = _rpythonic_function_(		"asinhl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-atanhl = _rpythonic_function_(		"atanhl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-expl = _rpythonic_function_(		"expl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-frexpl = _rpythonic_function_(		"frexpl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__exponent",		ctypes.POINTER(ctypes.c_int)),] )
-
-ldexpl = _rpythonic_function_(		"ldexpl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__exponent",		ctypes.c_int),] )
-
-logl = _rpythonic_function_(		"logl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-log10l = _rpythonic_function_(		"log10l", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-modfl = _rpythonic_function_(		"modfl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__iptr",		ctypes.POINTER(ctypes.c_double)),] )
-
-expm1l = _rpythonic_function_(		"expm1l", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-log1pl = _rpythonic_function_(		"log1pl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-logbl = _rpythonic_function_(		"logbl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-exp2l = _rpythonic_function_(		"exp2l", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-log2l = _rpythonic_function_(		"log2l", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-powl = _rpythonic_function_(		"powl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-sqrtl = _rpythonic_function_(		"sqrtl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-hypotl = _rpythonic_function_(		"hypotl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-cbrtl = _rpythonic_function_(		"cbrtl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-ceill = _rpythonic_function_(		"ceill", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-fabsl = _rpythonic_function_(		"fabsl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-floorl = _rpythonic_function_(		"floorl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-fmodl = _rpythonic_function_(		"fmodl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-isinfl = _rpythonic_function_(		"isinfl", ctypes.c_int, [
-	("__value",		ctypes.c_double),] )
-
-finitel = _rpythonic_function_(		"finitel", ctypes.c_int, [
-	("__value",		ctypes.c_double),] )
-
-dreml = _rpythonic_function_(		"dreml", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-significandl = _rpythonic_function_(		"significandl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-copysignl = _rpythonic_function_(		"copysignl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-nanl = _rpythonic_function_(		"nanl", ctypes.c_double, [
-	("__tagb",		ctypes.POINTER(ctypes.c_char)),] )
-
-isnanl = _rpythonic_function_(		"isnanl", ctypes.c_int, [
-	("__value",		ctypes.c_double),] )
-
-j0l = _rpythonic_function_(		"j0l", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-j1l = _rpythonic_function_(		"j1l", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-jnl = _rpythonic_function_(		"jnl", ctypes.c_double, [
-	("none",		ctypes.c_int),
-	("none",		ctypes.c_double),] )
-
-y0l = _rpythonic_function_(		"y0l", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-y1l = _rpythonic_function_(		"y1l", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-ynl = _rpythonic_function_(		"ynl", ctypes.c_double, [
-	("none",		ctypes.c_int),
-	("none",		ctypes.c_double),] )
-
-erfl = _rpythonic_function_(		"erfl", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-erfcl = _rpythonic_function_(		"erfcl", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-lgammal = _rpythonic_function_(		"lgammal", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-tgammal = _rpythonic_function_(		"tgammal", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-gammal = _rpythonic_function_(		"gammal", ctypes.c_double, [
-	("none",		ctypes.c_double),] )
-
-lgammal_r = _rpythonic_function_(		"lgammal_r", ctypes.c_double, [
-	("none",		ctypes.c_double),
-	("__signgamp",		ctypes.POINTER(ctypes.c_int)),] )
-
-rintl = _rpythonic_function_(		"rintl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-nextafterl = _rpythonic_function_(		"nextafterl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-nexttowardl = _rpythonic_function_(		"nexttowardl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-remainderl = _rpythonic_function_(		"remainderl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-scalbnl = _rpythonic_function_(		"scalbnl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__n",		ctypes.c_int),] )
-
-ilogbl = _rpythonic_function_(		"ilogbl", ctypes.c_int, [
-	("__x",		ctypes.c_double),] )
-
-scalblnl = _rpythonic_function_(		"scalblnl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__n",		ctypes.c_int64),] )
-
-nearbyintl = _rpythonic_function_(		"nearbyintl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-roundl = _rpythonic_function_(		"roundl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-truncl = _rpythonic_function_(		"truncl", ctypes.c_double, [
-	("__x",		ctypes.c_double),] )
-
-remquol = _rpythonic_function_(		"remquol", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),
-	("__quo",		ctypes.POINTER(ctypes.c_int)),] )
-
-lrintl = _rpythonic_function_(		"lrintl", ctypes.c_int64, [
-	("__x",		ctypes.c_double),] )
-
-llrintl = _rpythonic_function_(		"llrintl", ctypes.c_longlong, [
-	("__x",		ctypes.c_double),] )
-
-lroundl = _rpythonic_function_(		"lroundl", ctypes.c_int64, [
-	("__x",		ctypes.c_double),] )
-
-llroundl = _rpythonic_function_(		"llroundl", ctypes.c_longlong, [
-	("__x",		ctypes.c_double),] )
-
-fdiml = _rpythonic_function_(		"fdiml", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-fmaxl = _rpythonic_function_(		"fmaxl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-fminl = _rpythonic_function_(		"fminl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),] )
-
-fmal = _rpythonic_function_(		"fmal", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__y",		ctypes.c_double),
-	("__z",		ctypes.c_double),] )
-
-scalbl = _rpythonic_function_(		"scalbl", ctypes.c_double, [
-	("__x",		ctypes.c_double),
-	("__n",		ctypes.c_double),] )
-
-matherr = _rpythonic_function_(		"matherr", ctypes.c_int, [
-	("__exc",		ctypes.POINTER(exception)),] )
-
-imaxabs = _rpythonic_function_(		"imaxabs", ctypes.c_int64, [
-	("__n",		ctypes.c_int64),] )
-
-imaxdiv = _rpythonic_function_(		"imaxdiv", imaxdiv_t, [
-	("__numer",		ctypes.c_int64),
-	("__denom",		ctypes.c_int64),] )
-
-strtoimax = _rpythonic_function_(		"strtoimax", ctypes.c_int64, [
-	("__nptr",		ctypes.POINTER(ctypes.c_char)),
-	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("__base",		ctypes.c_int),] )
-
-strtoumax = _rpythonic_function_(		"strtoumax", ctypes.c_uint64, [
-	("__nptr",		ctypes.POINTER(ctypes.c_char)),
-	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
-	("__base",		ctypes.c_int),] )
-
-wcstoimax = _rpythonic_function_(		"wcstoimax", ctypes.c_int64, [
-	("__nptr",		ctypes.POINTER(ctypes.c_int)),
-	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_int))),
-	("__base",		ctypes.c_int),] )
-
-wcstoumax = _rpythonic_function_(		"wcstoumax", ctypes.c_uint64, [
-	("__nptr",		ctypes.POINTER(ctypes.c_int)),
-	("__endptr",		ctypes.POINTER(ctypes.POINTER(ctypes.c_int))),
-	("__base",		ctypes.c_int),] )
-
-implementation = _rpythonic_function_(		"implementation", ctypes.c_void_p, [] )
-
-wl_list_init = _rpythonic_function_(		"wl_list_init", ctypes.c_void_p, [
-	("C_list",		ctypes.POINTER(wl_list)),] )
-
-wl_list_insert = _rpythonic_function_(		"wl_list_insert", ctypes.c_void_p, [
-	("C_list",		ctypes.POINTER(wl_list)),
-	("elm",		ctypes.POINTER(wl_list)),] )
-
-wl_list_remove = _rpythonic_function_(		"wl_list_remove", ctypes.c_void_p, [
-	("elm",		ctypes.POINTER(wl_list)),] )
-
-wl_list_length = _rpythonic_function_(		"wl_list_length", ctypes.c_int, [
-	("C_list",		ctypes.POINTER(wl_list)),] )
-
-wl_list_empty = _rpythonic_function_(		"wl_list_empty", ctypes.c_int, [
-	("C_list",		ctypes.POINTER(wl_list)),] )
-
-wl_list_insert_list = _rpythonic_function_(		"wl_list_insert_list", ctypes.c_void_p, [
-	("C_list",		ctypes.POINTER(wl_list)),
-	("other",		ctypes.POINTER(wl_list)),] )
-
-wl_array_init = _rpythonic_function_(		"wl_array_init", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(wl_array)),] )
-
-wl_array_release = _rpythonic_function_(		"wl_array_release", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(wl_array)),] )
-
-wl_array_add = _rpythonic_function_(		"wl_array_add", ctypes.POINTER(ctypes.c_void_p), [
-	("array",		ctypes.POINTER(wl_array)),
-	("size",		ctypes.c_uint64),] )
-
-wl_array_copy = _rpythonic_function_(		"wl_array_copy", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(wl_array)),
-	("source",		ctypes.POINTER(wl_array)),] )
-
-wl_log_func_t = _rpythonic_function_(		"wl_log_func_t", ctypes.c_void_p, [
-	("none",		ctypes.POINTER(ctypes.c_char)),
-	("none",		ctypes.c_char),] )
-
-wl_proxy_create = _rpythonic_function_(		"wl_proxy_create", ctypes.POINTER(wl_proxy), [
-	("factory",		ctypes.POINTER(wl_proxy)),
-	("interface",		ctypes.POINTER(wl_interface)),] )
-
-wl_proxy_get_user_data = _rpythonic_function_(		"wl_proxy_get_user_data", ctypes.POINTER(ctypes.c_void_p), [
-	("proxy",		ctypes.POINTER(wl_proxy)),] )
-
-wl_proxy_get_id = _rpythonic_function_(		"wl_proxy_get_id", ctypes.c_uint32, [
-	("proxy",		ctypes.POINTER(wl_proxy)),] )
-
-wl_display_bind = _rpythonic_function_(		"wl_display_bind", ctypes.POINTER(ctypes.c_void_p), [
-	("display",		ctypes.POINTER(wl_display)),
-	("name",		ctypes.c_uint32),
-	("interface",		ctypes.POINTER(wl_interface)),] )
-
-wl_proxy_create_for_id = _rpythonic_function_(		"wl_proxy_create_for_id", ctypes.POINTER(wl_proxy), [
-	("factory",		ctypes.POINTER(wl_proxy)),
-	("C_id",		ctypes.c_uint32),
-	("interface",		ctypes.POINTER(wl_interface)),] )
-
-wl_proxy_destroy = _rpythonic_function_(		"wl_proxy_destroy", ctypes.c_void_p, [
-	("proxy",		ctypes.POINTER(wl_proxy)),] )
-
-wl_proxy_add_listener = _rpythonic_function_(		"wl_proxy_add_listener", ctypes.c_int, [
-	("proxy",		ctypes.POINTER(wl_proxy)),
-	("implementation",		ctypes.POINTER(ctypes.c_void_p)),
-	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-wl_proxy_set_user_data = _rpythonic_function_(		"wl_proxy_set_user_data", ctypes.c_void_p, [
-	("proxy",		ctypes.POINTER(wl_proxy)),
-	("user_data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-wl_display_sync = _rpythonic_function_(		"wl_display_sync", ctypes.POINTER(wl_callback), [
-	("display",		ctypes.POINTER(wl_display)),] )
-
-error = _rpythonic_function_(		"error", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_display",		ctypes.POINTER(wl_display)),
-	("object_id",		ctypes.POINTER(wl_object)),
-	("code",		ctypes.c_uint32),
-	("message",		ctypes.POINTER(ctypes.c_char)),] )
-
-C_global = _rpythonic_function_(		"C_global", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_display",		ctypes.POINTER(wl_display)),
-	("name",		ctypes.c_uint32),
-	("interface",		ctypes.POINTER(ctypes.c_char)),
-	("version",		ctypes.c_uint32),] )
-
-global_remove = _rpythonic_function_(		"global_remove", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_display",		ctypes.POINTER(wl_display)),
-	("name",		ctypes.c_uint32),] )
-
-delete_id = _rpythonic_function_(		"delete_id", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_display",		ctypes.POINTER(wl_display)),
-	("C_id",		ctypes.c_uint32),] )
-
-done = _rpythonic_function_(		"done", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_callback",		ctypes.POINTER(wl_callback)),
-	("serial",		ctypes.c_uint32),] )
-
-format = _rpythonic_function_(		"format", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_shm",		ctypes.POINTER(wl_shm)),
-	("format",		ctypes.c_uint32),] )
-
-release = _rpythonic_function_(		"release", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_buffer",		ctypes.POINTER(wl_buffer)),] )
-
-offer = _rpythonic_function_(		"offer", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_offer",		ctypes.POINTER(wl_data_offer)),
-	("C_type",		ctypes.POINTER(ctypes.c_char)),] )
-
-target = _rpythonic_function_(		"target", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_source",		ctypes.POINTER(wl_data_source)),
-	("mime_type",		ctypes.POINTER(ctypes.c_char)),] )
-
-data_offer = _rpythonic_function_(		"data_offer", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_device",		ctypes.POINTER(wl_data_device)),
-	("C_id",		ctypes.POINTER(wl_data_offer)),] )
-
-enter = _rpythonic_function_(		"enter", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_device",		ctypes.POINTER(wl_data_device)),
-	("serial",		ctypes.c_uint32),
-	("surface",		ctypes.POINTER(wl_surface)),
-	("x",		ctypes.c_int32),
-	("y",		ctypes.c_int32),
-	("C_id",		ctypes.POINTER(wl_data_offer)),] )
-
-send = _rpythonic_function_(		"send", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_source",		ctypes.POINTER(wl_data_source)),
-	("mime_type",		ctypes.POINTER(ctypes.c_char)),
-	("fd",		ctypes.c_int32),] )
-
-cancelled = _rpythonic_function_(		"cancelled", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_source",		ctypes.POINTER(wl_data_source)),] )
-
-leave = _rpythonic_function_(		"leave", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_device",		ctypes.POINTER(wl_data_device)),] )
-
-motion = _rpythonic_function_(		"motion", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_device",		ctypes.POINTER(wl_data_device)),
-	("time",		ctypes.c_uint32),
-	("x",		ctypes.c_int32),
-	("y",		ctypes.c_int32),] )
-
-drop = _rpythonic_function_(		"drop", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_device",		ctypes.POINTER(wl_data_device)),] )
-
-selection = _rpythonic_function_(		"selection", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_data_device",		ctypes.POINTER(wl_data_device)),
-	("C_id",		ctypes.POINTER(wl_data_offer)),] )
-
-ping = _rpythonic_function_(		"ping", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_shell_surface",		ctypes.POINTER(wl_shell_surface)),
-	("serial",		ctypes.c_uint32),] )
-
-configure = _rpythonic_function_(		"configure", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_shell_surface",		ctypes.POINTER(wl_shell_surface)),
-	("edges",		ctypes.c_uint32),
-	("width",		ctypes.c_int32),
-	("height",		ctypes.c_int32),] )
-
-popup_done = _rpythonic_function_(		"popup_done", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_shell_surface",		ctypes.POINTER(wl_shell_surface)),] )
-
 capabilities = _rpythonic_function_(		"capabilities", ctypes.c_void_p, [
 	("data",		ctypes.POINTER(ctypes.c_void_p)),
 	("wl_seat",		ctypes.POINTER(wl_seat)),
 	("capabilities",		ctypes.c_uint32),] )
+
+geometry = _rpythonic_function_(		"geometry", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_output",		ctypes.POINTER(wl_output)),
+	("x",		ctypes.c_int32),
+	("y",		ctypes.c_int32),
+	("physical_width",		ctypes.c_int32),
+	("physical_height",		ctypes.c_int32),
+	("subpixel",		ctypes.c_int32),
+	("make",		ctypes.POINTER(ctypes.c_char)),
+	("model",		ctypes.POINTER(ctypes.c_char)),] )
+
+mode = _rpythonic_function_(		"mode", ctypes.c_void_p, [
+	("data",		ctypes.POINTER(ctypes.c_void_p)),
+	("wl_output",		ctypes.POINTER(wl_output)),
+	("flags",		ctypes.c_uint32),
+	("width",		ctypes.c_int32),
+	("height",		ctypes.c_int32),
+	("refresh",		ctypes.c_int32),] )
 
 button = _rpythonic_function_(		"button", ctypes.c_void_p, [
 	("data",		ctypes.POINTER(ctypes.c_void_p)),
@@ -2075,25 +2095,6 @@ frame = _rpythonic_function_(		"frame", ctypes.c_void_p, [
 cancel = _rpythonic_function_(		"cancel", ctypes.c_void_p, [
 	("data",		ctypes.POINTER(ctypes.c_void_p)),
 	("wl_touch",		ctypes.POINTER(wl_touch)),] )
-
-geometry = _rpythonic_function_(		"geometry", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_output",		ctypes.POINTER(wl_output)),
-	("x",		ctypes.c_int32),
-	("y",		ctypes.c_int32),
-	("physical_width",		ctypes.c_int32),
-	("physical_height",		ctypes.c_int32),
-	("subpixel",		ctypes.c_int32),
-	("make",		ctypes.POINTER(ctypes.c_char)),
-	("model",		ctypes.POINTER(ctypes.c_char)),] )
-
-mode = _rpythonic_function_(		"mode", ctypes.c_void_p, [
-	("data",		ctypes.POINTER(ctypes.c_void_p)),
-	("wl_output",		ctypes.POINTER(wl_output)),
-	("flags",		ctypes.c_uint32),
-	("width",		ctypes.c_int32),
-	("height",		ctypes.c_int32),
-	("refresh",		ctypes.c_int32),] )
 
 wl_display_update_func_t = _rpythonic_function_(		"wl_display_update_func_t", ctypes.c_int, [
 	("mask",		ctypes.c_uint32),
