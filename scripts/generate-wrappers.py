@@ -513,6 +513,20 @@ if '--libvnc' in sys.argv or ALL:
 		library_names=['libvncclient'],
 	)
 
+if '--wayland' in sys.argv or ALL:
+	rpythonic.wrap( 'wayland_server', 
+		header='../../wayland/src/wayland-server.h',
+		includes=['../../wayland/src/'],
+		library_names=['libwayland-server'],
+		strip_prefixes = ['wl_', 'WL_'],
+	)
+	rpythonic.wrap( 'wayland_client', 
+		header='../../wayland/src/wayland-client.h',
+		includes=['../../wayland/src/'],
+		library_names=['libwayland-client'],
+		strip_prefixes = ['wl_', 'WL_'],
+	)
+
 
 if '--test' in sys.argv:
 	rpythonic.wrap( 'testing', 
