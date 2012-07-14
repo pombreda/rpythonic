@@ -1,12 +1,10 @@
 #!/usr/bin/pypy
-#!/usr/bin/python
-
-#http://parmanoir.com/Taming_JavascriptCore_within_and_without_WebView
-#http://gxjones.blogspot.sg/2008/02/javascript-core-in-leopard-basics.html
-
 
 import os, sys, time, ctypes
-import webkit
+import webkitgtk as webkit
+gtk = webkit
+gtk.init()
+
 
 a = 400
 b = 20.0
@@ -31,4 +29,23 @@ assert value == a+b
 
 print(result, value)
 print('webkit test complete')
+
+############ Test WebKitGTK #############
+view = webkit.web_view_new()
+print(view)
+
+#view.load_string('hello world', "text/html", "iso-8859-15", "mytitle")
+view.load_uri( 'http://google.com' )
+frame = view.get_main_frame()
+
+win = gtk.Window()
+win.add( view )
+win.set_default_size( 320, 240 )
+win.show_all()
+
+while True:
+	if gtk.gtk_events_pending():
+		gtk.gtk_main_iteration()
+
+print('webkit-gtk test complete')
 

@@ -67549,7 +67549,9 @@ def rgb2gdk( r, g, b ): return GdkColor(0,int(r*65535),int(g*65535),int(b*65535)
 def gdk2rgb( c ): return (c.red/65536.0, c.green/65536.0, c.blue/65536.0)
 
 
+webkit_web_view_new.return_wrapper = WebKitWebView
+
 _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()
 _rpythonic_clean_up_missing_functions_()
-_rpythonic_strip_prefixes_(['GTK_', 'gtk_'])
+_rpythonic_strip_prefixes_(['GTK_', 'gtk_', 'webkit_'])
