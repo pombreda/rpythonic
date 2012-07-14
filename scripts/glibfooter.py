@@ -117,3 +117,30 @@ def Variant( *args, **kw ):
 		else:
 			return variant_new_tuple( array, len(args) )
 
+
+## rpythonic can not parse: #define G_TYPE_INVALID	G_TYPE_MAKE_FUNDAMENTAL (0)
+G_TYPE_INVALID = 0
+G_TYPE_NONE = 1
+G_TYPE_INTERFACE = 2
+G_TYPE_CHAR = 3
+G_TYPE_UCHAR = 4
+G_TYPE_BOOLEAN = 5
+G_TYPE_INT = 6
+G_TYPE_UINT = 7
+G_TYPE_LONG = 8
+G_TYPE_ULONG = 9
+G_TYPE_INT64 = 10
+G_TYPE_UINT64 = 11
+G_TYPE_ENUM = 12
+G_TYPE_FLAGS = 13
+G_TYPE_FLOAT = 14
+G_TYPE_DOUBLE = 15
+G_TYPE_STRING = 16
+G_TYPE_POINTER = 17
+G_TYPE_BOXED = 18
+G_TYPE_PARAM = 19
+G_TYPE_OBJECT = 20
+G_TYPE_VARIANT = 21
+
+
+

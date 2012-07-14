@@ -214,9 +214,10 @@ if '--gvfs' in sys.argv:	# not working
 
 # sudo apt-get install libwebkit-dev
 # sudo apt-get install libwebkitgtk-3.0-dev
-if '--webkit' in sys.argv or ALL:
+if '--webkit' in sys.argv:
 	footer = '''
 
+webkit_dom_html_element_get_inner_html.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
 webkit_web_view_new.return_wrapper = WebKitWebView
 
 	'''
@@ -236,4 +237,11 @@ webkit_web_view_new.return_wrapper = WebKitWebView
 	)
 
 
+#sudo apt-get install libgirepository1.0-dev
+if '--gi' in sys.argv:
+	rpythonic.wrap( 'libgi', 
+		header = '/usr/include/gobject-introspection-1.0/girepository.h',
+		library_names=['libgirepository-1.0'],
+		includes = GINCLUDE,
+	)
 

@@ -67548,7 +67548,30 @@ def hsv2rgb( h,s,v ):
 def rgb2gdk( r, g, b ): return GdkColor(0,int(r*65535),int(g*65535),int(b*65535))
 def gdk2rgb( c ): return (c.red/65536.0, c.green/65536.0, c.blue/65536.0)
 
+G_TYPE_INVALID = g_type_fundamental(0)
+G_TYPE_NONE = g_type_fundamental(1)
+G_TYPE_INTERFACE = g_type_fundamental(2)
+G_TYPE_CHAR = g_type_fundamental(3)
+G_TYPE_UCHAR = g_type_fundamental(4)
+G_TYPE_BOOLEAN = g_type_fundamental(5)
+G_TYPE_INT = 6
+G_TYPE_UINT = 7
+G_TYPE_LONG = 8
+G_TYPE_ULONG = 9
+G_TYPE_INT64 = 10
+G_TYPE_UINT64 = 11
+G_TYPE_ENUM = 12
+G_TYPE_FLAGS = 13
+G_TYPE_FLOAT = 14
+G_TYPE_DOUBLE = 15
+G_TYPE_STRING = 16
+G_TYPE_POINTER = 17
+G_TYPE_BOXED = 18
+G_TYPE_PARAM = 19
+G_TYPE_OBJECT = 20
+G_TYPE_VARIANT = 21
 
+webkit_dom_html_element_get_inner_html.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
 webkit_web_view_new.return_wrapper = WebKitWebView
 
 _rpythonic_setup_return_wrappers()
