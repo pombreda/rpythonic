@@ -212,4 +212,23 @@ if '--gvfs' in sys.argv:	# not working
 		library_names = ['/usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so', '/usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon-dnssd.so'],
 	)
 
+# sudo apt-get install libwebkit-dev
+# sudo apt-get install libwebkitgtk-3.0-dev
+if '--webkit' in sys.argv or ALL:
+	rpythonic.wrap( 'webkit', 
+		header = '/usr/include/webkitgtk-3.0/JavaScriptCore/JavaScript.h',	# JavaScriptCore.h will want 
+		includes=['/usr/include/webkitgtk-3.0/'],
+		library_names=['libwebkitgtk-3.0'],
+	)
+
+	rpythonic.wrap( 'webkitgtk', 
+		header='/usr/include/webkitgtk-3.0/webkit/webkit.h',
+		insert_headers = ['/usr/include/webkitgtk-3.0/JavaScriptCore/JavaScript.h'],
+		includes=['/usr/include/webkitgtk-3.0/', '/usr/include/libsoup-2.4/', '/usr/include/gtk-3.0/'] + GINCLUDE,
+		library_names=['libwebkitgtk-3.0'],
+		ctypes_footer= glibfooter + gtkfooter,
+		strip_prefixes = ['GTK_', 'gtk_'],
+	)
+
+
 

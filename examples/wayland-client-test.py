@@ -1,6 +1,6 @@
 #!/usr/bin/pypy
 # this also works in Python2 and Python3
-# to run this you must have compiled and installed libwayland-client.so to /usr/local/lib/
+# to run this you must have compiled and installed libwayland-server.so to /usr/local/lib/
 
 import os, sys, time, ctypes
 import socket
