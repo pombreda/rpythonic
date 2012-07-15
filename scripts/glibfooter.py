@@ -151,7 +151,7 @@ class _g_value_data( ctypes.Structure ):
 class _g_value_struct( ctypes.Structure ):
 	_fields_ = [
 		('type', ctypes.c_ulong),
-		('data', (_g_value_data*1)),
+		('data', (_g_value_data*2)),
 	]
 
 def GValue( arg, unsigned=False, long=False, enum=False, pointer=False, double=True, char=False, flag=False, param=False, boxed=False, gobject=False, variant=False ):

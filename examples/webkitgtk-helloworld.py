@@ -36,12 +36,11 @@ view = webkit.webkit_web_view_new()	#WebKitWebView()
 print(view)
 
 
-if False:		# This will crash PyPy, but it won't crash CPython!
-	settings = webkit.web_settings_new()
-	for prop in 'enable-webaudio enable-file-access-from-file-uris enable-universal-access-from-file-uris enable-developer-extras enable-accelerated-compositing enable-webgl'.split():
-		gval = glib.GValue(True)
-		glib.g_object_set_property( settings, prop, gval )
-	view.set_settings( settings )
+settings = webkit.web_settings_new()
+for prop in 'enable-webaudio enable-file-access-from-file-uris enable-universal-access-from-file-uris enable-developer-extras enable-accelerated-compositing enable-webgl'.split():
+	gval = glib.GValue(True)
+	glib.g_object_set_property( settings, prop, gval )
+view.set_settings( settings )
 #view.load_uri( 'http://get.webgl.org/')	# webkit still not built by default with webgl
 
 #view.load_string('hello world', "text/html", "iso-8859-15", "mytitle")
