@@ -60493,26 +60493,16 @@ gtk_page_setup_get_paper_width = _rpythonic_function_(		"gtk_page_setup_get_pape
 	("setup",		ctypes.POINTER(_GtkPageSetup)),
 	("unit",		ctypes.c_int),] )
 
-gtk_page_setup_get_paper_height = _rpythonic_function_(		"gtk_page_setup_get_paper_height", ctypes.c_double, [
-	("setup",		ctypes.POINTER(_GtkPageSetup)),
-	("unit",		ctypes.c_int),] )
-
-gtk_page_setup_get_page_width = _rpythonic_function_(		"gtk_page_setup_get_page_width", ctypes.c_double, [
-	("setup",		ctypes.POINTER(_GtkPageSetup)),
-	("unit",		ctypes.c_int),] )
-
-gtk_page_setup_get_page_height = _rpythonic_function_(		"gtk_page_setup_get_page_height", ctypes.c_double, [
-	("setup",		ctypes.POINTER(_GtkPageSetup)),
-	("unit",		ctypes.c_int),] )
-
-gtk_page_setup_new_from_file = _rpythonic_function_(		"gtk_page_setup_new_from_file", ctypes.POINTER(_GtkPageSetup), [
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
-gtk_page_setup_load_file = _rpythonic_function_(		"gtk_page_setup_load_file", ctypes.c_int, [
-	("setup",		ctypes.POINTER(_GtkPageSetup)),
-	("file_name",		ctypes.POINTER(ctypes.c_char)),
-	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
+draw_focus = _rpythonic_function_(		"draw_focus", ctypes.c_void_p, [
+	("style",		ctypes.POINTER(_GtkStyle)),
+	("cr",		ctypes.POINTER(_cairo)),
+	("state_type",		ctypes.c_int),
+	("widget",		ctypes.POINTER(_GtkWidget)),
+	("detail",		ctypes.POINTER(ctypes.c_char)),
+	("x",		ctypes.c_int),
+	("y",		ctypes.c_int),
+	("width",		ctypes.c_int),
+	("height",		ctypes.c_int),] )
 
 draw_slider = _rpythonic_function_(		"draw_slider", ctypes.c_void_p, [
 	("style",		ctypes.POINTER(_GtkStyle)),
@@ -61300,21 +61290,26 @@ webkit_editing_behavior_get_type = _rpythonic_function_(		"webkit_editing_behavi
 
 webkit_web_history_item_get_type = _rpythonic_function_(		"webkit_web_history_item_get_type", ctypes.c_ulong, [] )
 
-webkit_web_history_item_new = _rpythonic_function_(		"webkit_web_history_item_new", ctypes.POINTER(_WebKitWebHistoryItem), [] )
+gtk_page_setup_get_paper_height = _rpythonic_function_(		"gtk_page_setup_get_paper_height", ctypes.c_double, [
+	("setup",		ctypes.POINTER(_GtkPageSetup)),
+	("unit",		ctypes.c_int),] )
 
-webkit_web_history_item_new_with_data = _rpythonic_function_(		"webkit_web_history_item_new_with_data", ctypes.POINTER(_WebKitWebHistoryItem), [
-	("uri",		ctypes.POINTER(ctypes.c_char)),
-	("title",		ctypes.POINTER(ctypes.c_char)),] )
+gtk_page_setup_get_page_width = _rpythonic_function_(		"gtk_page_setup_get_page_width", ctypes.c_double, [
+	("setup",		ctypes.POINTER(_GtkPageSetup)),
+	("unit",		ctypes.c_int),] )
 
-webkit_web_history_item_get_title = _rpythonic_function_(		"webkit_web_history_item_get_title", ctypes.POINTER(ctypes.c_char), [
-	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),] )
+gtk_page_setup_get_page_height = _rpythonic_function_(		"gtk_page_setup_get_page_height", ctypes.c_double, [
+	("setup",		ctypes.POINTER(_GtkPageSetup)),
+	("unit",		ctypes.c_int),] )
 
-webkit_web_history_item_get_alternate_title = _rpythonic_function_(		"webkit_web_history_item_get_alternate_title", ctypes.POINTER(ctypes.c_char), [
-	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),] )
+gtk_page_setup_new_from_file = _rpythonic_function_(		"gtk_page_setup_new_from_file", ctypes.POINTER(_GtkPageSetup), [
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
-webkit_web_history_item_set_alternate_title = _rpythonic_function_(		"webkit_web_history_item_set_alternate_title", ctypes.c_void_p, [
-	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),
-	("title",		ctypes.POINTER(ctypes.c_char)),] )
+gtk_page_setup_load_file = _rpythonic_function_(		"gtk_page_setup_load_file", ctypes.c_int, [
+	("setup",		ctypes.POINTER(_GtkPageSetup)),
+	("file_name",		ctypes.POINTER(ctypes.c_char)),
+	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
 gtk_page_setup_to_file = _rpythonic_function_(		"gtk_page_setup_to_file", ctypes.c_int, [
 	("setup",		ctypes.POINTER(_GtkPageSetup)),
@@ -66003,16 +65998,21 @@ draw_extension = _rpythonic_function_(		"draw_extension", ctypes.c_void_p, [
 	("height",		ctypes.c_int),
 	("gap_side",		ctypes.c_int),] )
 
-draw_focus = _rpythonic_function_(		"draw_focus", ctypes.c_void_p, [
-	("style",		ctypes.POINTER(_GtkStyle)),
-	("cr",		ctypes.POINTER(_cairo)),
-	("state_type",		ctypes.c_int),
-	("widget",		ctypes.POINTER(_GtkWidget)),
-	("detail",		ctypes.POINTER(ctypes.c_char)),
-	("x",		ctypes.c_int),
-	("y",		ctypes.c_int),
-	("width",		ctypes.c_int),
-	("height",		ctypes.c_int),] )
+webkit_web_history_item_new = _rpythonic_function_(		"webkit_web_history_item_new", ctypes.POINTER(_WebKitWebHistoryItem), [] )
+
+webkit_web_history_item_new_with_data = _rpythonic_function_(		"webkit_web_history_item_new_with_data", ctypes.POINTER(_WebKitWebHistoryItem), [
+	("uri",		ctypes.POINTER(ctypes.c_char)),
+	("title",		ctypes.POINTER(ctypes.c_char)),] )
+
+webkit_web_history_item_get_title = _rpythonic_function_(		"webkit_web_history_item_get_title", ctypes.POINTER(ctypes.c_char), [
+	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),] )
+
+webkit_web_history_item_get_alternate_title = _rpythonic_function_(		"webkit_web_history_item_get_alternate_title", ctypes.POINTER(ctypes.c_char), [
+	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),] )
+
+webkit_web_history_item_set_alternate_title = _rpythonic_function_(		"webkit_web_history_item_set_alternate_title", ctypes.c_void_p, [
+	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),
+	("title",		ctypes.POINTER(ctypes.c_char)),] )
 
 webkit_web_history_item_get_uri = _rpythonic_function_(		"webkit_web_history_item_get_uri", ctypes.POINTER(ctypes.c_char), [
 	("web_history_item",		ctypes.POINTER(_WebKitWebHistoryItem)),] )
@@ -67228,6 +67228,140 @@ def Variant( *args, **kw ):
 		else:
 			return variant_new_tuple( array, len(args) )
 
+
+## rpythonic can not parse: #define G_TYPE_INVALID	G_TYPE_MAKE_FUNDAMENTAL (0)
+G_TYPE_FUNDAMENTAL_SHIFT = 2
+G_TYPE_INVALID = 	0 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_NONE = 		1 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_INTERFACE = 	2 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_CHAR = 		3 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_UCHAR = 		4 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_BOOLEAN = 	5 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_INT = 		6 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_UINT = 		7 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_LONG = 		8 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_ULONG = 		9 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_INT64 = 		10 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_UINT64 = 		11 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_ENUM = 		12 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_FLAGS = 		13 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_FLOAT = 		14 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_DOUBLE = 	15 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_STRING = 		16 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_POINTER = 	17 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_BOXED = 		18 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_PARAM = 		19 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_OBJECT = 		20 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_VARIANT = 	21 << G_TYPE_FUNDAMENTAL_SHIFT
+
+class _g_value_data( ctypes.Structure ):
+	_fields_ = [
+		('padding', ctypes.c_ulong),
+	]
+
+class _g_value_struct( ctypes.Structure ):
+	_fields_ = [
+		('type', ctypes.c_ulong),
+		('data', (_g_value_data*1)),
+	]
+
+def GValue( arg, unsigned=False, long=False, enum=False, pointer=False, double=True, char=False, flag=False, param=False, boxed=False, gobject=False, variant=False ):
+	ptr = ctypes.pointer( _g_value_struct() )
+
+	if pointer:
+		gval = g_value_init( ptr, G_TYPE_POINTER )
+		g_value_set_pointer( gval, arg )
+		return gval
+
+	elif flag:
+		gval = g_value_init( ptr, G_TYPE_FLAGS )
+		g_value_set_flags( gval, arg )
+		return gval
+
+	elif param:
+		gval = g_value_init( ptr, G_TYPE_PARAM )
+		g_value_set_param( gval, arg )
+		return gval
+
+	elif boxed:
+		gval = g_value_init( ptr, G_TYPE_BOXED )
+		g_value_set_boxed( gval, arg )
+		return gval
+
+	elif gobject:
+		gval = g_value_init( ptr, G_TYPE_OBJECT )
+		g_value_set_object( gval, arg )
+		return gval
+
+	elif variant:
+		gval = g_value_init( ptr, G_TYPE_VARIANT )
+		g_value_set_variant( gval, arg )
+		return gval
+
+
+	elif isinstance(arg,bool):
+		gval = g_value_init( ptr, G_TYPE_BOOLEAN )
+		g_value_set_boolean( gval, arg )
+		return gval
+
+	elif isinstance(arg, int) and enum:
+		gval = g_value_init( ptr, G_TYPE_ENUM )
+		g_value_set_enum( gval, arg )
+		return gval
+
+	elif isinstance(arg, int) and long:
+		if unsigned:
+			gval = g_value_init( ptr, G_TYPE_ULONG )
+			g_value_set_ulong( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_LONG )
+			g_value_set_long( gval, arg )
+		return gval
+	elif isinstance(arg, int):
+		if unsigned:
+			gval = g_value_init( ptr, G_TYPE_UINT )
+			g_value_set_uint( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_INT )
+			g_value_set_int( gval, arg )
+		return gval
+
+	elif isinstance(arg, float):
+		if double:
+			gval = g_value_init( ptr, G_TYPE_DOUBLE )
+			g_value_set_double( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_FLOAT )
+			g_value_set_float( gval, arg )
+		return gval
+
+	elif isinstance(arg, _basestring):
+		if char:
+			if unsigned:
+				gval = g_value_init( ptr, G_TYPE_UCHAR )
+				g_value_set_char( gval, arg )
+			else:
+				gval = g_value_init( ptr, G_TYPE_CHAR )
+				g_value_set_schar( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_STRING )
+			g_value_set_string( gval, arg )
+		return gval
+
+
+	elif arg is None:
+		gval = g_value_init( ptr, G_TYPE_NONE )
+		return gval
+
+
+
+	else:
+		raise NotImplementedError
+
+
+
+
+
 cairo_rectangle_int = _cairo_rectangle_int
 
 gtk_window_new.defaults[0] = GTK_WINDOW_TOPLEVEL
@@ -67237,7 +67371,7 @@ gtk_box_pack_start.defaults[3] = True		# fill
 gtk_box_pack_end.defaults[2] = True		# expand
 gtk_box_pack_end.defaults[3] = True		# fill
 
-_RETURNS_CHARP_ = (
+_RETURNS_CHARP_ = [
 	gtk_accelerator_get_label,
 	gtk_widget_path_iter_get_name,
 
@@ -67392,12 +67526,7 @@ _RETURNS_CHARP_ = (
 	gdk_rgba_to_string,
 	gdk_pixbuf_format_get_name,
 	gdk_keyval_name,
-)
-
-for func in _RETURNS_CHARP_:
-	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
-
-
+]
 
 
 
@@ -67485,6 +67614,13 @@ GTK_CONTAINER_CLASSES = {
 	GtkMenuBar : gtk_menu_bar_new,
 
 }
+
+################### WebKitGTK #####################
+if 'WebKitWebView' in globals():
+	GTK_WIDGET_CLASSES[ WebKitWebView ] = webkit_web_view_new
+	_RETURNS_CHARP_.append( webkit_dom_html_element_get_inner_html )
+
+################# Clutter GTK ######################
 if 'GtkSocket' in globals():	# this is missing with Clutter
 	GTK_WIDGET_CLASSES[ GtkSocket ] = gtk_socket_new
 
@@ -67522,6 +67658,13 @@ if 'ClutterActor' in globals():
 		return x.contents.value, y.contents.value
 	ClutterActor.get_size = _get_
 
+
+################################################
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
+
 for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 	for o in d:
 		o._rpythonic_parent_classes_.append( GtkWidget )
@@ -67548,31 +67691,6 @@ def hsv2rgb( h,s,v ):
 def rgb2gdk( r, g, b ): return GdkColor(0,int(r*65535),int(g*65535),int(b*65535))
 def gdk2rgb( c ): return (c.red/65536.0, c.green/65536.0, c.blue/65536.0)
 
-G_TYPE_INVALID = g_type_fundamental(0)
-G_TYPE_NONE = g_type_fundamental(1)
-G_TYPE_INTERFACE = g_type_fundamental(2)
-G_TYPE_CHAR = g_type_fundamental(3)
-G_TYPE_UCHAR = g_type_fundamental(4)
-G_TYPE_BOOLEAN = g_type_fundamental(5)
-G_TYPE_INT = 6
-G_TYPE_UINT = 7
-G_TYPE_LONG = 8
-G_TYPE_ULONG = 9
-G_TYPE_INT64 = 10
-G_TYPE_UINT64 = 11
-G_TYPE_ENUM = 12
-G_TYPE_FLAGS = 13
-G_TYPE_FLOAT = 14
-G_TYPE_DOUBLE = 15
-G_TYPE_STRING = 16
-G_TYPE_POINTER = 17
-G_TYPE_BOXED = 18
-G_TYPE_PARAM = 19
-G_TYPE_OBJECT = 20
-G_TYPE_VARIANT = 21
-
-webkit_dom_html_element_get_inner_html.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
-webkit_web_view_new.return_wrapper = WebKitWebView
 
 _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()

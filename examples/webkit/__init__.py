@@ -827,24 +827,82 @@ __freeze_rpythonic_struct( JSClassDefinition, [
 ])
 
 ## wrapper functions ##
-JSGarbageCollect = _rpythonic_function_(		"JSGarbageCollect", ctypes.c_void_p, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+JSStringRetain = _rpythonic_function_(		"JSStringRetain", ctypes.POINTER(OpaqueJSString), [
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
 
-JSValueGetType = _rpythonic_function_(		"JSValueGetType", ctypes.c_int, [
+JSStringRelease = _rpythonic_function_(		"JSStringRelease", ctypes.c_void_p, [
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSStringGetLength = _rpythonic_function_(		"JSStringGetLength", ctypes.c_uint64, [
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSStringGetCharactersPtr = _rpythonic_function_(		"JSStringGetCharactersPtr", ctypes.POINTER(ctypes.c_ushort), [
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSStringGetMaximumUTF8CStringSize = _rpythonic_function_(		"JSStringGetMaximumUTF8CStringSize", ctypes.c_uint64, [
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSStringGetUTF8CString = _rpythonic_function_(		"JSStringGetUTF8CString", ctypes.c_uint64, [
+	("string",		ctypes.POINTER(OpaqueJSString)),
+	("buffer",		ctypes.POINTER(ctypes.c_char)),
+	("bufferSize",		ctypes.c_uint64),] )
+
+JSEvaluateScript = _rpythonic_function_(		"JSEvaluateScript", ctypes.POINTER(OpaqueJSValue), [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("script",		ctypes.POINTER(OpaqueJSString)),
+	("thisObject",		ctypes.POINTER(OpaqueJSValue)),
+	("sourceURL",		ctypes.POINTER(OpaqueJSString)),
+	("startingLineNumber",		ctypes.c_int),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSCheckScriptSyntax = _rpythonic_function_(		"JSCheckScriptSyntax", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("script",		ctypes.POINTER(OpaqueJSString)),
+	("sourceURL",		ctypes.POINTER(OpaqueJSString)),
+	("startingLineNumber",		ctypes.c_int),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectGetPrototype = _rpythonic_function_(		"JSObjectGetPrototype", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSObjectSetPrototype = _rpythonic_function_(		"JSObjectSetPrototype", ctypes.c_void_p, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("value",		ctypes.POINTER(OpaqueJSValue)),] )
 
-JSValueIsUndefined = _rpythonic_function_(		"JSValueIsUndefined", ctypes.c_bool, [
+JSObjectHasProperty = _rpythonic_function_(		"JSObjectHasProperty", ctypes.c_bool, [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),
+	("propertyName",		ctypes.POINTER(OpaqueJSString)),] )
 
-JSValueIsNull = _rpythonic_function_(		"JSValueIsNull", ctypes.c_bool, [
+JSObjectMakeDate = _rpythonic_function_(		"JSObjectMakeDate", ctypes.POINTER(OpaqueJSValue), [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
-JSValueIsBoolean = _rpythonic_function_(		"JSValueIsBoolean", ctypes.c_bool, [
+JSObjectMakeError = _rpythonic_function_(		"JSObjectMakeError", ctypes.POINTER(OpaqueJSValue), [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectMakeRegExp = _rpythonic_function_(		"JSObjectMakeRegExp", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectMakeFunction = _rpythonic_function_(		"JSObjectMakeFunction", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("name",		ctypes.POINTER(OpaqueJSString)),
+	("parameterCount",		ctypes.c_void_p),
+	("parameterNames",		ctypes.POINTER(OpaqueJSString)),
+	("body",		ctypes.POINTER(OpaqueJSString)),
+	("sourceURL",		ctypes.POINTER(OpaqueJSString)),
+	("startingLineNumber",		ctypes.c_int),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
 JSObjectDeletePropertyCallback = _rpythonic_function_(		"JSObjectDeletePropertyCallback", ctypes.c_bool, [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
@@ -885,41 +943,141 @@ JSObjectSetPrivate = _rpythonic_function_(		"JSObjectSetPrivate", ctypes.c_bool,
 	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-JSValueToBoolean = _rpythonic_function_(		"JSValueToBoolean", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSValueToNumber = _rpythonic_function_(		"JSValueToNumber", ctypes.c_double, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSValueToStringCopy = _rpythonic_function_(		"JSValueToStringCopy", ctypes.POINTER(OpaqueJSString), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSValueToObject = _rpythonic_function_(		"JSValueToObject", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectHasPropertyCallback = _rpythonic_function_(		"JSObjectHasPropertyCallback", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),
-	("propertyName",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSObjectGetPropertyCallback = _rpythonic_function_(		"JSObjectGetPropertyCallback", ctypes.POINTER(OpaqueJSValue), [
+JSObjectGetProperty = _rpythonic_function_(		"JSObjectGetProperty", ctypes.POINTER(OpaqueJSValue), [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
 	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("propertyName",		ctypes.POINTER(OpaqueJSString)),
 	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
-JSObjectSetPropertyCallback = _rpythonic_function_(		"JSObjectSetPropertyCallback", ctypes.c_bool, [
+JSObjectSetProperty = _rpythonic_function_(		"JSObjectSetProperty", ctypes.c_void_p, [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
 	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("propertyName",		ctypes.POINTER(OpaqueJSString)),
 	("value",		ctypes.POINTER(OpaqueJSValue)),
+	("attributes",		ctypes.c_void_p),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectDeleteProperty = _rpythonic_function_(		"JSObjectDeleteProperty", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),
+	("propertyName",		ctypes.POINTER(OpaqueJSString)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectCallAsConstructorCallback = _rpythonic_function_(		"JSObjectCallAsConstructorCallback", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("constructor",		ctypes.POINTER(OpaqueJSValue)),
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectHasInstanceCallback = _rpythonic_function_(		"JSObjectHasInstanceCallback", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("constructor",		ctypes.POINTER(OpaqueJSValue)),
+	("possibleInstance",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectConvertToTypeCallback = _rpythonic_function_(		"JSObjectConvertToTypeCallback", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),
+	("C_type",		ctypes.c_int),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSValueIsStrictEqual = _rpythonic_function_(		"JSValueIsStrictEqual", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("a",		ctypes.POINTER(OpaqueJSValue)),
+	("b",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSValueIsInstanceOfConstructor = _rpythonic_function_(		"JSValueIsInstanceOfConstructor", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),
+	("constructor",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSValueMakeUndefined = _rpythonic_function_(		"JSValueMakeUndefined", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSValueMakeNull = _rpythonic_function_(		"JSValueMakeNull", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSObjectCopyPropertyNames = _rpythonic_function_(		"JSObjectCopyPropertyNames", ctypes.POINTER(OpaqueJSPropertyNameArray), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSPropertyNameArrayRetain = _rpythonic_function_(		"JSPropertyNameArrayRetain", ctypes.POINTER(OpaqueJSPropertyNameArray), [
+	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),] )
+
+JSPropertyNameArrayRelease = _rpythonic_function_(		"JSPropertyNameArrayRelease", ctypes.c_void_p, [
+	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),] )
+
+JSPropertyNameArrayGetCount = _rpythonic_function_(		"JSPropertyNameArrayGetCount", ctypes.c_uint64, [
+	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),] )
+
+JSPropertyNameArrayGetNameAtIndex = _rpythonic_function_(		"JSPropertyNameArrayGetNameAtIndex", ctypes.POINTER(OpaqueJSString), [
+	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),
+	("index",		ctypes.c_uint64),] )
+
+JSGlobalContextRetain = _rpythonic_function_(		"JSGlobalContextRetain", ctypes.POINTER(OpaqueJSContext), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSGlobalContextRelease = _rpythonic_function_(		"JSGlobalContextRelease", ctypes.c_void_p, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSContextGetGlobalObject = _rpythonic_function_(		"JSContextGetGlobalObject", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSContextGetGroup = _rpythonic_function_(		"JSContextGetGroup", ctypes.POINTER(OpaqueJSContextGroup), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSStringCreateWithCharacters = _rpythonic_function_(		"JSStringCreateWithCharacters", ctypes.POINTER(OpaqueJSString), [
+	("chars",		ctypes.POINTER(ctypes.c_ushort)),
+	("numChars",		ctypes.c_uint64),] )
+
+JSStringCreateWithUTF8CString = _rpythonic_function_(		"JSStringCreateWithUTF8CString", ctypes.POINTER(OpaqueJSString), [
+	("string",		ctypes.POINTER(ctypes.c_char)),] )
+
+JSObjectIsFunction = _rpythonic_function_(		"JSObjectIsFunction", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSObjectCallAsFunction = _rpythonic_function_(		"JSObjectCallAsFunction", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),
+	("thisObject",		ctypes.POINTER(OpaqueJSValue)),
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSObjectIsConstructor = _rpythonic_function_(		"JSObjectIsConstructor", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSObjectCallAsConstructor = _rpythonic_function_(		"JSObjectCallAsConstructor", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("C_object",		ctypes.POINTER(OpaqueJSValue)),
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSValueMakeBoolean = _rpythonic_function_(		"JSValueMakeBoolean", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("boolean",		ctypes.c_bool),] )
+
+JSValueMakeNumber = _rpythonic_function_(		"JSValueMakeNumber", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("number",		ctypes.c_double),] )
+
+JSValueMakeString = _rpythonic_function_(		"JSValueMakeString", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSValueMakeFromJSONString = _rpythonic_function_(		"JSValueMakeFromJSONString", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("string",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSValueCreateJSONString = _rpythonic_function_(		"JSValueCreateJSONString", ctypes.POINTER(OpaqueJSString), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),
+	("indent",		ctypes.c_void_p),
 	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
 JSValueIsNumber = _rpythonic_function_(		"JSValueIsNumber", ctypes.c_bool, [
@@ -945,6 +1103,68 @@ JSValueIsEqual = _rpythonic_function_(		"JSValueIsEqual", ctypes.c_bool, [
 	("b",		ctypes.POINTER(OpaqueJSValue)),
 	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
+JSObjectMakeFunctionWithCallback = _rpythonic_function_(		"JSObjectMakeFunctionWithCallback", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("name",		ctypes.POINTER(OpaqueJSString)),
+	("callAsFunction",		ctypes.CFUNCTYPE(ctypes.POINTER(OpaqueJSValue), ctypes.POINTER(OpaqueJSContext),ctypes.POINTER(OpaqueJSValue),ctypes.POINTER(OpaqueJSValue),ctypes.c_uint64,ctypes.POINTER(OpaqueJSValue),ctypes.POINTER(ctypes.POINTER(OpaqueJSValue)),)),] )
+
+JSObjectMakeConstructor = _rpythonic_function_(		"JSObjectMakeConstructor", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("jsClass",		ctypes.POINTER(OpaqueJSClass)),
+	("callAsConstructor",		ctypes.CFUNCTYPE(ctypes.POINTER(OpaqueJSValue), ctypes.POINTER(OpaqueJSContext),ctypes.POINTER(OpaqueJSValue),ctypes.c_uint64,ctypes.POINTER(OpaqueJSValue),ctypes.POINTER(ctypes.POINTER(OpaqueJSValue)),)),] )
+
+JSObjectMakeArray = _rpythonic_function_(		"JSObjectMakeArray", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("argumentCount",		ctypes.c_uint64),
+	("arguments",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSStringIsEqual = _rpythonic_function_(		"JSStringIsEqual", ctypes.c_bool, [
+	("a",		ctypes.POINTER(OpaqueJSString)),
+	("b",		ctypes.POINTER(OpaqueJSString)),] )
+
+JSStringIsEqualToUTF8CString = _rpythonic_function_(		"JSStringIsEqualToUTF8CString", ctypes.c_bool, [
+	("a",		ctypes.POINTER(OpaqueJSString)),
+	("b",		ctypes.POINTER(ctypes.c_char)),] )
+
+JSGarbageCollect = _rpythonic_function_(		"JSGarbageCollect", ctypes.c_void_p, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
+
+JSValueGetType = _rpythonic_function_(		"JSValueGetType", ctypes.c_int, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSValueIsUndefined = _rpythonic_function_(		"JSValueIsUndefined", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSValueIsNull = _rpythonic_function_(		"JSValueIsNull", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSValueIsBoolean = _rpythonic_function_(		"JSValueIsBoolean", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSValueToBoolean = _rpythonic_function_(		"JSValueToBoolean", ctypes.c_bool, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),] )
+
+JSValueToNumber = _rpythonic_function_(		"JSValueToNumber", ctypes.c_double, [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSValueToStringCopy = _rpythonic_function_(		"JSValueToStringCopy", ctypes.POINTER(OpaqueJSString), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
+JSValueToObject = _rpythonic_function_(		"JSValueToObject", ctypes.POINTER(OpaqueJSValue), [
+	("ctx",		ctypes.POINTER(OpaqueJSContext)),
+	("value",		ctypes.POINTER(OpaqueJSValue)),
+	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
+
 JSPropertyNameAccumulatorAddName = _rpythonic_function_(		"JSPropertyNameAccumulatorAddName", ctypes.c_void_p, [
 	("accumulator",		ctypes.POINTER(OpaqueJSPropertyNameAccumulator)),
 	("propertyName",		ctypes.POINTER(OpaqueJSString)),] )
@@ -963,67 +1183,6 @@ JSGlobalContextCreate = _rpythonic_function_(		"JSGlobalContextCreate", ctypes.P
 JSGlobalContextCreateInGroup = _rpythonic_function_(		"JSGlobalContextCreateInGroup", ctypes.POINTER(OpaqueJSContext), [
 	("group",		ctypes.POINTER(OpaqueJSContextGroup)),
 	("globalObjectClass",		ctypes.POINTER(OpaqueJSClass)),] )
-
-JSObjectCallAsConstructorCallback = _rpythonic_function_(		"JSObjectCallAsConstructorCallback", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("constructor",		ctypes.POINTER(OpaqueJSValue)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectHasInstanceCallback = _rpythonic_function_(		"JSObjectHasInstanceCallback", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("constructor",		ctypes.POINTER(OpaqueJSValue)),
-	("possibleInstance",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectConvertToTypeCallback = _rpythonic_function_(		"JSObjectConvertToTypeCallback", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),
-	("C_type",		ctypes.c_int),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectIsFunction = _rpythonic_function_(		"JSObjectIsFunction", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSObjectCallAsFunction = _rpythonic_function_(		"JSObjectCallAsFunction", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),
-	("thisObject",		ctypes.POINTER(OpaqueJSValue)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectIsConstructor = _rpythonic_function_(		"JSObjectIsConstructor", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSObjectCallAsConstructor = _rpythonic_function_(		"JSObjectCallAsConstructor", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSGlobalContextRetain = _rpythonic_function_(		"JSGlobalContextRetain", ctypes.POINTER(OpaqueJSContext), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
-
-JSGlobalContextRelease = _rpythonic_function_(		"JSGlobalContextRelease", ctypes.c_void_p, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
-
-JSContextGetGlobalObject = _rpythonic_function_(		"JSContextGetGlobalObject", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
-
-JSContextGetGroup = _rpythonic_function_(		"JSContextGetGroup", ctypes.POINTER(OpaqueJSContextGroup), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
-
-JSStringCreateWithCharacters = _rpythonic_function_(		"JSStringCreateWithCharacters", ctypes.POINTER(OpaqueJSString), [
-	("chars",		ctypes.POINTER(ctypes.c_ushort)),
-	("numChars",		ctypes.c_uint64),] )
-
-JSStringCreateWithUTF8CString = _rpythonic_function_(		"JSStringCreateWithUTF8CString", ctypes.POINTER(OpaqueJSString), [
-	("string",		ctypes.POINTER(ctypes.c_char)),] )
 
 JSValueProtect = _rpythonic_function_(		"JSValueProtect", ctypes.c_void_p, [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
@@ -1054,181 +1213,22 @@ JSObjectMake = _rpythonic_function_(		"JSObjectMake", ctypes.POINTER(OpaqueJSVal
 	("jsClass",		ctypes.POINTER(OpaqueJSClass)),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-JSObjectCopyPropertyNames = _rpythonic_function_(		"JSObjectCopyPropertyNames", ctypes.POINTER(OpaqueJSPropertyNameArray), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSPropertyNameArrayRetain = _rpythonic_function_(		"JSPropertyNameArrayRetain", ctypes.POINTER(OpaqueJSPropertyNameArray), [
-	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),] )
-
-JSPropertyNameArrayRelease = _rpythonic_function_(		"JSPropertyNameArrayRelease", ctypes.c_void_p, [
-	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),] )
-
-JSPropertyNameArrayGetCount = _rpythonic_function_(		"JSPropertyNameArrayGetCount", ctypes.c_uint64, [
-	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),] )
-
-JSPropertyNameArrayGetNameAtIndex = _rpythonic_function_(		"JSPropertyNameArrayGetNameAtIndex", ctypes.POINTER(OpaqueJSString), [
-	("array",		ctypes.POINTER(OpaqueJSPropertyNameArray)),
-	("index",		ctypes.c_uint64),] )
-
-JSObjectMakeFunctionWithCallback = _rpythonic_function_(		"JSObjectMakeFunctionWithCallback", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("name",		ctypes.POINTER(OpaqueJSString)),
-	("callAsFunction",		ctypes.CFUNCTYPE(ctypes.POINTER(OpaqueJSValue), ctypes.POINTER(OpaqueJSContext),ctypes.POINTER(OpaqueJSValue),ctypes.POINTER(OpaqueJSValue),ctypes.c_uint64,ctypes.POINTER(OpaqueJSValue),ctypes.POINTER(ctypes.POINTER(OpaqueJSValue)),)),] )
-
-JSObjectMakeConstructor = _rpythonic_function_(		"JSObjectMakeConstructor", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("jsClass",		ctypes.POINTER(OpaqueJSClass)),
-	("callAsConstructor",		ctypes.CFUNCTYPE(ctypes.POINTER(OpaqueJSValue), ctypes.POINTER(OpaqueJSContext),ctypes.POINTER(OpaqueJSValue),ctypes.c_uint64,ctypes.POINTER(OpaqueJSValue),ctypes.POINTER(ctypes.POINTER(OpaqueJSValue)),)),] )
-
-JSObjectMakeArray = _rpythonic_function_(		"JSObjectMakeArray", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSEvaluateScript = _rpythonic_function_(		"JSEvaluateScript", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("script",		ctypes.POINTER(OpaqueJSString)),
-	("thisObject",		ctypes.POINTER(OpaqueJSValue)),
-	("sourceURL",		ctypes.POINTER(OpaqueJSString)),
-	("startingLineNumber",		ctypes.c_int),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSCheckScriptSyntax = _rpythonic_function_(		"JSCheckScriptSyntax", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("script",		ctypes.POINTER(OpaqueJSString)),
-	("sourceURL",		ctypes.POINTER(OpaqueJSString)),
-	("startingLineNumber",		ctypes.c_int),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSStringRetain = _rpythonic_function_(		"JSStringRetain", ctypes.POINTER(OpaqueJSString), [
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSStringRelease = _rpythonic_function_(		"JSStringRelease", ctypes.c_void_p, [
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSStringGetLength = _rpythonic_function_(		"JSStringGetLength", ctypes.c_uint64, [
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSStringGetCharactersPtr = _rpythonic_function_(		"JSStringGetCharactersPtr", ctypes.POINTER(ctypes.c_ushort), [
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSStringGetMaximumUTF8CStringSize = _rpythonic_function_(		"JSStringGetMaximumUTF8CStringSize", ctypes.c_uint64, [
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSStringGetUTF8CString = _rpythonic_function_(		"JSStringGetUTF8CString", ctypes.c_uint64, [
-	("string",		ctypes.POINTER(OpaqueJSString)),
-	("buffer",		ctypes.POINTER(ctypes.c_char)),
-	("bufferSize",		ctypes.c_uint64),] )
-
-JSObjectMakeDate = _rpythonic_function_(		"JSObjectMakeDate", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectMakeError = _rpythonic_function_(		"JSObjectMakeError", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectMakeRegExp = _rpythonic_function_(		"JSObjectMakeRegExp", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("argumentCount",		ctypes.c_uint64),
-	("arguments",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectMakeFunction = _rpythonic_function_(		"JSObjectMakeFunction", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("name",		ctypes.POINTER(OpaqueJSString)),
-	("parameterCount",		ctypes.c_void_p),
-	("parameterNames",		ctypes.POINTER(OpaqueJSString)),
-	("body",		ctypes.POINTER(OpaqueJSString)),
-	("sourceURL",		ctypes.POINTER(OpaqueJSString)),
-	("startingLineNumber",		ctypes.c_int),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSValueIsStrictEqual = _rpythonic_function_(		"JSValueIsStrictEqual", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("a",		ctypes.POINTER(OpaqueJSValue)),
-	("b",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSValueIsInstanceOfConstructor = _rpythonic_function_(		"JSValueIsInstanceOfConstructor", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),
-	("constructor",		ctypes.POINTER(OpaqueJSValue)),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSValueMakeUndefined = _rpythonic_function_(		"JSValueMakeUndefined", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
-
-JSValueMakeNull = _rpythonic_function_(		"JSValueMakeNull", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),] )
-
-JSObjectGetPrototype = _rpythonic_function_(		"JSObjectGetPrototype", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSObjectSetPrototype = _rpythonic_function_(		"JSObjectSetPrototype", ctypes.c_void_p, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),] )
-
-JSObjectHasProperty = _rpythonic_function_(		"JSObjectHasProperty", ctypes.c_bool, [
+JSObjectHasPropertyCallback = _rpythonic_function_(		"JSObjectHasPropertyCallback", ctypes.c_bool, [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
 	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("propertyName",		ctypes.POINTER(OpaqueJSString)),] )
 
-JSStringIsEqual = _rpythonic_function_(		"JSStringIsEqual", ctypes.c_bool, [
-	("a",		ctypes.POINTER(OpaqueJSString)),
-	("b",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSStringIsEqualToUTF8CString = _rpythonic_function_(		"JSStringIsEqualToUTF8CString", ctypes.c_bool, [
-	("a",		ctypes.POINTER(OpaqueJSString)),
-	("b",		ctypes.POINTER(ctypes.c_char)),] )
-
-JSValueMakeBoolean = _rpythonic_function_(		"JSValueMakeBoolean", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("boolean",		ctypes.c_bool),] )
-
-JSValueMakeNumber = _rpythonic_function_(		"JSValueMakeNumber", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("number",		ctypes.c_double),] )
-
-JSValueMakeString = _rpythonic_function_(		"JSValueMakeString", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSValueMakeFromJSONString = _rpythonic_function_(		"JSValueMakeFromJSONString", ctypes.POINTER(OpaqueJSValue), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("string",		ctypes.POINTER(OpaqueJSString)),] )
-
-JSValueCreateJSONString = _rpythonic_function_(		"JSValueCreateJSONString", ctypes.POINTER(OpaqueJSString), [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("value",		ctypes.POINTER(OpaqueJSValue)),
-	("indent",		ctypes.c_void_p),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectGetProperty = _rpythonic_function_(		"JSObjectGetProperty", ctypes.POINTER(OpaqueJSValue), [
+JSObjectGetPropertyCallback = _rpythonic_function_(		"JSObjectGetPropertyCallback", ctypes.POINTER(OpaqueJSValue), [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
 	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("propertyName",		ctypes.POINTER(OpaqueJSString)),
 	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
-JSObjectSetProperty = _rpythonic_function_(		"JSObjectSetProperty", ctypes.c_void_p, [
+JSObjectSetPropertyCallback = _rpythonic_function_(		"JSObjectSetPropertyCallback", ctypes.c_bool, [
 	("ctx",		ctypes.POINTER(OpaqueJSContext)),
 	("C_object",		ctypes.POINTER(OpaqueJSValue)),
 	("propertyName",		ctypes.POINTER(OpaqueJSString)),
 	("value",		ctypes.POINTER(OpaqueJSValue)),
-	("attributes",		ctypes.c_void_p),
-	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
-
-JSObjectDeleteProperty = _rpythonic_function_(		"JSObjectDeleteProperty", ctypes.c_bool, [
-	("ctx",		ctypes.POINTER(OpaqueJSContext)),
-	("C_object",		ctypes.POINTER(OpaqueJSValue)),
-	("propertyName",		ctypes.POINTER(OpaqueJSString)),
 	("exception",		ctypes.POINTER(ctypes.POINTER(OpaqueJSValue))),] )
 
 

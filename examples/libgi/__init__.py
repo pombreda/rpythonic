@@ -9473,6 +9473,16 @@ thread_create = _rpythonic_function_(		"thread_create", ctypes.c_void_p, [
 	("thread",		ctypes.POINTER(ctypes.c_void_p)),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
 
+thread_yield = _rpythonic_function_(		"thread_yield", ctypes.c_void_p, [] )
+
+thread_join = _rpythonic_function_(		"thread_join", ctypes.c_void_p, [("thread",		ctypes.c_void_p)] )
+
+thread_exit = _rpythonic_function_(		"thread_exit", ctypes.c_void_p, [] )
+
+thread_set_priority = _rpythonic_function_(		"thread_set_priority", ctypes.c_void_p, [
+	("thread",		ctypes.POINTER(ctypes.c_void_p)),
+	("priority",		ctypes.c_int),] )
+
 thread_self = _rpythonic_function_(		"thread_self", ctypes.c_void_p, [("thread",		ctypes.c_void_p)] )
 
 thread_equal = _rpythonic_function_(		"thread_equal", ctypes.c_int, [
@@ -9495,16 +9505,6 @@ g_thread_create_full = _rpythonic_function_(		"g_thread_create_full", ctypes.POI
 	("bound",		ctypes.c_int),
 	("priority",		ctypes.c_int),
 	("error",		ctypes.POINTER(ctypes.POINTER(_GError))),] )
-
-thread_yield = _rpythonic_function_(		"thread_yield", ctypes.c_void_p, [] )
-
-thread_join = _rpythonic_function_(		"thread_join", ctypes.c_void_p, [("thread",		ctypes.c_void_p)] )
-
-thread_exit = _rpythonic_function_(		"thread_exit", ctypes.c_void_p, [] )
-
-thread_set_priority = _rpythonic_function_(		"thread_set_priority", ctypes.c_void_p, [
-	("thread",		ctypes.POINTER(ctypes.c_void_p)),
-	("priority",		ctypes.c_int),] )
 
 g_thread_set_priority = _rpythonic_function_(		"g_thread_set_priority", ctypes.c_void_p, [
 	("thread",		ctypes.POINTER(_GThread)),
@@ -10487,6 +10487,14 @@ GVaClosureMarshal = _rpythonic_function_(		"GVaClosureMarshal", ctypes.c_void_p,
 	("n_params",		ctypes.c_int),
 	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
 
+marshal = _rpythonic_function_(		"marshal", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("n_param_values",		ctypes.c_uint),
+	("param_values",		ctypes.POINTER(_GValue)),
+	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 g_cclosure_new = _rpythonic_function_(		"g_cclosure_new", ctypes.POINTER(_GClosure), [
 	("callback_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),
@@ -10496,14 +10504,6 @@ g_cclosure_new_swap = _rpythonic_function_(		"g_cclosure_new_swap", ctypes.POINT
 	("callback_func",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),
 	("user_data",		ctypes.POINTER(ctypes.c_void_p)),
 	("destroy_data",		ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p),ctypes.POINTER(_GClosure),)),] )
-
-marshal = _rpythonic_function_(		"marshal", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("n_param_values",		ctypes.c_uint),
-	("param_values",		ctypes.POINTER(_GValue)),
-	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 g_signal_type_cclosure_new = _rpythonic_function_(		"g_signal_type_cclosure_new", ctypes.POINTER(_GClosure), [
 	("itype",		ctypes.c_ulong),
@@ -10585,31 +10585,6 @@ g_cclosure_marshal_generic_va = _rpythonic_function_(		"g_cclosure_marshal_gener
 	("n_params",		ctypes.c_int),
 	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
 
-g_cclosure_marshal_VOID__UCHAR = _rpythonic_function_(		"g_cclosure_marshal_VOID__UCHAR", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("n_param_values",		ctypes.c_uint),
-	("param_values",		ctypes.POINTER(_GValue)),
-	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-g_cclosure_marshal_VOID__UCHARv = _rpythonic_function_(		"g_cclosure_marshal_VOID__UCHARv", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("instance",		ctypes.POINTER(ctypes.c_void_p)),
-	("args",		ctypes.c_char),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
-	("n_params",		ctypes.c_int),
-	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
-
-g_cclosure_marshal_VOID__INT = _rpythonic_function_(		"g_cclosure_marshal_VOID__INT", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("n_param_values",		ctypes.c_uint),
-	("param_values",		ctypes.POINTER(_GValue)),
-	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
 g_cclosure_marshal_VOID__VOID = _rpythonic_function_(		"g_cclosure_marshal_VOID__VOID", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
@@ -10661,6 +10636,31 @@ g_cclosure_marshal_VOID__CHARv = _rpythonic_function_(		"g_cclosure_marshal_VOID
 	("n_params",		ctypes.c_int),
 	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
 
+g_cclosure_marshal_VOID__UCHAR = _rpythonic_function_(		"g_cclosure_marshal_VOID__UCHAR", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("n_param_values",		ctypes.c_uint),
+	("param_values",		ctypes.POINTER(_GValue)),
+	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+g_cclosure_marshal_VOID__UCHARv = _rpythonic_function_(		"g_cclosure_marshal_VOID__UCHARv", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("instance",		ctypes.POINTER(ctypes.c_void_p)),
+	("args",		ctypes.c_char),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
+	("n_params",		ctypes.c_int),
+	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
+
+g_cclosure_marshal_VOID__INT = _rpythonic_function_(		"g_cclosure_marshal_VOID__INT", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("n_param_values",		ctypes.c_uint),
+	("param_values",		ctypes.POINTER(_GValue)),
+	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 g_cclosure_marshal_VOID__INTv = _rpythonic_function_(		"g_cclosure_marshal_VOID__INTv", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
@@ -10695,6 +10695,23 @@ g_cclosure_marshal_VOID__LONG = _rpythonic_function_(		"g_cclosure_marshal_VOID_
 	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+g_cclosure_marshal_VOID__LONGv = _rpythonic_function_(		"g_cclosure_marshal_VOID__LONGv", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("instance",		ctypes.POINTER(ctypes.c_void_p)),
+	("args",		ctypes.c_char),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
+	("n_params",		ctypes.c_int),
+	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
+
+g_cclosure_marshal_VOID__ULONG = _rpythonic_function_(		"g_cclosure_marshal_VOID__ULONG", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("n_param_values",		ctypes.c_uint),
+	("param_values",		ctypes.POINTER(_GValue)),
+	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 g_cclosure_marshal_VOID__ULONGv = _rpythonic_function_(		"g_cclosure_marshal_VOID__ULONGv", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
@@ -10721,23 +10738,6 @@ g_cclosure_marshal_VOID__ENUMv = _rpythonic_function_(		"g_cclosure_marshal_VOID
 	("n_params",		ctypes.c_int),
 	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
 
-g_cclosure_marshal_VOID__LONGv = _rpythonic_function_(		"g_cclosure_marshal_VOID__LONGv", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("instance",		ctypes.POINTER(ctypes.c_void_p)),
-	("args",		ctypes.c_char),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
-	("n_params",		ctypes.c_int),
-	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
-
-g_cclosure_marshal_VOID__ULONG = _rpythonic_function_(		"g_cclosure_marshal_VOID__ULONG", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("n_param_values",		ctypes.c_uint),
-	("param_values",		ctypes.POINTER(_GValue)),
-	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
 g_cclosure_marshal_VOID__FLAGS = _rpythonic_function_(		"g_cclosure_marshal_VOID__FLAGS", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
@@ -10754,23 +10754,6 @@ g_cclosure_marshal_VOID__FLAGSv = _rpythonic_function_(		"g_cclosure_marshal_VOI
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
 	("n_params",		ctypes.c_int),
 	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
-
-g_cclosure_marshal_VOID__BOXEDv = _rpythonic_function_(		"g_cclosure_marshal_VOID__BOXEDv", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("instance",		ctypes.POINTER(ctypes.c_void_p)),
-	("args",		ctypes.c_char),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
-	("n_params",		ctypes.c_int),
-	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
-
-g_cclosure_marshal_VOID__POINTER = _rpythonic_function_(		"g_cclosure_marshal_VOID__POINTER", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("n_param_values",		ctypes.c_uint),
-	("param_values",		ctypes.POINTER(_GValue)),
-	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 g_cclosure_marshal_VOID__FLOAT = _rpythonic_function_(		"g_cclosure_marshal_VOID__FLOAT", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
@@ -10848,6 +10831,23 @@ g_cclosure_marshal_VOID__BOXED = _rpythonic_function_(		"g_cclosure_marshal_VOID
 	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+g_cclosure_marshal_VOID__BOXEDv = _rpythonic_function_(		"g_cclosure_marshal_VOID__BOXEDv", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("instance",		ctypes.POINTER(ctypes.c_void_p)),
+	("args",		ctypes.c_char),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
+	("n_params",		ctypes.c_int),
+	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
+
+g_cclosure_marshal_VOID__POINTER = _rpythonic_function_(		"g_cclosure_marshal_VOID__POINTER", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("n_param_values",		ctypes.c_uint),
+	("param_values",		ctypes.POINTER(_GValue)),
+	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 g_cclosure_marshal_VOID__POINTERv = _rpythonic_function_(		"g_cclosure_marshal_VOID__POINTERv", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
@@ -10882,6 +10882,23 @@ g_cclosure_marshal_VOID__VARIANT = _rpythonic_function_(		"g_cclosure_marshal_VO
 	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+g_cclosure_marshal_VOID__VARIANTv = _rpythonic_function_(		"g_cclosure_marshal_VOID__VARIANTv", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("instance",		ctypes.POINTER(ctypes.c_void_p)),
+	("args",		ctypes.c_char),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
+	("n_params",		ctypes.c_int),
+	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
+
+g_cclosure_marshal_VOID__UINT_POINTER = _rpythonic_function_(		"g_cclosure_marshal_VOID__UINT_POINTER", ctypes.c_void_p, [
+	("closure",		ctypes.POINTER(_GClosure)),
+	("return_value",		ctypes.POINTER(_GValue)),
+	("n_param_values",		ctypes.c_uint),
+	("param_values",		ctypes.POINTER(_GValue)),
+	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
+	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
+
 g_cclosure_marshal_VOID__UINT_POINTERv = _rpythonic_function_(		"g_cclosure_marshal_VOID__UINT_POINTERv", ctypes.c_void_p, [
 	("closure",		ctypes.POINTER(_GClosure)),
 	("return_value",		ctypes.POINTER(_GValue)),
@@ -10906,35 +10923,6 @@ g_cclosure_marshal_BOOLEAN__FLAGSv = _rpythonic_function_(		"g_cclosure_marshal_
 	("args",		ctypes.c_char),
 	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
 	("n_params",		ctypes.c_int),
-	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
-
-g_cclosure_marshal_VOID__VARIANTv = _rpythonic_function_(		"g_cclosure_marshal_VOID__VARIANTv", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("instance",		ctypes.POINTER(ctypes.c_void_p)),
-	("args",		ctypes.c_char),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),
-	("n_params",		ctypes.c_int),
-	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
-
-g_cclosure_marshal_VOID__UINT_POINTER = _rpythonic_function_(		"g_cclosure_marshal_VOID__UINT_POINTER", ctypes.c_void_p, [
-	("closure",		ctypes.POINTER(_GClosure)),
-	("return_value",		ctypes.POINTER(_GValue)),
-	("n_param_values",		ctypes.c_uint),
-	("param_values",		ctypes.POINTER(_GValue)),
-	("invocation_hint",		ctypes.POINTER(ctypes.c_void_p)),
-	("marshal_data",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-g_signal_newv = _rpythonic_function_(		"g_signal_newv", ctypes.c_uint, [
-	("signal_name",		ctypes.POINTER(ctypes.c_char)),
-	("itype",		ctypes.c_ulong),
-	("signal_flags",		ctypes.c_int),
-	("class_closure",		ctypes.POINTER(_GClosure)),
-	("accumulator",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(_GSignalInvocationHint),ctypes.POINTER(_GValue),ctypes.POINTER(_GValue),ctypes.POINTER(ctypes.c_void_p),)),
-	("accu_data",		ctypes.POINTER(ctypes.c_void_p)),
-	("c_marshaller",		ctypes.c_void_p),
-	("return_type",		ctypes.c_ulong),
-	("n_params",		ctypes.c_uint),
 	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
 
 g_cclosure_marshal_STRING__OBJECT_POINTER = _rpythonic_function_(		"g_cclosure_marshal_STRING__OBJECT_POINTER", ctypes.c_void_p, [
@@ -10983,6 +10971,18 @@ GSignalAccumulator = _rpythonic_function_(		"GSignalAccumulator", ctypes.c_int, 
 	("handler_return",		ctypes.POINTER(_GValue)),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
+g_signal_newv = _rpythonic_function_(		"g_signal_newv", ctypes.c_uint, [
+	("signal_name",		ctypes.POINTER(ctypes.c_char)),
+	("itype",		ctypes.c_ulong),
+	("signal_flags",		ctypes.c_int),
+	("class_closure",		ctypes.POINTER(_GClosure)),
+	("accumulator",		ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(_GSignalInvocationHint),ctypes.POINTER(_GValue),ctypes.POINTER(_GValue),ctypes.POINTER(ctypes.c_void_p),)),
+	("accu_data",		ctypes.POINTER(ctypes.c_void_p)),
+	("c_marshaller",		ctypes.c_void_p),
+	("return_type",		ctypes.c_ulong),
+	("n_params",		ctypes.c_uint),
+	("param_types",		ctypes.POINTER(ctypes.c_ulong)),] )
+
 g_signal_new_valist = _rpythonic_function_(		"g_signal_new_valist", ctypes.c_uint, [
 	("signal_name",		ctypes.POINTER(ctypes.c_char)),
 	("itype",		ctypes.c_ulong),
@@ -10994,21 +10994,6 @@ g_signal_new_valist = _rpythonic_function_(		"g_signal_new_valist", ctypes.c_uin
 	("return_type",		ctypes.c_ulong),
 	("n_params",		ctypes.c_uint),
 	("args",		ctypes.c_char),] )
-
-g_signal_lookup = _rpythonic_function_(		"g_signal_lookup", ctypes.c_uint, [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("itype",		ctypes.c_ulong),] )
-
-g_signal_name = _rpythonic_function_(		"g_signal_name", ctypes.POINTER(ctypes.c_char), [
-	("signal_id",		ctypes.c_uint),] )
-
-g_signal_query = _rpythonic_function_(		"g_signal_query", ctypes.c_void_p, [
-	("signal_id",		ctypes.c_uint),
-	("query",		ctypes.POINTER(_GSignalQuery)),] )
-
-g_signal_list_ids = _rpythonic_function_(		"g_signal_list_ids", ctypes.POINTER(ctypes.c_uint), [
-	("itype",		ctypes.c_ulong),
-	("n_ids",		ctypes.POINTER(ctypes.c_uint)),] )
 
 g_signal_set_va_marshaller = _rpythonic_function_(		"g_signal_set_va_marshaller", ctypes.c_void_p, [
 	("signal_id",		ctypes.c_uint),
@@ -11026,6 +11011,21 @@ g_signal_emit_valist = _rpythonic_function_(		"g_signal_emit_valist", ctypes.c_v
 	("signal_id",		ctypes.c_uint),
 	("detail",		ctypes.c_uint),
 	("var_args",		ctypes.c_char),] )
+
+g_signal_lookup = _rpythonic_function_(		"g_signal_lookup", ctypes.c_uint, [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("itype",		ctypes.c_ulong),] )
+
+g_signal_name = _rpythonic_function_(		"g_signal_name", ctypes.POINTER(ctypes.c_char), [
+	("signal_id",		ctypes.c_uint),] )
+
+g_signal_query = _rpythonic_function_(		"g_signal_query", ctypes.c_void_p, [
+	("signal_id",		ctypes.c_uint),
+	("query",		ctypes.POINTER(_GSignalQuery)),] )
+
+g_signal_list_ids = _rpythonic_function_(		"g_signal_list_ids", ctypes.POINTER(ctypes.c_uint), [
+	("itype",		ctypes.c_ulong),
+	("n_ids",		ctypes.POINTER(ctypes.c_uint)),] )
 
 g_signal_parse_name = _rpythonic_function_(		"g_signal_parse_name", ctypes.c_int, [
 	("detailed_signal",		ctypes.POINTER(ctypes.c_char)),
@@ -11108,22 +11108,6 @@ g_signal_handler_find = _rpythonic_function_(		"g_signal_handler_find", ctypes.c
 	("func",		ctypes.POINTER(ctypes.c_void_p)),
 	("data",		ctypes.POINTER(ctypes.c_void_p)),] )
 
-g_signal_chain_from_overridden = _rpythonic_function_(		"g_signal_chain_from_overridden", ctypes.c_void_p, [
-	("instance_and_params",		ctypes.POINTER(_GValue)),
-	("return_value",		ctypes.POINTER(_GValue)),] )
-
-g_signal_accumulator_true_handled = _rpythonic_function_(		"g_signal_accumulator_true_handled", ctypes.c_int, [
-	("ihint",		ctypes.POINTER(_GSignalInvocationHint)),
-	("return_accu",		ctypes.POINTER(_GValue)),
-	("handler_return",		ctypes.POINTER(_GValue)),
-	("dummy",		ctypes.POINTER(ctypes.c_void_p)),] )
-
-g_signal_accumulator_first_wins = _rpythonic_function_(		"g_signal_accumulator_first_wins", ctypes.c_int, [
-	("ihint",		ctypes.POINTER(_GSignalInvocationHint)),
-	("return_accu",		ctypes.POINTER(_GValue)),
-	("handler_return",		ctypes.POINTER(_GValue)),
-	("dummy",		ctypes.POINTER(ctypes.c_void_p)),] )
-
 g_signal_handlers_block_matched = _rpythonic_function_(		"g_signal_handlers_block_matched", ctypes.c_uint, [
 	("instance",		ctypes.POINTER(ctypes.c_void_p)),
 	("mask",		ctypes.c_int),
@@ -11160,6 +11144,22 @@ g_signal_override_class_handler = _rpythonic_function_(		"g_signal_override_clas
 	("signal_name",		ctypes.POINTER(ctypes.c_char)),
 	("instance_type",		ctypes.c_ulong),
 	("class_handler",		ctypes.CFUNCTYPE(ctypes.c_void_p, )),] )
+
+g_signal_chain_from_overridden = _rpythonic_function_(		"g_signal_chain_from_overridden", ctypes.c_void_p, [
+	("instance_and_params",		ctypes.POINTER(_GValue)),
+	("return_value",		ctypes.POINTER(_GValue)),] )
+
+g_signal_accumulator_true_handled = _rpythonic_function_(		"g_signal_accumulator_true_handled", ctypes.c_int, [
+	("ihint",		ctypes.POINTER(_GSignalInvocationHint)),
+	("return_accu",		ctypes.POINTER(_GValue)),
+	("handler_return",		ctypes.POINTER(_GValue)),
+	("dummy",		ctypes.POINTER(ctypes.c_void_p)),] )
+
+g_signal_accumulator_first_wins = _rpythonic_function_(		"g_signal_accumulator_first_wins", ctypes.c_int, [
+	("ihint",		ctypes.POINTER(_GSignalInvocationHint)),
+	("return_accu",		ctypes.POINTER(_GValue)),
+	("handler_return",		ctypes.POINTER(_GValue)),
+	("dummy",		ctypes.POINTER(ctypes.c_void_p)),] )
 
 g_signal_handlers_destroy = _rpythonic_function_(		"g_signal_handlers_destroy", ctypes.c_void_p, [("instance",		ctypes.c_void_p)] )
 
@@ -11649,24 +11649,6 @@ g_param_spec_char = _rpythonic_function_(		"g_param_spec_char", ctypes.POINTER(_
 	("default_value",		ctypes.c_char),
 	("flags",		ctypes.c_int),] )
 
-g_param_spec_int = _rpythonic_function_(		"g_param_spec_int", ctypes.POINTER(_GParamSpec), [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("nick",		ctypes.POINTER(ctypes.c_char)),
-	("blurb",		ctypes.POINTER(ctypes.c_char)),
-	("minimum",		ctypes.c_int),
-	("maximum",		ctypes.c_int),
-	("default_value",		ctypes.c_int),
-	("flags",		ctypes.c_int),] )
-
-g_param_spec_uint = _rpythonic_function_(		"g_param_spec_uint", ctypes.POINTER(_GParamSpec), [
-	("name",		ctypes.POINTER(ctypes.c_char)),
-	("nick",		ctypes.POINTER(ctypes.c_char)),
-	("blurb",		ctypes.POINTER(ctypes.c_char)),
-	("minimum",		ctypes.c_uint),
-	("maximum",		ctypes.c_uint),
-	("default_value",		ctypes.c_uint),
-	("flags",		ctypes.c_int),] )
-
 g_param_spec_uchar = _rpythonic_function_(		"g_param_spec_uchar", ctypes.POINTER(_GParamSpec), [
 	("name",		ctypes.POINTER(ctypes.c_char)),
 	("nick",		ctypes.POINTER(ctypes.c_char)),
@@ -11683,18 +11665,22 @@ g_param_spec_boolean = _rpythonic_function_(		"g_param_spec_boolean", ctypes.POI
 	("default_value",		ctypes.c_int),
 	("flags",		ctypes.c_int),] )
 
-g_param_spec_value_array = _rpythonic_function_(		"g_param_spec_value_array", ctypes.POINTER(_GParamSpec), [
+g_param_spec_int = _rpythonic_function_(		"g_param_spec_int", ctypes.POINTER(_GParamSpec), [
 	("name",		ctypes.POINTER(ctypes.c_char)),
 	("nick",		ctypes.POINTER(ctypes.c_char)),
 	("blurb",		ctypes.POINTER(ctypes.c_char)),
-	("element_spec",		ctypes.POINTER(_GParamSpec)),
+	("minimum",		ctypes.c_int),
+	("maximum",		ctypes.c_int),
+	("default_value",		ctypes.c_int),
 	("flags",		ctypes.c_int),] )
 
-g_param_spec_object = _rpythonic_function_(		"g_param_spec_object", ctypes.POINTER(_GParamSpec), [
+g_param_spec_uint = _rpythonic_function_(		"g_param_spec_uint", ctypes.POINTER(_GParamSpec), [
 	("name",		ctypes.POINTER(ctypes.c_char)),
 	("nick",		ctypes.POINTER(ctypes.c_char)),
 	("blurb",		ctypes.POINTER(ctypes.c_char)),
-	("object_type",		ctypes.c_ulong),
+	("minimum",		ctypes.c_uint),
+	("maximum",		ctypes.c_uint),
+	("default_value",		ctypes.c_uint),
 	("flags",		ctypes.c_int),] )
 
 g_param_spec_long = _rpythonic_function_(		"g_param_spec_long", ctypes.POINTER(_GParamSpec), [
@@ -11801,17 +11787,19 @@ g_param_spec_pointer = _rpythonic_function_(		"g_param_spec_pointer", ctypes.POI
 	("blurb",		ctypes.POINTER(ctypes.c_char)),
 	("flags",		ctypes.c_int),] )
 
-load = _rpythonic_function_(		"load", ctypes.c_int, [
-	("module",		ctypes.POINTER(_GTypeModule)),] )
+g_param_spec_value_array = _rpythonic_function_(		"g_param_spec_value_array", ctypes.POINTER(_GParamSpec), [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("nick",		ctypes.POINTER(ctypes.c_char)),
+	("blurb",		ctypes.POINTER(ctypes.c_char)),
+	("element_spec",		ctypes.POINTER(_GParamSpec)),
+	("flags",		ctypes.c_int),] )
 
-unload = _rpythonic_function_(		"unload", ctypes.c_void_p, [
-	("module",		ctypes.POINTER(_GTypeModule)),] )
-
-reserved1 = _rpythonic_function_(		"reserved1", ctypes.c_void_p, [] )
-
-reserved2 = _rpythonic_function_(		"reserved2", ctypes.c_void_p, [] )
-
-reserved3 = _rpythonic_function_(		"reserved3", ctypes.c_void_p, [] )
+g_param_spec_object = _rpythonic_function_(		"g_param_spec_object", ctypes.POINTER(_GParamSpec), [
+	("name",		ctypes.POINTER(ctypes.c_char)),
+	("nick",		ctypes.POINTER(ctypes.c_char)),
+	("blurb",		ctypes.POINTER(ctypes.c_char)),
+	("object_type",		ctypes.c_ulong),
+	("flags",		ctypes.c_int),] )
 
 g_param_spec_override = _rpythonic_function_(		"g_param_spec_override", ctypes.POINTER(_GParamSpec), [
 	("name",		ctypes.POINTER(ctypes.c_char)),
@@ -11838,6 +11826,18 @@ g_source_set_closure = _rpythonic_function_(		"g_source_set_closure", ctypes.c_v
 
 g_source_set_dummy_callback = _rpythonic_function_(		"g_source_set_dummy_callback", ctypes.c_void_p, [
 	("source",		ctypes.POINTER(_GSource)),] )
+
+load = _rpythonic_function_(		"load", ctypes.c_int, [
+	("module",		ctypes.POINTER(_GTypeModule)),] )
+
+unload = _rpythonic_function_(		"unload", ctypes.c_void_p, [
+	("module",		ctypes.POINTER(_GTypeModule)),] )
+
+reserved1 = _rpythonic_function_(		"reserved1", ctypes.c_void_p, [] )
+
+reserved2 = _rpythonic_function_(		"reserved2", ctypes.c_void_p, [] )
+
+reserved3 = _rpythonic_function_(		"reserved3", ctypes.c_void_p, [] )
 
 reserved4 = _rpythonic_function_(		"reserved4", ctypes.c_void_p, [] )
 
@@ -12789,3 +12789,4 @@ _rpythonic_convert_structs_to_objects()
 _rpythonic_setup_return_wrappers()
 _rpythonic_make_nice_global_enums_()
 _rpythonic_clean_up_missing_functions_()
+_rpythonic_strip_prefixes_(['g_'])

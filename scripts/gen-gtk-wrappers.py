@@ -215,12 +215,7 @@ if '--gvfs' in sys.argv:	# not working
 # sudo apt-get install libwebkit-dev
 # sudo apt-get install libwebkitgtk-3.0-dev
 if '--webkit' in sys.argv:
-	footer = '''
 
-webkit_dom_html_element_get_inner_html.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
-webkit_web_view_new.return_wrapper = WebKitWebView
-
-	'''
 	rpythonic.wrap( 'webkit', 
 		header = '/usr/include/webkitgtk-3.0/JavaScriptCore/JavaScript.h',	# JavaScriptCore.h will want 
 		includes=['/usr/include/webkitgtk-3.0/'],
@@ -232,7 +227,7 @@ webkit_web_view_new.return_wrapper = WebKitWebView
 		insert_headers = ['/usr/include/webkitgtk-3.0/JavaScriptCore/JavaScript.h'],
 		includes=['/usr/include/webkitgtk-3.0/', '/usr/include/libsoup-2.4/', '/usr/include/gtk-3.0/'] + GINCLUDE,
 		library_names=['libwebkitgtk-3.0'],
-		ctypes_footer= glibfooter + gtkfooter + footer,
+		ctypes_footer= glibfooter + gtkfooter,
 		strip_prefixes = ['GTK_', 'gtk_', 'webkit_'],
 	)
 
@@ -243,5 +238,6 @@ if '--gi' in sys.argv:
 		header = '/usr/include/gobject-introspection-1.0/girepository.h',
 		library_names=['libgirepository-1.0'],
 		includes = GINCLUDE,
+		strip_prefixes = ['g_'],
 	)
 

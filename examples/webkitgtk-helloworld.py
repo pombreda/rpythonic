@@ -3,6 +3,7 @@
 import os, sys, time, ctypes
 import webkitgtk as webkit
 gtk = glib = webkit	# webkit links to gtk and glib
+#glib.g_type_init()	# not required, gtk init should do this
 gtk.init()
 
 
@@ -31,44 +32,20 @@ print('javascriptcore test complete')
 
 
 ################## Test WebKitGTK ###################
-view = webkit.web_view_new()
+view = webkit.webkit_web_view_new()	#WebKitWebView()
 print(view)
 
-''' TODO
-settings = webkit.web_settings_new()
 
-class _data( ctypes.Structure ):
-	_fields_ = [
-		('padding', ctypes.c_uint),
-	]
-
-class _struct( ctypes.Structure ):
-	_fields_ = [
-		('type', ctypes.c_uint),
-		('data', (_data*1)),
-	]
-ptr = ctypes.pointer( _struct() )
-
-print('gtype', glib.G_TYPE_BOOLEAN)
-
-gval = glib.g_value_init( ptr, glib.G_TYPE_BOOLEAN )
-
-#raise None
-
-glib.g_value_set_boolean( gval, True )
-#assert glib.g_value_get_boolean( gval )
-
-
-glib.g_object_class_find_property( gclass, 'enable-webgl' )
-
-glib.g_object_set_property( settings, 'enable-webgl', True )
-gval = glib.g_object_get_property( settings, 'enable-webgl' )
-view.set_settings( settings )
-'''
+if False:		# This will crash PyPy, but it won't crash CPython!
+	settings = webkit.web_settings_new()
+	for prop in 'enable-webaudio enable-file-access-from-file-uris enable-universal-access-from-file-uris enable-developer-extras enable-accelerated-compositing enable-webgl'.split():
+		gval = glib.GValue(True)
+		glib.g_object_set_property( settings, prop, gval )
+	view.set_settings( settings )
+#view.load_uri( 'http://get.webgl.org/')	# webkit still not built by default with webgl
 
 #view.load_string('hello world', "text/html", "iso-8859-15", "mytitle")
-view.load_uri( 'http://google.com' )
-#view.load_uri( 'http://get.webgl.org/')	# webkit still not built by default with webgl
+view.load_uri( 'http://pyppet.blogspot.com' )
 frame = view.get_main_frame()
 
 dom = view.get_dom_document()
