@@ -255,6 +255,9 @@ GTK_CONTAINER_CLASSES = {
 if 'WebKitWebView' in globals():
 	GTK_WIDGET_CLASSES[ WebKitWebView ] = webkit_web_view_new
 	_RETURNS_CHARP_.append( webkit_dom_html_element_get_inner_html )
+	_RETURNS_CHARP_.append( webkit_web_frame_get_title )
+	_RETURNS_CHARP_.append( webkit_web_frame_get_uri )
+
 
 ################# Clutter GTK ######################
 if 'GtkSocket' in globals():	# this is missing with Clutter

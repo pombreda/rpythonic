@@ -7,31 +7,24 @@ gtk = glib = webkit	# webkit links to gtk and glib
 gtk.init()
 
 
-################### java script core ##################
-a = 400
-b = 20.0
-ctx = webkit.JSGlobalContextCreate( None )
-body = webkit.JSStringCreateWithUTF8CString( 'return %s + %s' %(a,b) )
-func = webkit.JSObjectMakeFunction(
-	ctx,
-	None,	# name
-	0,		# number of arguments
-	None,	# argument names
-	body,	# function body
-	None,	# source url
-	1,		# starting line number
-	None	# exception object
-)
-print(func)
-result = webkit.JSObjectCallAsFunction( ctx, func, None, 0, None, None )
-value = webkit.JSValueToNumber( ctx, result, None )
-assert value == a+b
-print(result, value)
-print('javascriptcore test complete')
-################################################
-
-
 ################## Test WebKitGTK ###################
+def get_html():
+	dom = view.get_dom_document()
+	html = webkit.dom_html_element_get_inner_html( dom )
+	print( html )
+	return html
+
+def call_javascript( script ):
+	'''
+	return the result of the script
+	'''
+	#view.execute_script('document.title=document.documentElement.innerHTML;')
+	view.execute_script('document.title=%s;' %script)
+	frame = view.get_main_frame()
+	result = frame.get_title()
+	print(result)
+	return result
+
 view = webkit.webkit_web_view_new()	#WebKitWebView()
 print(view)
 
@@ -45,15 +38,27 @@ view.set_settings( settings )
 
 #view.load_string('hello world', "text/html", "iso-8859-15", "mytitle")
 view.load_uri( 'http://pyppet.blogspot.com' )
-frame = view.get_main_frame()
 
-dom = view.get_dom_document()
-html = webkit.dom_html_element_get_inner_html( dom )
-print( html )
 
 
 win = gtk.Window()
-win.add( view )
+root = gtk.VBox()
+win.add( root )
+
+header = gtk.HBox()
+root.pack_start( header, expand=False )
+
+button = gtk.Button('print html')
+button.connect('clicked', lambda b: get_html() )
+header.pack_start( button )
+
+button = gtk.Button('print 1+2')
+button.connect('clicked', lambda b: call_javascript('1+2') )
+header.pack_start( button )
+
+
+root.pack_start( view, expand=True )
+
 win.set_default_size( 320, 240 )
 win.show_all()
 

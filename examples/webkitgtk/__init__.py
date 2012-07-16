@@ -40716,6 +40716,21 @@ soup_message_headers_iter_next = _rpythonic_function_(		"soup_message_headers_it
 	("name",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),
 	("value",		ctypes.POINTER(ctypes.POINTER(ctypes.c_char))),] )
 
+soup_message_headers_get_ranges = _rpythonic_function_(		"soup_message_headers_get_ranges", ctypes.c_int, [
+	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
+	("total_length",		ctypes.c_long),
+	("ranges",		ctypes.POINTER(ctypes.POINTER(SoupRange))),
+	("length",		ctypes.POINTER(ctypes.c_int)),] )
+
+soup_message_headers_free_ranges = _rpythonic_function_(		"soup_message_headers_free_ranges", ctypes.c_void_p, [
+	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
+	("ranges",		ctypes.POINTER(SoupRange)),] )
+
+soup_message_headers_set_ranges = _rpythonic_function_(		"soup_message_headers_set_ranges", ctypes.c_void_p, [
+	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
+	("ranges",		ctypes.POINTER(SoupRange)),
+	("length",		ctypes.c_int),] )
+
 soup_message_headers_get_encoding = _rpythonic_function_(		"soup_message_headers_get_encoding", ctypes.c_int, [
 	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),] )
 
@@ -40736,21 +40751,6 @@ soup_message_headers_get_expectations = _rpythonic_function_(		"soup_message_hea
 soup_message_headers_set_expectations = _rpythonic_function_(		"soup_message_headers_set_expectations", ctypes.c_void_p, [
 	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
 	("expectations",		ctypes.c_int),] )
-
-soup_message_headers_get_ranges = _rpythonic_function_(		"soup_message_headers_get_ranges", ctypes.c_int, [
-	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
-	("total_length",		ctypes.c_long),
-	("ranges",		ctypes.POINTER(ctypes.POINTER(SoupRange))),
-	("length",		ctypes.POINTER(ctypes.c_int)),] )
-
-soup_message_headers_free_ranges = _rpythonic_function_(		"soup_message_headers_free_ranges", ctypes.c_void_p, [
-	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
-	("ranges",		ctypes.POINTER(SoupRange)),] )
-
-soup_message_headers_set_ranges = _rpythonic_function_(		"soup_message_headers_set_ranges", ctypes.c_void_p, [
-	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
-	("ranges",		ctypes.POINTER(SoupRange)),
-	("length",		ctypes.c_int),] )
 
 soup_message_headers_set_range = _rpythonic_function_(		"soup_message_headers_set_range", ctypes.c_void_p, [
 	("hdrs",		ctypes.POINTER(SoupMessageHeaders)),
@@ -67619,6 +67619,9 @@ GTK_CONTAINER_CLASSES = {
 if 'WebKitWebView' in globals():
 	GTK_WIDGET_CLASSES[ WebKitWebView ] = webkit_web_view_new
 	_RETURNS_CHARP_.append( webkit_dom_html_element_get_inner_html )
+	_RETURNS_CHARP_.append( webkit_web_frame_get_title )
+	_RETURNS_CHARP_.append( webkit_web_frame_get_uri )
+
 
 ################# Clutter GTK ######################
 if 'GtkSocket' in globals():	# this is missing with Clutter
