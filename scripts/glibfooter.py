@@ -117,3 +117,137 @@ def Variant( *args, **kw ):
 		else:
 			return variant_new_tuple( array, len(args) )
 
+
+## rpythonic can not parse: #define G_TYPE_INVALID	G_TYPE_MAKE_FUNDAMENTAL (0)
+G_TYPE_FUNDAMENTAL_SHIFT = 2
+G_TYPE_INVALID = 	0 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_NONE = 		1 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_INTERFACE = 	2 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_CHAR = 		3 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_UCHAR = 		4 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_BOOLEAN = 	5 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_INT = 		6 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_UINT = 		7 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_LONG = 		8 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_ULONG = 		9 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_INT64 = 		10 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_UINT64 = 		11 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_ENUM = 		12 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_FLAGS = 		13 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_FLOAT = 		14 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_DOUBLE = 	15 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_STRING = 		16 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_POINTER = 	17 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_BOXED = 		18 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_PARAM = 		19 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_OBJECT = 		20 << G_TYPE_FUNDAMENTAL_SHIFT
+G_TYPE_VARIANT = 	21 << G_TYPE_FUNDAMENTAL_SHIFT
+
+class _g_value_data( ctypes.Structure ):
+	_fields_ = [
+		('padding', ctypes.c_ulong),
+	]
+
+class _g_value_struct( ctypes.Structure ):
+	_fields_ = [
+		('type', ctypes.c_ulong),
+		('data', (_g_value_data*2)),
+	]
+
+def GValue( arg, unsigned=False, long=False, enum=False, pointer=False, double=True, char=False, flag=False, param=False, boxed=False, gobject=False, variant=False ):
+	ptr = ctypes.pointer( _g_value_struct() )
+
+	if pointer:
+		gval = g_value_init( ptr, G_TYPE_POINTER )
+		g_value_set_pointer( gval, arg )
+		return gval
+
+	elif flag:
+		gval = g_value_init( ptr, G_TYPE_FLAGS )
+		g_value_set_flags( gval, arg )
+		return gval
+
+	elif param:
+		gval = g_value_init( ptr, G_TYPE_PARAM )
+		g_value_set_param( gval, arg )
+		return gval
+
+	elif boxed:
+		gval = g_value_init( ptr, G_TYPE_BOXED )
+		g_value_set_boxed( gval, arg )
+		return gval
+
+	elif gobject:
+		gval = g_value_init( ptr, G_TYPE_OBJECT )
+		g_value_set_object( gval, arg )
+		return gval
+
+	elif variant:
+		gval = g_value_init( ptr, G_TYPE_VARIANT )
+		g_value_set_variant( gval, arg )
+		return gval
+
+
+	elif isinstance(arg,bool):
+		gval = g_value_init( ptr, G_TYPE_BOOLEAN )
+		g_value_set_boolean( gval, arg )
+		return gval
+
+	elif isinstance(arg, int) and enum:
+		gval = g_value_init( ptr, G_TYPE_ENUM )
+		g_value_set_enum( gval, arg )
+		return gval
+
+	elif isinstance(arg, int) and long:
+		if unsigned:
+			gval = g_value_init( ptr, G_TYPE_ULONG )
+			g_value_set_ulong( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_LONG )
+			g_value_set_long( gval, arg )
+		return gval
+	elif isinstance(arg, int):
+		if unsigned:
+			gval = g_value_init( ptr, G_TYPE_UINT )
+			g_value_set_uint( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_INT )
+			g_value_set_int( gval, arg )
+		return gval
+
+	elif isinstance(arg, float):
+		if double:
+			gval = g_value_init( ptr, G_TYPE_DOUBLE )
+			g_value_set_double( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_FLOAT )
+			g_value_set_float( gval, arg )
+		return gval
+
+	elif isinstance(arg, _basestring):
+		if char:
+			if unsigned:
+				gval = g_value_init( ptr, G_TYPE_UCHAR )
+				g_value_set_char( gval, arg )
+			else:
+				gval = g_value_init( ptr, G_TYPE_CHAR )
+				g_value_set_schar( gval, arg )
+		else:
+			gval = g_value_init( ptr, G_TYPE_STRING )
+			g_value_set_string( gval, arg )
+		return gval
+
+
+	elif arg is None:
+		gval = g_value_init( ptr, G_TYPE_NONE )
+		return gval
+
+
+
+	else:
+		raise NotImplementedError
+
+
+
+
+

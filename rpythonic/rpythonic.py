@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - June, 2012
+# RPythonic - July, 2012
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8h'
+VERSION = '0.4.8i'
 
 _doc_ = '''
 NAME
@@ -821,6 +821,7 @@ class SomeThing(object):
 
 	#Usually, ctypes does strict type checking. This means, if you have POINTER(c_int) in the argtypes list of a function or as the type of a member field in a structure definition, only instances of exactly the same type are accepted. There are some exceptions to this rule, where ctypes accepts other objects. For example, you can pass compatible array instances instead of pointer types. So, for POINTER(c_int), ctypes accepts an array of c_int: - from the ctypes tutorial
 	def ctypes_type( self ):		# TODO array for all types
+		import ctypes
 		type = self.type()
 		typedef = self.typedef()
 		pointers = len(self.pointers())
@@ -872,10 +873,11 @@ class SomeThing(object):
 				elif type == 'size_t': ctype = 'ctypes.c_size_t'
 				elif type == 'ssize_t': ctype = 'ctypes.c_ssize_t'
 				elif type == 'char' and unsigned: ctype = 'ctypes.c_ubyte'
-				elif hasattr( ctypes, 'c_%s%s'%(unsigned,type) ):
+				elif hasattr( ctypes, 'c_%s%s'%(unsigned,type) ):	# some bug (triggered by webkit) requires "import ctypes" above - check eval's, somehow the "ctypes" global gets deleted!
 					ctype = 'ctypes.c_%s%s'%(unsigned,type)		# should catch most types, even int16
 				else:
 					if type == 'uchar': ctype = 'ctypes.c_ubyte'
+					elif type == '_Bool': ctypes = 'ctypes.c_bool'	# special case (found in webkit)
 					else:
 						print( 'WARN - bad type:', _type )
 						raise NotImplemented
@@ -884,6 +886,7 @@ class SomeThing(object):
 			self.ast.show()
 			if self.type() == '<unknown-type>':
 				ctype = 'ctypes.c_void_p'; print('TODO FIXME')
+			elif self.type() == '_Bool': ctype = 'ctypes.c_bool'		# special case (found in webkit)
 			else:
 				print( self.type() )
 				raise NotImplemented

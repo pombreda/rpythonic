@@ -212,7 +212,38 @@ if '--gvfs' in sys.argv:	# not working
 		library_names = ['/usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so', '/usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon-dnssd.so'],
 	)
 
-if '--appindicator' in sys.argv:	# apt-get install libappindicator-dev
+
+# sudo apt-get install libwebkit-dev
+# sudo apt-get install libwebkitgtk-3.0-dev
+if '--webkit' in sys.argv:
+	rpythonic.wrap( 'webkit', 
+		header = '/usr/include/webkitgtk-3.0/JavaScriptCore/JavaScript.h',	# JavaScriptCore.h will want 
+		includes=['/usr/include/webkitgtk-3.0/'],
+		library_names=['libwebkitgtk-3.0'],
+	)
+
+	rpythonic.wrap( 'webkitgtk', 
+		header='/usr/include/webkitgtk-3.0/webkit/webkit.h',
+		insert_headers = ['/usr/include/webkitgtk-3.0/JavaScriptCore/JavaScript.h'],
+		includes=['/usr/include/webkitgtk-3.0/', '/usr/include/libsoup-2.4/', '/usr/include/gtk-3.0/'] + GINCLUDE,
+		library_names=['libwebkitgtk-3.0'],
+		ctypes_footer= glibfooter + gtkfooter,
+		strip_prefixes = ['GTK_', 'gtk_', 'webkit_'],
+	)
+
+
+#sudo apt-get install libgirepository1.0-dev
+if '--gi' in sys.argv:
+	rpythonic.wrap( 'libgi', 
+		header = '/usr/include/gobject-introspection-1.0/girepository.h',
+		library_names=['libgirepository-1.0'],
+		includes = GINCLUDE,
+		strip_prefixes = ['g_'],
+	)
+
+
+# apt-get install libappindicator-dev
+if '--appindicator' in sys.argv:
 	rpythonic.wrap( 'libappindicator', 
 		header='/usr/include/libappindicator-0.1/libappindicator/app-indicator.h',
 		includes=[
@@ -222,4 +253,5 @@ if '--appindicator' in sys.argv:	# apt-get install libappindicator-dev
 		ctypes_footer= glibfooter + gtkfooter,
 		strip_prefixes = ['app_', 'GTK_', 'gtk_'],
 	)
+
 

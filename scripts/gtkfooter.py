@@ -7,7 +7,7 @@ gtk_box_pack_start.defaults[3] = True		# fill
 gtk_box_pack_end.defaults[2] = True		# expand
 gtk_box_pack_end.defaults[3] = True		# fill
 
-_RETURNS_CHARP_ = (
+_RETURNS_CHARP_ = [
 	gtk_accelerator_get_label,
 	gtk_widget_path_iter_get_name,
 
@@ -162,12 +162,7 @@ _RETURNS_CHARP_ = (
 	gdk_rgba_to_string,
 	gdk_pixbuf_format_get_name,
 	gdk_keyval_name,
-)
-
-for func in _RETURNS_CHARP_:
-	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
-
-
+]
 
 
 
@@ -257,6 +252,16 @@ GTK_CONTAINER_CLASSES = {
 	GtkMenuBar : gtk_menu_bar_new,
 
 }
+
+################### WebKitGTK #####################
+if 'WebKitWebView' in globals():
+	GTK_WIDGET_CLASSES[ WebKitWebView ] = webkit_web_view_new
+	_RETURNS_CHARP_.append( webkit_dom_html_element_get_inner_html )
+	_RETURNS_CHARP_.append( webkit_web_frame_get_title )
+	_RETURNS_CHARP_.append( webkit_web_frame_get_uri )
+
+
+################# Clutter GTK ######################
 if 'GtkSocket' in globals():	# this is missing with Clutter
 	GTK_WIDGET_CLASSES[ GtkSocket ] = gtk_socket_new
 
@@ -293,6 +298,13 @@ if 'ClutterActor' in globals():
 		self.clutter_actor_get_size( x, y )
 		return x.contents.value, y.contents.value
 	ClutterActor.get_size = _get_
+
+
+################################################
+
+for func in _RETURNS_CHARP_:
+	func.return_wrapper = lambda pointer=None: _CHARP2STRING(pointer)
+
 
 for d in (GTK_WIDGET_CLASSES, GTK_CONTAINER_CLASSES):
 	for o in d:
