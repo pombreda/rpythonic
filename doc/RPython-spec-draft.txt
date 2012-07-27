@@ -1,0 +1,94 @@
+==============================
+		Strict Rpython 1.0
+==============================
+
+RPython rule1: All rules can be broken if you can meta-program your way around them
+( using function decorators to rewrite functions to comply with the rules below )
+
+RPython rule2: All globals and class-level attributes are constants. 
+       . PyPy considers globals to always be constant, including class- 
+level attributes. Use singleton instances to store global changeable state.
+
+RPython rule3: Tuples may contain mixed types, but it should be avoided. 
+       . PyPy can not use a loop to iterate over mixed tuples 
+	( because to iterate over a tuple it must be cast to a list - ie. for x in list(mytuple) )
+
+RPython rule4: Dicts and lists must contain compatible types (homogeneous). 
+       . ShedSkin and PyPy common rule 
+
+RPython rule5: No reflection (getattr, hasattr, etc..) 
+       . PyPy allows for limited getattr, hasattr.., but only if the string is 'concrete.'
+
+RPython rule6: No runtime evaluation. 
+       . Neither ShedSkin or PyPy support eval or exec 
+
+RPython rule7: No **keywordargs 
+       . Neither ShedSkin or PyPy support **kw 
+		this is ok: def func(a, b=None, y=2): pass
+		this is not ok: def func(a,**b): pass
+
+RPython rule 8:  Within a scope, a variable must not change type; however,
+`None` can be used as a place holder and intermixed with any type, but NOT with ints or floats.
+
+RPython rule 9: For instances to be of a compatible type, they must inherit from a common base class. 
+       . ShedSkin and PyPy requirement 
+
+RPython rule 10: For compatible instances stored in the same list, but 
+of different subclasses, to call methods with incompatible signatures 
+or access attributes unique to the subclass, the type must be asserted 
+first: 
+       assert isinstance(a,MySubClass) 
+
+
+RPython rule 11: The *assert isinstance* statement acts like a cast in 
+C/C++, turning `SomeObject` into the real subclass instance.  This 
+solves problems like in rule10, and in other cases where an instance 
+of uncertian type must be passed to a function that expects a certian 
+type. 
+
+RPython rule 12: No overloading, except for __init__ and __del__. 
+
+RPython rule 13: Attribute variables should be of consistent type in 
+all subclasses.  Do not create a subclass that redefines the type of 
+an attribute. 
+
+RPython rule 14: The calling and return signature of a function must 
+not change.  The types of function arguments must always be the same 
+for each function call.  Only `None` can be intermixed but not with ints or floats.  
+Function returns must always have the same type. 
+
+RPython rule 15: Its not recommended to define subclasses with like- 
+named functions that have different signatures.  Casting by `assert 
+isinstance` is the work around that allows this rule to be bent.
+In addition when doing this you may need to follow rule16 below.
+
+RPython rule 16: The root base class should define dummy functions,
+if multiple subclasses will overload them those functions with
+incompatible signatures.
+       . Prevents method `demotion` error in PyPy 
+
+RPython Extra Quirks:
+	1. a string of multiple characters is not the same as a string of a single character,
+	some functions will only accept a single character string; Examples:
+		this is valid:
+			a = 'hello world'
+			a.split(' ')
+			a.split('x')
+		this is invalid:
+			a = 'hello world'
+			a.split()
+			a.split('world')
+
+	2. some builtin functions require an argument where normally they do not, Example:
+		this is valid:
+			a = ['x','y','z']
+			a.pop( len(a)-1 )	# pop by index, pop the last item
+		this is invalid:
+			a = ['x','y','z']
+			a.pop()	# pop requires an index so this fails
+
+
+
+
+
+
