@@ -828,7 +828,10 @@ class SomeThing(object):
 		array = 0
 		if self.array:
 			print( 'array item name', self.name() )
-			array += self.array.length()
+			length = self.array.length()
+			if length is None: print('WARN: could not find length of array')
+			else: array += length
+
 		if typedef:
 			pointers += len( typedef.pointers() )
 			if typedef.array: array += typedef.array.length()
