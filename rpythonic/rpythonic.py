@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# RPythonic - July, 2012
+# RPythonic | http://code.google.com/p/rpythonic/
 # By Brett, bhartsho@yahoo.com
 # License: BSD
-VERSION = '0.4.8i'
+VERSION = '0.4.8j'
 
 _doc_ = '''
 NAME
@@ -1678,6 +1678,7 @@ def make_pycparser_compatible( data ):
 		if line.strip().endswith('((__format__ (__printf__, 2, 3)));'):
 			line = line.replace( '((__format__ (__printf__, 2, 3)));', ';' )
 
+
 		if '__attribute__((__malloc__))' in line.split() and line.strip().endswith(';'):
 			line = line.split('__attribute__((__malloc__))')[0] + ';'
 
@@ -1841,7 +1842,7 @@ def make_pycparser_compatible( data ):
 			line = line.replace( '__attribute__((alloc_size(1)))', '' )
 
 		if '__attribute__((' in line:
-			print('WARN: ugly __attribute__ hack')
+			#print('WARN: ugly __attribute__ hack')
 			x = line.split('__attribute__((')[0]
 			y = line.strip()[-1]
 			if y == ')': line = x
@@ -1908,6 +1909,12 @@ def make_pycparser_compatible( data ):
 		if line.endswith('((__format__ (__scanf__, 2, 0)));'): line = line.replace('((__format__ (__scanf__, 2, 0)));',';')
 
 		if '((__nothrow__ , __leaf__))' in line: line = line.replace('((__nothrow__ , __leaf__))', '')	# wayland
+
+		if line.strip().startswith('((format(printf') and line.strip().endswith(')))'): #blender/blenlib/BLI_string.h
+			line = ''
+		if line.strip() == '_Static_assert((sizeof(BMHeader) <= 16), "BMHeader size has grown!");;':
+			# special case for blender/bmesh/bmesh_class.h:85
+			line = ''
 
 		#######################
 		d += line + '\n'
